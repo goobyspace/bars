@@ -6,8 +6,8 @@ local function UpdateBar()
     if not frame or not frame:IsShown() then return end;
 
     -- hp:
-    local maxHP = UnitHealthMax("player");
-    local currentHP = UnitHealth("player", true);
+    local maxHP = UnitHealthMax("target");
+    local currentHP = UnitHealth("target", true);
     if not maxHP then
         return frame:Hide();
     end
@@ -17,7 +17,7 @@ local function UpdateBar()
     frame.text:SetText(AbbreviateNumbers(currentHP));
 
     -- healing absorb:
-    local absorb = UnitGetTotalAbsorbs("player") or 0;
+    local absorb = UnitGetTotalAbsorbs("target") or 0;
     if frame.absorbBar:IsShown() then
         frame.absorbBar:SetMinMaxValues(0, select(2, frame.bar:GetMinMaxValues()),
             Enum.StatusBarInterpolation.ExponentialEaseOut)
@@ -25,7 +25,7 @@ local function UpdateBar()
             Enum.StatusBarInterpolation.ExponentialEaseOut)
     end
 
-    local healAbsorb = UnitGetTotalHealAbsorbs("player") or 0;
+    local healAbsorb = UnitGetTotalHealAbsorbs("target") or 0;
     if frame.healAbsorbBar:IsShown() then
         frame.healAbsorbBar:SetMinMaxValues(0, select(2, frame.bar:GetMinMaxValues()),
             Enum.StatusBarInterpolation.ExponentialEaseOut)
@@ -34,33 +34,33 @@ local function UpdateBar()
     end
 end
 
-function core:CreateHPBar(parent)
-    frame = CreateFrame("Frame", "HPBarContainer", parent)
-    frame:SetSize(80, 4);
+function core:CreateTargetHPBar(parent)
+    frame = CreateFrame("Frame", "TargetHPBarContainer", parent)
+    frame:SetSize(core.width, 4);
 
     frame.bg = frame:CreateTexture();
     frame.bg:SetPoint("CENTER");
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0);
-    frame.bg:SetSize(80, 4);
+    frame.bg:SetSize(core.width, 4);
     frame.bg:SetDrawLayer("OVERLAY", -1);
 
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
     frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(78, 2);
-    frame.bar:SetStatusBarColor(200 / 255, 70 / 255, 80 / 255)
+    frame.bar:SetSize(core.width - 2, 2);
+    frame.bar:SetStatusBarColor(200 / 255, 70 / 255, core.width / 255)
 
     frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar)
     frame.absorbBar:SetPoint("CENTER");
-    frame.absorbBar:SetSize(78, 2);
+    frame.absorbBar:SetSize(core.width - 2, 2);
     frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/texture/absorb.png")
     frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.absorbBar:SetStatusBarColor(1, 1, 1, 0.7)
 
     frame.healAbsorbBar = CreateFrame("StatusBar", nil, frame.bar)
     frame.healAbsorbBar:SetPoint("CENTER");
-    frame.healAbsorbBar:SetSize(78, 2);
+    frame.healAbsorbBar:SetSize(core.width - 2, 2);
     frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay")
     frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.healAbsorbBar:SetStatusBarColor(1, 1, 1, 0.7)
@@ -71,16 +71,17 @@ function core:CreateHPBar(parent)
     frame.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_HEALTH", "player")
-    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "player")
+    frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "target")
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "target")
+    frame:RegisterUnitEvent("UNIT_HEALTH", "target")
+    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "target")
+    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "target")
+    frame:RegisterUnitEvent("PLAYER_TARGET_DIED")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
 
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("target"))
 
     if playerClass == "DRUID" then
         frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")

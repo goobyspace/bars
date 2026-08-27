@@ -52,7 +52,7 @@ end
 
 function core:CreateWidgets(parent)
     frame = CreateFrame("Frame", nil, parent);
-    frame:SetSize(370, 1);
+    frame:SetSize(core.width, 1);
 
     frame.afk = frame:CreateTexture();
     frame.afk:SetPoint("CENTER", -193, 4);

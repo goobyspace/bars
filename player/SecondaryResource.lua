@@ -43,8 +43,8 @@ local function updateBar()
         local max = UnitPowerMax("player", resource);
         local regenRate = GetPowerRegenForPowerType(resource);
 
-        local gap = 6;
-        local barWidth = 370 / max - gap;
+        local gap = 4;
+        local barWidth = core.width / max - gap;
         local offset = gap + (gap / max);
 
         if issecretvalue(regenRate) then
@@ -89,15 +89,15 @@ local function updateBar()
 
         for i = 1, max do
             frame['container' .. i]:ClearAllPoints();
-            frame['container' .. i]:SetSize(barWidth, 10);
+            frame['container' .. i]:SetSize(barWidth, 6);
             frame['container' .. i]:SetPoint("LEFT", frame, "LEFT", (i - 1) * (barWidth + offset), 0);
 
             frame["bg" .. i]:Show();
-            frame["bg" .. i]:SetSize(barWidth, 10);
+            frame["bg" .. i]:SetSize(barWidth, 6);
 
             local bar = frame["bar" .. i];
             bar:Show();
-            bar:SetSize(barWidth - 4, 6);
+            bar:SetSize(barWidth - 2, 4);
 
             bar:SetMinMaxValues(0, 1)
             if i <= current then
@@ -160,7 +160,7 @@ end
 
 function core:CreateSecondaryBar(parent)
     frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
-    frame:SetSize(370, 10);
+    frame:SetSize(core.width, 6);
 
     local playerClass = select(2, UnitClass("player"))
 
@@ -174,14 +174,14 @@ function core:CreateSecondaryBar(parent)
             bg:SetPoint("CENTER");
             bg:SetTexture(134532)
             bg:SetColorTexture(0, 0, 0);
-            bg:SetSize(100, 10);
+            bg:SetSize(100, 6);
             bg:SetDrawLayer("OVERLAY", -1);
 
             frame['bar' .. i] = CreateFrame("StatusBar", nil, frame['container' .. i]);
             local bar = frame['bar' .. i];
             bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
             bar:SetPoint("CENTER");
-            bar:SetSize(100, 6);
+            bar:SetSize(100, 4);
 
             bg:Hide();
             bar:Hide();

@@ -1,67 +1,110 @@
 local _, core = ...
 
+
 function core:InitializeBarFrames()
-    -- hide defaults
-    PlayerFrame:SetScript("OnEvent", nil);
-    PlayerFrame:Hide();
+    -- core variables before anything else
+    core.width = 340;
+    core.playerHeight = 36;
+    core.targetHeight = 36;
 
-    local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent)
-    playerFrame:SetSize(370, 46);
-    playerFrame:SetPoint("CENTER", 0, -230);
+    -- playerframe
+    do
+        -- hide defaults
+        PlayerFrame:SetScript("OnEvent", nil);
+        PlayerFrame:Hide();
 
-    -- temporary bg to show full size
-    playerFrame.bg = playerFrame:CreateTexture();
-    playerFrame.bg:SetPoint("CENTER");
-    playerFrame.bg:SetColorTexture(0, 0, 0, 0.1);
-    playerFrame.bg:SetSize(370, 46);
+        local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent)
+        playerFrame:SetSize(core.width, core.playerHeight);
+        playerFrame:SetPoint("CENTER", 0, -176);
 
-    playerFrame.click = CreateFrame("Button", "PlayerFrameTarget", playerFrame, "SecureActionButtonTemplate")
-    playerFrame.click:SetPoint("CENTER");
-    playerFrame.click:SetSize(370, 46);
-    playerFrame.click:SetAttribute("unit", "player")
-    playerFrame.click:SetAttribute("type1", "target")
-    playerFrame.click:SetAttribute("type2", "togglemenu")
-    playerFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+        -- debug BG to show the size of click frame
+        -- playerFrame.bg = playerFrame:CreateTexture();
+        -- playerFrame.bg:SetPoint("CENTER");
+        -- playerFrame.bg:SetColorTexture(0, 0, 0, 0.1);
+        -- playerFrame.bg:SetSize(core.width, core.playerHeight);
 
-    local widgets = core:CreateWidgets(playerFrame);
-    widgets:SetPoint("BOTTOM")
+        playerFrame.click = CreateFrame("Button", "PlayerFrameClick", playerFrame, "SecureActionButtonTemplate")
+        playerFrame.click:SetPoint("CENTER");
+        playerFrame.click:SetSize(core.width, core.playerHeight);
+        playerFrame.click:SetAttribute("unit", "player")
+        playerFrame.click:SetAttribute("type1", "target")
+        playerFrame.click:SetAttribute("type2", "togglemenu")
+        playerFrame.click:RegisterForClicks("AnyUp", "AnyDown")
 
-    local primaryResourceBar = core:CreatePrimaryBar(playerFrame)
-    primaryResourceBar:SetPoint("BOTTOM")
+        local widgets = core:CreateWidgets(playerFrame);
+        widgets:SetPoint("BOTTOM")
 
-    local secondaryResourceBar = core:CreateSecondaryBar(playerFrame);
-    if secondaryResourceBar then
-        secondaryResourceBar:SetPoint("BOTTOM", 0, 18);
-    end
+        local primaryResourceBar = core:CreatePrimaryBar(playerFrame)
+        primaryResourceBar:SetPoint("BOTTOM")
 
-    local tertiaryHeight = secondaryResourceBar:IsShown() and 36 or 18;
-
-    local hpBar = core:CreateHPBar(playerFrame);
-    hpBar:SetPoint("BOTTOM", 135, tertiaryHeight)
-
-
-    function secondaryResourceBar:SetHidden(hidden)
-        if hidden then
-            secondaryResourceBar:Hide();
-            tertiaryHeight = 18;
-        else
-            secondaryResourceBar:Show();
-            tertiaryHeight = 36;
+        local secondaryResourceBar = core:CreateSecondaryBar(playerFrame);
+        if secondaryResourceBar then
+            secondaryResourceBar:SetPoint("BOTTOM", 0, 9);
         end
-        hpBar:SetPoint("BOTTOM", 135, tertiaryHeight)
+
+        local tertiaryHeight = secondaryResourceBar:IsShown() and 18 or 9;
+
+        local hpBar = core:CreateHPBar(playerFrame);
+
+
+        function secondaryResourceBar:SetHidden(hidden)
+            if hidden then
+                secondaryResourceBar:Hide();
+                tertiaryHeight = 9;
+            else
+                secondaryResourceBar:Show();
+                tertiaryHeight = 18;
+            end
+            -- 34 is half of the HP bars total size
+            hpBar:SetPoint("BOTTOM", core.width / 2 - 40, tertiaryHeight)
+        end
     end
 
-    -- player frame
-    -- big ol bar with HP
-    -- cast bar
-    -- target of target
-    -- pet HP/power
-    -- resources (like rage/essence/mana)
-    -- any other weakaura like features (enrage bar?)
+    -- targetframe
+    do
+        -- hide defaults
+        --TargetFrame:SetScript("OnEvent", nil);
+        --TargetFrame:Hide();
 
-    -- target frame
-    -- big ol HP bar
-    -- cast bar
-    -- mana/other power resource
-    -- target of target
+        local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate")
+        targetFrame:SetSize(core.width, core.targetHeight);
+        targetFrame:SetPoint("CENTER", 0, -120);
+
+        -- debug BG to show the size of click frame
+        targetFrame.bg = targetFrame:CreateTexture();
+        targetFrame.bg:SetPoint("CENTER");
+        targetFrame.bg:SetColorTexture(0, 0, 0, 0.1);
+        targetFrame.bg:SetSize(core.width, core.targetHeight);
+
+        targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
+        targetFrame.click:SetPoint("CENTER");
+        targetFrame.click:SetSize(core.width, core.playerHeight);
+        targetFrame.click:SetAttribute("unit", "target")
+        targetFrame.click:SetAttribute("type1", "target")
+        targetFrame.click:SetAttribute("type2", "togglemenu")
+        targetFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+
+        local primaryResourceBar = core:CreateTargetHPBar(targetFrame)
+        primaryResourceBar:SetPoint("BOTTOM")
+
+
+        targetFrame:SetAttribute("unit", "target")
+        -- Register the frame with unit watch
+        RegisterUnitWatch(targetFrame, false)
+    end
 end
+
+-- actual todo:
+-- cast bar
+-- pet stuff
+-- side resources like holy power/chi/stagger/etc
+-- weakaura like features for stuff like teachings of the monastery & enrage, maybe whirlwind timer etc
+-- literally everything for target still
+-- do we maybe want a trp feature? like a way to open someones trp
+
+-- target frame
+-- big ol HP bar
+-- cast bar
+-- mana/other power resource
+-- buffs/debuffs on target
+-- target of target
