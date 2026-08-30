@@ -28,6 +28,7 @@ core.resources.resourceColours = {
     ["EBON_MIGHT"] = { r = 239, g = 158, b = 78 },
     ["WHIRLWIND"] = { r = 200, g = 210, b = 255 },
     ["ENRAGE"] = { r = 219, g = 145, b = 99 },
+    ["TEACHINGS"] = { r = 133, g = 255, b = 133 },
     ["STAGGER"] = {
         light = { r = 133, g = 255, b = 133 },
         medium = { r = 255, g = 250, b = 184 },
@@ -83,6 +84,9 @@ core.resources.secondary = {
     ["EVOKER"] = Enum.PowerType.Essence,
     ["MONK"]        = {
         [270] = "TEACHINGS",   -- Mistweaver
+    },
+    ["WARRIOR"]     = {
+        [72] = "ENRAGE", -- Fury
     },
 }
 

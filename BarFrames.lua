@@ -63,8 +63,8 @@ function core:InitializeBarFrames()
     -- targetframe
     do
         -- hide defaults
-        --TargetFrame:SetScript("OnEvent", nil);
-        --TargetFrame:Hide();
+        TargetFrame:SetScript("OnEvent", nil);
+        TargetFrame:Hide();
 
         local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate")
         targetFrame:SetSize(core.width, core.targetHeight);
@@ -99,8 +99,8 @@ function core:InitializeBarFrames()
         local castbar = core:CreateTargetCastbar(targetFrame)
         castbar:SetPoint("TOP", (3 * core.width) / 8, -23)
 
+        -- taint safe way to hide/show this depending on target
         targetFrame:SetAttribute("unit", "target")
-        -- Register the frame with unit watch
         RegisterUnitWatch(targetFrame, false)
     end
 end

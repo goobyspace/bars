@@ -2,6 +2,10 @@ local _, core = ...
 
 local frame;
 
+local TEACHINGS_OF_THE_MONASTERY = 202090;
+local TEACHINGS_MAX_STACKS = 4;
+local ENRAGE = 184362;
+
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
     local resourceTable = core.resources.secondary;
@@ -14,7 +18,7 @@ local function getResource()
     -- Druid: form-based
     if playerClass == "DRUID" then
         local formID = GetShapeshiftFormID()
-        resource = resource["DRUID"][formID or 0]
+        resource = resource and resource[formID or 0]
     end
 
     if type(resource) == "table" then
@@ -28,6 +32,8 @@ local nextEssenceTick = nil;
 local lastEssence = nil;
 local startTime = nil;
 
+-- this is only for basic power bars that can be handled in combat
+-- check below for stuff like teachings tracker, which we have to let blizz handle
 local function updateBar()
     local resource = getResource()
     if not resource then return end;
@@ -111,46 +117,12 @@ local function updateBar()
     end
 end
 
-local globalAuraID;
-
-local function updateEnrage(auraInstanceID)
-    local resource = getResource()
-    if not resource then return end;
-
-    if resource == "ENRAGE" then
-        if not frame or not frame:IsShown() then return end;
-
-        local resource = getResource();
-        if not resource then return end;
-
-        local color = core.resources.resourceColours[resource];
-
-        local duration = C_UnitAuras.GetAuraDuration("player", auraInstanceID);
-        if duration then
-            globalAuraID = auraInstanceID;
-            frame.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
-            frame.bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            --frame.text:SetFormattedText("%.1f%s", duration:GetRemainingDuration())
-        else
-            frame.bar:SetMinMaxValues(0, 0);
-            frame.bar:SetValue(0);
-            frame.text:SetText("");
-        end
-    end
-end
-
-local function refreshEnrage()
-    if globalAuraID then
-        print(globalAuraID)
-        updateEnrage(globalAuraID);
-    end
-end
-
 local function updateColour()
     local resource = getResource()
     if not resource then return end;
 
     local color = core.resources.resourceColours[resource];
+
     if resource == Enum.PowerType.Essence then
         for i = 1, 6 do
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
@@ -158,17 +130,40 @@ local function updateColour()
     end
 end
 
-local function toggleResource(resource)
-    -- figure out how to delete resources that aren't in use right now
+-- 12.1 you create these auracontainers to track stuff like stacks in widgets
+-- can only really be either an icon or a bar, and not multiple bars either
+-- use textures to make fake segments in a progress bar if you need to
+local function createAuraTracker(spellID, configureButton)
+    local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
+    container:SetPoint("CENTER");
+    container:SetSize(core.width, 6);
+    container:SetUnit("player");
+
+    container:AddAuraSlot("tracked", "HELPFUL", {
+        candidateFilters = { includeSpellIDs = { [spellID] = true } },
+        initializeFrame = configureButton,
+    });
+
+    return container;
 end
 
-function core:CreateSecondaryBar(parent)
-    frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
-    frame:SetSize(core.width, 6);
+local function createTrackerBar(button, colorKey, texture)
+    texture = texture or "Interface/TargetingFrame/UI-StatusBar"
+    button:SetSize(core.width - 2, 4);
+    button:SetPoint("CENTER", frame, "CENTER");
 
-    local playerClass = select(2, UnitClass("player"))
+    local bar = CreateFrame("StatusBar", nil, button);
+    bar:SetStatusBarTexture(texture);
+    bar:SetAllPoints(button);
 
-    if playerClass == "EVOKER" then
+    local color = core.resources.resourceColours[colorKey];
+    bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+
+    return bar;
+end
+
+local trackerBuilders = {
+    [Enum.PowerType.Essence] = function(tracker)
         -- with talents evoker max essence count can be 6 so we need 6 frames
         for i = 1, 6 do
             frame['container' .. i] = CreateFrame("Frame", nil, frame);
@@ -189,10 +184,98 @@ function core:CreateSecondaryBar(parent)
 
             bg:Hide();
             bar:Hide();
-        end
-    elseif playerClass == "MONK" then
 
+            table.insert(tracker.visuals, frame['container' .. i]);
+        end
+    end,
+
+    ["TEACHINGS"] = function(tracker)
+        local segmentWidth = (core.width - 2) / TEACHINGS_MAX_STACKS;
+
+        for i = 1, TEACHINGS_MAX_STACKS do
+            local bars = frame:CreateTexture(nil, "OVERLAY");
+            bars:SetColorTexture(0, 0, 0);
+            bars:SetSize(segmentWidth - 1, 6);
+            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
+            table.insert(tracker.visuals, bars);
+        end
+
+        tracker.container = createAuraTracker(TEACHINGS_OF_THE_MONASTERY, function(button)
+            local bar = createTrackerBar(button, "TEACHINGS",
+                "Interface/Addons/Bars/assets/transparent four segment bar.png");
+
+            button:SetApplicationBar(bar, {
+                maxApplications = TEACHINGS_MAX_STACKS,
+                interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
+            });
+        end);
+    end,
+
+    ["ENRAGE"] = function(tracker)
+        local bg = frame:CreateTexture();
+        bg:SetPoint("CENTER");
+        bg:SetTexture(134532)
+        bg:SetColorTexture(0, 0, 0);
+        bg:SetSize(core.width, 6);
+        bg:SetDrawLayer("OVERLAY", -1);
+        table.insert(tracker.visuals, bg);
+
+        local color = core.resources.resourceColours["ENRAGE"];
+        local track = frame:CreateTexture(nil, "OVERLAY");
+        track:SetColorTexture(color.r / 255, color.g / 255, color.b / 255, 0.2);
+        track:SetSize(core.width - 2, 4);
+        track:SetPoint("CENTER");
+        table.insert(tracker.visuals, track);
+
+        tracker.container = createAuraTracker(ENRAGE, function(button)
+            local bar = createTrackerBar(button, "ENRAGE");
+
+            button:SetDurationBar(bar, {
+                interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
+                direction = Enum.StatusBarTimerDirection.RemainingTime,
+            });
+        end);
+    end,
+};
+
+-- tldr if you switch spec and a tracker isnt relevant anymore hide it
+-- if a tracker is now relevant but we havent created it go make it otherwise show it
+local function refreshTrackers()
+    for _, tracker in pairs(frame.trackers) do
+        if tracker.container then
+            tracker.container:Hide();
+        end
+        for _, region in ipairs(tracker.visuals) do
+            region:Hide();
+        end
     end
+
+    local resource = getResource();
+    local build = trackerBuilders[resource];
+    if not build then return end;
+
+    local tracker = frame.trackers[resource];
+    if not tracker then
+        tracker = { visuals = {} };
+        frame.trackers[resource] = tracker;
+        build(tracker);
+    end
+
+    if tracker.container then
+        tracker.container:Show();
+    end
+    for _, region in ipairs(tracker.visuals) do
+        region:Show();
+    end
+end
+
+function core:CreateSecondaryBar(parent)
+    frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
+    frame:SetSize(core.width, 6);
+
+    local playerClass = select(2, UnitClass("player"))
+
+    frame.trackers = {};
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
@@ -223,6 +306,8 @@ function core:CreateSecondaryBar(parent)
         if event == "PLAYER_ENTERING_WORLD"
             or event == "UPDATE_SHAPESHIFT_FORM"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
+            refreshTrackers();
+
             local resource = getResource();
             if resource then
                 hidden = false;
