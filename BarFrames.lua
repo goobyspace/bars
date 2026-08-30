@@ -5,7 +5,7 @@ function core:InitializeBarFrames()
     -- core variables before anything else
     core.width = 340;
     core.playerHeight = 36;
-    core.targetHeight = 36;
+    core.targetHeight = 28;
 
     -- playerframe
     do
@@ -56,7 +56,7 @@ function core:InitializeBarFrames()
                 tertiaryHeight = 18;
             end
             -- 34 is half of the HP bars total size
-            hpBar:SetPoint("BOTTOM", core.width / 2 - 40, tertiaryHeight)
+            hpBar:SetPoint("BOTTOM", core.width / 3, tertiaryHeight)
         end
     end
 
@@ -78,7 +78,7 @@ function core:InitializeBarFrames()
 
         targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
         targetFrame.click:SetPoint("CENTER");
-        targetFrame.click:SetSize(core.width, core.playerHeight);
+        targetFrame.click:SetSize(core.width, core.targetHeight);
         targetFrame.click:SetAttribute("unit", "target")
         targetFrame.click:SetAttribute("type1", "target")
         targetFrame.click:SetAttribute("type2", "togglemenu")
@@ -89,6 +89,15 @@ function core:InitializeBarFrames()
 
         local widgets = core:CreateTargetWidgets(targetFrame);
         widgets:SetPoint("TOP")
+
+        local primaryResourceBar = core:CreateTargetResourceBar(targetFrame)
+        primaryResourceBar:SetPoint("TOPLEFT", -core.width / 6, -20)
+
+        local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame)
+        targetOfTargetBar:SetPoint("TOPLEFT", -core.width / 3, -29)
+
+        local castbar = core:CreateTargetCastbar(targetFrame)
+        castbar:SetPoint("TOP", (3 * core.width) / 8, -23)
 
         targetFrame:SetAttribute("unit", "target")
         -- Register the frame with unit watch

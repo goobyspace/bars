@@ -36,31 +36,31 @@ end
 
 function core:CreateHPBar(parent)
     frame = CreateFrame("Frame", "HPBarContainer", parent)
-    frame:SetSize(80, 4);
+    frame:SetSize(core.width/3, 4);
 
     frame.bg = frame:CreateTexture();
     frame.bg:SetPoint("CENTER");
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0);
-    frame.bg:SetSize(80, 4);
+    frame.bg:SetSize(core.width/3, 4);
     frame.bg:SetDrawLayer("OVERLAY", -1);
 
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
     frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(78, 2);
+    frame.bar:SetSize(core.width/3 -2, 2);
     frame.bar:SetStatusBarColor(200 / 255, 70 / 255, 80 / 255)
 
     frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar)
     frame.absorbBar:SetPoint("CENTER");
-    frame.absorbBar:SetSize(78, 2);
+    frame.absorbBar:SetSize(core.width/3 -2, 2);
     frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
     frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.absorbBar:SetStatusBarColor(1, 1, 1, 0.7)
 
     frame.healAbsorbBar = CreateFrame("StatusBar", nil, frame.bar)
     frame.healAbsorbBar:SetPoint("CENTER");
-    frame.healAbsorbBar:SetSize(78, 2);
+    frame.healAbsorbBar:SetSize(core.width/3 -2, 2);
     frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay")
     frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.healAbsorbBar:SetStatusBarColor(1, 1, 1, 0.7)

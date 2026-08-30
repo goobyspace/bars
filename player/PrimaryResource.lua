@@ -27,8 +27,8 @@ end
 local function getResourceValue(resource)
     if not resource then return nil, nil end
 
-    local current = UnitPower("player", resource)
-    local max = UnitPowerMax("player", resource)
+    local current = UnitPower("player", resource, true)
+    local max = UnitPowerMax("player", resource, true)
     if max <= 0 then return nil end
 
     return max, current

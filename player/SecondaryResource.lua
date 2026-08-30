@@ -158,6 +158,10 @@ local function updateColour()
     end
 end
 
+local function toggleResource(resource)
+    -- figure out how to delete resources that aren't in use right now
+end
+
 function core:CreateSecondaryBar(parent)
     frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
     frame:SetSize(core.width, 6);
@@ -186,6 +190,8 @@ function core:CreateSecondaryBar(parent)
             bg:Hide();
             bar:Hide();
         end
+    elseif playerClass == "MONK" then
+
     end
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -193,6 +199,7 @@ function core:CreateSecondaryBar(parent)
     frame:RegisterEvent("PLAYER_REGEN_ENABLED")
     frame:RegisterEvent("PLAYER_REGEN_DISABLED")
     frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterUnitEvent("UNIT_AURA", "player")
     frame:RegisterUnitEvent("UNIT_POWER_POINT_CHARGE", "player")
     frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
     frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")

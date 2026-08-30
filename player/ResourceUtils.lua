@@ -81,6 +81,9 @@ core.resources.primary = {
 
 core.resources.secondary = {
     ["EVOKER"] = Enum.PowerType.Essence,
+    ["MONK"]        = {
+        [270] = "TEACHINGS",   -- Mistweaver
+    },
 }
 
 -- core.resources.secondary = {

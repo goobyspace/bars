@@ -18,6 +18,9 @@ player/Widgets.lua
 
 target/HPBar.lua
 target/Widgets.lua
+target/ResourceBar.lua
+target/TargetOfTarget.lua
+target/Castbar.lua
 
 BarFrames.lua
 Init.lua

@@ -27,6 +27,10 @@ local function checkRareElite()
         frame.elite:Hide()
         frame.rare:Hide()
         frame.rareelite:Show()
+    else
+        frame.elite:Hide()
+        frame.rare:Hide()
+        frame.rareelite:Hide()
     end
 end
 
@@ -45,7 +49,7 @@ function core:CreateTargetWidgets(parent)
     frame.pvp:SetSize(16, 16);
 
     frame.elite = frame:CreateTexture();
-    frame.elite:SetPoint("CENTER", 180, -10);
+    frame.elite:SetPoint("CENTER", 160, -7);
     frame.elite:SetTexture("Interface/Addons/Bars/assets/elite.png");
     frame.elite:SetSize(20, 16);
 
