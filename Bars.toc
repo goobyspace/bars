@@ -15,6 +15,9 @@ player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
 player/Widgets.lua
+
 target/HPBar.lua
+target/Widgets.lua
+
 BarFrames.lua
 Init.lua

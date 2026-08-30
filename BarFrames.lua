@@ -84,9 +84,11 @@ function core:InitializeBarFrames()
         targetFrame.click:SetAttribute("type2", "togglemenu")
         targetFrame.click:RegisterForClicks("AnyUp", "AnyDown")
 
-        local primaryResourceBar = core:CreateTargetHPBar(targetFrame)
-        primaryResourceBar:SetPoint("BOTTOM")
+        local hpBar = core:CreateTargetHPBar(targetFrame)
+        hpBar:SetPoint("TOP", 0, -16)
 
+        local widgets = core:CreateTargetWidgets(targetFrame);
+        widgets:SetPoint("TOP")
 
         targetFrame:SetAttribute("unit", "target")
         -- Register the frame with unit watch

@@ -54,7 +54,7 @@ function core:CreateHPBar(parent)
     frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar)
     frame.absorbBar:SetPoint("CENTER");
     frame.absorbBar:SetSize(78, 2);
-    frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/texture/absorb.png")
+    frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
     frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.absorbBar:SetStatusBarColor(1, 1, 1, 0.7)
 

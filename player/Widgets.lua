@@ -13,41 +13,17 @@ end
 local function checkRested()
     -- 1 = rested 2 = normal
     local rested = GetRestState();
-    print(rested);
     if rested == 1 then
-        frame.restedGroup:Play()
-        frame.restedFrame:Show();
-        print(frame.restedGroup:IsPlaying());
+        frame.rested:Show();
     else
-        frame.restedGroup:Stop()
-        frame.restedFrame:Hide();
+        frame.rested:Hide();
     end
 end
 
 local function checkPvP()
     local isFreeForAll = UnitIsPVPFreeForAll("player")
     local isPvP = UnitIsPVP("player")
-    local faction = UnitFactionGroup("player")
-
-    if isFreeForAll then
-        frame.ffaPvP:Show();
-        frame.alliancePvP:Hide();
-        frame.hordePvP:Hide();
-    elseif isPvP then
-        if faction == "Alliance" then
-            frame.ffaPvP:Hide();
-            frame.alliancePvP:Show();
-            frame.hordePvP:Hide();
-        elseif faction == "Horde" then
-            frame.ffaPvP:Hide();
-            frame.alliancePvP:Hide();
-            frame.hordePvP:Show();
-        end
-    else
-        frame.ffaPvP:Hide();
-        frame.alliancePvP:Hide();
-        frame.hordePvP:Hide();
-    end
+    frame.pvp:SetShown(isFreeForAll or isPvP or false)
 end
 
 function core:CreateWidgets(parent)
@@ -55,59 +31,24 @@ function core:CreateWidgets(parent)
     frame:SetSize(core.width, 1);
 
     frame.afk = frame:CreateTexture();
-    frame.afk:SetPoint("CENTER", -193, 4);
-    frame.afk:SetTexture("interface/FriendsFrame/StatusIcon-Away");
+    frame.afk:SetPoint("CENTER", -180, -6);
+    frame.afk:SetTexture("Interface/Addons/Bars/assets/afk.png");
     frame.afk:SetSize(16, 16);
 
     frame.combat = frame:CreateTexture();
-    frame.combat:SetPoint("CENTER", 193, 6);
-    frame.combat:SetTexture("interface/FriendsFrame/StatusIcon-Away");
-    frame.combat:SetSize(8, 8);
+    frame.combat:SetPoint("CENTER", 180, 10);
+    frame.combat:SetTexture("Interface/Addons/Bars/assets/combat.png");
+    frame.combat:SetSize(16, 16);
 
-    do -- rested
-        frame.restedFrame = CreateFrame("Frame", nil, frame);
-        frame.restedFrame:SetSize(20, 20);
-        frame.restedFrame:SetPoint("CENTER", -185, 16);
+    frame.rested = frame:CreateTexture();
+    frame.rested:SetPoint("CENTER", -180, 10);
+    frame.rested:SetTexture("Interface/Addons/Bars/assets/rested.png");
+    frame.rested:SetSize(16, 16);
 
-        frame.restedTexture = frame.restedFrame:CreateTexture(nil, "OVERLAY");
-        frame.restedTexture:SetSize(20, 20);
-        frame.restedTexture:SetPoint("CENTER");
-        frame.restedTexture:SetTexture("Interface\\HUD\\UI-HUD-UnitFrame-Player-Rest-Flipbook");
-        frame.restedTexture:SetParentKey("FlipBookRestedTexture")
-
-        frame.restedGroup = frame.restedTexture:CreateAnimationGroup();
-        frame.restedAnim = frame.restedGroup:CreateAnimation("FlipBook");
-
-        frame.restedAnim:SetFlipBookRows(4);
-        frame.restedAnim:SetFlipBookColumns(4);
-        frame.restedAnim:SetDuration(2.0);
-        frame.restedAnim:SetFlipBookFrames(8);
-        frame.restedAnim:SetChildKey("FlipBookRestedTexture")
-
-        frame.restedGroup:SetLooping("REPEAT");
-
-        frame.restedFrame:Show();
-        frame.restedTexture:Show();
-        frame.restedGroup:Play();
-        frame.restedAnim:Play();
-    end
-
-    do -- pvp
-        frame.ffaPvP = frame:CreateTexture();
-        frame.ffaPvP:SetPoint("CENTER", 178, 8);
-        frame.ffaPvP:SetTexture("interface/TARGETINGFRAME/UI-PVP-FFA");
-        frame.ffaPvP:SetSize(8, 8);
-
-        frame.hordePvP = frame:CreateTexture();
-        frame.hordePvP:SetPoint("CENTER", 178, 8);
-        frame.hordePvP:SetTexture("interface/TARGETINGFRAME/UI-PVP-Horde");
-        frame.hordePvP:SetSize(8, 8);
-
-        frame.alliancePvP = frame:CreateTexture();
-        frame.alliancePvP:SetPoint("CENTER", 178, 8);
-        frame.alliancePvP:SetTexture("interface/TARGETINGFRAME/UI-PVP-Alliance");
-        frame.alliancePvP:SetSize(8, 8);
-    end
+    frame.pvp = frame:CreateTexture();
+    frame.pvp:SetPoint("CENTER", 180, -6);
+    frame.pvp:SetTexture("Interface/Addons/Bars/assets/pvp.png");
+    frame.pvp:SetSize(16, 16);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
