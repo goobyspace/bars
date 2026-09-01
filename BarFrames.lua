@@ -94,10 +94,10 @@ function core:InitializeBarFrames()
         primaryResourceBar:SetPoint("TOPLEFT", -core.width / 6, -20)
 
         local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame)
-        targetOfTargetBar:SetPoint("TOPLEFT", -core.width / 3, -29)
+        targetOfTargetBar:SetPoint("TOPRIGHT", core.width / 3 + 1, -23)
 
         local castbar = core:CreateTargetCastbar(targetFrame)
-        castbar:SetPoint("TOP", (3 * core.width) / 8, -23)
+        castbar:SetPoint("CENTER", 0, -29)
 
         -- taint safe way to hide/show this depending on target
         targetFrame:SetAttribute("unit", "target")

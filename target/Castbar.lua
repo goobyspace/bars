@@ -1,7 +1,8 @@
 local _, core = ...
 
 local frame = nil;
-local interruptSpellID = nil -- Filled dynamically in function 1
+local interruptSpellID = nil
+
 local function updateBar()
     if not frame then return end;
     local name, text, texture, _, _, _, _, notInterruptible = UnitCastingInfo("target")
@@ -28,12 +29,27 @@ local function updateBar()
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorUninterruptible = CreateColor(0.5, 0.5, 0.5, 1.0) -- Gray
-    local colorKickReady       = CreateColor(0.1, 1, 0.1, 1.0)   -- Green
+    local colorKickNotReady = CreateColor(1.0, 0.1, 0.2)       -- red
+    local colorKickReady    = CreateColor(0.1, 1, 0.1, 1.0)    -- Green
+    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0); -- gray
 
-    local mainBarTexture       = frame.bar:GetStatusBarTexture()
+    frame.bar:SetStatusBarDesaturated(not UnitCanAttack("Player", "Target"));
+
     if notInterruptible ~= nil then
-        mainBarTexture:SetVertexColorFromBoolean(notInterruptible, colorUninterruptible, colorKickReady)
+        if interruptSpellID ~= nil then
+            -- these values are real the vs code plugin is just out of date
+            local spellCD = C_Spell.GetSpellCooldownDuration(interruptSpellID, true);
+            local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellCD:IsActive(), colorKickNotReady, colorKickReady)
+            local blockedColor = C_CurveUtil.EvaluateColorFromBoolean(notInterruptible, colorBlocked, baseColor)
+            local targetable = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedColor,
+                colorBlocked)
+            frame.bar:SetStatusBarColor(targetable:GetRGB())
+        else
+            local blockedColor = C_CurveUtil.EvaluateColorFromBoolean(notInterruptible, colorBlocked, colorKickReady)
+            local targetable = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedColor,
+                colorBlocked)
+            frame.bar:SetStatusBarColor(targetable:GetRGB())
+        end
     end
 end
 
@@ -115,29 +131,28 @@ local function CachePlayerInterrupt()
         [73]   = 6552, -- Protection (Pummel)
     }
 
-    -- Assign the specific spell ID from our clean integer lookup map
     interruptSpellID = specInterrupts[specID]
 end
 
 function core:CreateTargetCastbar(parent)
     frame = CreateFrame("Frame", "TargetCastbar", parent)
-    frame:SetSize(core.width / 4, 16)
+    frame:SetSize(core.width, 16)
 
     frame.bg = frame:CreateTexture()
-    frame.bg:SetPoint("CENTER")
+    frame.bg:SetPoint("RIGHT")
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0)
-    frame.bg:SetSize(core.width / 4, 16)
+    frame.bg:SetSize(core.width - 16, 16)
     frame.bg:SetDrawLayer("OVERLAY", -1)
 
     frame.bar = CreateFrame("StatusBar", nil, frame)
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
-    frame.bar:SetPoint("CENTER")
-    frame.bar:SetSize(core.width / 4 - 2, 14)
+    frame.bar:SetPoint("RIGHT", -2, 0)
+    frame.bar:SetSize(core.width - 16 - 2, 14)
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
     frame.icon = frame:CreateTexture()
-    frame.icon:SetPoint("LEFT", -16, 0)
+    frame.icon:SetPoint("LEFT", 0, 0)
     frame.icon:SetSize(16, 16)
 
     frame.name = frame.bar:CreateFontString("PrimaryText")
