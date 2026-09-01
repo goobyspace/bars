@@ -3,27 +3,19 @@ local _, core = ...;
 local frame;
 
 local function checkAfk()
-    frame.afk:SetShown(UnitIsAFK("player"));
+    frame.afk:SetAlphaFromBoolean(UnitIsAFK("player"));
 end
 
 local function checkCombat()
-    frame.combat:SetShown(PlayerIsInCombat());
+    frame.combat:SetAlphaFromBoolean(PlayerIsInCombat());
 end
 
 local function checkRested()
-    -- 1 = rested 2 = normal
-    local rested = GetRestState();
-    if rested == 1 then
-        frame.rested:Show();
-    else
-        frame.rested:Hide();
-    end
+    frame.rested:SetAlphaFromBoolean(IsResting());
 end
 
 local function checkPvP()
-    local isFreeForAll = UnitIsPVPFreeForAll("player")
-    local isPvP = UnitIsPVP("player")
-    frame.pvp:SetShown(isFreeForAll or isPvP or false)
+    frame.pvp:SetAlphaFromBoolean(UnitIsPVP("player"))
 end
 
 function core:CreateWidgets(parent)
@@ -61,7 +53,7 @@ function core:CreateWidgets(parent)
     frame:RegisterEvent("PLAYER_FLAGS_CHANGED");
     frame:RegisterEvent("PLAYER_IN_COMBAT_CHANGED");
 
-    frame:SetScript("OnEvent", function(_, event)
+    frame:HookScript("OnEvent", function(_, event)
         if event == "ZONE_CHANGED" then
             checkRested();
         elseif event == "ZONE_CHANGED_INDOORS" then

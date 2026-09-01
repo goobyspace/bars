@@ -3,14 +3,12 @@ local _, core = ...;
 local frame;
 
 local function checkAfk()
-    frame.afk:SetShown(UnitIsAFK("player"));
+    frame.afk:SetAlphaFromBoolean(UnitIsAFK("player"));
 end
 
 
 local function checkPvP()
-    local isFreeForAll = UnitIsPVPFreeForAll("target")
-    local isPvP = UnitIsPVP("target")
-    frame.pvp:SetShown(isFreeForAll or isPvP or false)
+    frame.pvp:SetAlphaFromBoolean(UnitIsPVP("target"))
 end
 
 local function checkRareElite()
@@ -71,7 +69,7 @@ function core:CreateTargetWidgets(parent)
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
 
-    frame:SetScript("OnEvent", function(_, _)
+    frame:HookScript("OnEvent", function(_, _)
         checkRareElite();
         checkAfk();
         checkPvP();

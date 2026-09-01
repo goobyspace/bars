@@ -40,8 +40,12 @@ local function UpdateBar()
     local isPlayer = UnitIsPlayer("targettarget")
     local threat = UnitThreatSituation("player", "targettarget")
     if isPlayer then
-        local _, _, id = UnitClass("targettarget");
-        frame.bar:SetStatusBarColor(core.ClassColors[id].r, core.ClassColors[id].g, core.ClassColors[id].b)
+        local _, name, _ = UnitClass("targettarget");
+        local color = C_ClassColor.GetClassColor(name)
+        local barTexture = frame.bar:GetStatusBarTexture()
+        if (barTexture) then
+            barTexture:SetVertexColor(color:GetRGB())
+        end
     elseif threat ~= nil or UnitIsEnemy("player", "targettarget") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
             core.ClassColors["hostile"].b)
@@ -152,10 +156,13 @@ function core:CreateTargetTargetHPBar(parent)
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
 
-    frame:SetScript("OnEvent", function()
+    frame:HookScript("OnEvent", function()
         UpdateBar();
     end)
 
+    frame:HookScript("OnShow", function()
+        UpdateBar()
+    end)
 
     frame:SetAttribute("unit", "targettarget")
     RegisterUnitWatch(frame, false)
