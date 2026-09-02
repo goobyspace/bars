@@ -50,6 +50,14 @@ function core:CreatePetFrame(parent)
     frame = CreateFrame("Frame", "PetFrameContainer", parent)
     frame:SetSize(core.width / 3, 6);
 
+    frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate")
+    frame.click:SetPoint("CENTER");
+    frame.click:SetSize(core.width / 3, 6);
+    frame.click:SetAttribute("unit", "pet")
+    frame.click:SetAttribute("type1", "target")
+    frame.click:SetAttribute("type2", "togglemenu")
+    frame.click:RegisterForClicks("AnyUp", "AnyDown")
+
     frame.hpBg = frame:CreateTexture();
     frame.hpBg:SetPoint("TOPLEFT");
     frame.hpBg:SetTexture(134532)
