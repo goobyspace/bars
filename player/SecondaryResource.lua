@@ -28,15 +28,15 @@ local COUNT_RESOURCES = {
 }
 
 local CLASS_EVENTS = {
-    ["DEATHKNIGHT"] = { { "RUNE_POWER_UPDATE" }, { "UNIT_MAXPOWER", "player" } },
+    ["DEATHKNIGHT"] = { { "RUNE_POWER_UPDATE" }, { "UNIT_POWER_UPDATE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["DEMONHUNTER"] = { { "UNIT_AURA", "player" } },
-    ["DRUID"]       = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
+    ["DRUID"]       = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["EVOKER"]      = { { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
-    ["MONK"]        = { { "UNIT_AURA", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" }, { "UNIT_HEALTH", "player" } },
+    ["MONK"]        = { { "UNIT_AURA", "player" }, { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" }, { "UNIT_HEALTH", "player" } },
     ["PALADIN"]     = { { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
-    ["ROGUE"]       = { { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
+    ["ROGUE"]       = { { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["SHAMAN"]      = { { "UNIT_AURA", "player" } },
-    ["WARLOCK"]     = { { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
+    ["WARLOCK"]     = { { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["WARRIOR"]     = { { "PLAYER_REGEN_ENABLED" }, { "PLAYER_REGEN_DISABLED" }, { "UNIT_AURA", "player" } },
 }
 
@@ -156,33 +156,36 @@ local function updateCountBar(resource)
 
     local current = UnitPower("player", resource) or 0;
     local max = UnitPowerMax("player", resource);
-
-    print(current)
-    print(max)
-
     if not max or max <= 0 then return end;
+
+    local pendingRuneDurations;
+    if resource == Enum.PowerType.Runes then
+        current = 0;
+        pendingRuneDurations = {};
+        for i = 1, max do
+            local start, dur, ready = GetRuneCooldown(i)
+            if ready then
+                current = current + 1;
+            elseif start and dur and dur > 0 then
+                table.insert(pendingRuneDurations, { start = start, duration = dur });
+            end
+        end
+        table.sort(pendingRuneDurations, function(a, b)
+            return (a.start + a.duration) < (b.start + b.duration)
+        end)
+    end
+
+    local fractionalSoulShardValue;
+    if resource == Enum.PowerType.SoulShards then
+        local shardProgress = current - math.floor(current);
+        if shardProgress > 0 then
+            fractionalSoulShardValue = shardProgress;
+        end
+    end
 
     local gap = 4;
     local barWidth = core.width / max - gap;
     local offset = gap + (gap / max);
-
-    local nextStart, nextDuration;
-    if resource == Enum.PowerType.Runes then
-        for i = 1, 6 do
-            local start, duration, ready = GetRuneCooldown(i)
-            if not ready and start and duration and duration > 0 then
-                if not nextStart or (start + duration) < (nextStart + nextDuration) then
-                    nextStart, nextDuration = start, duration
-                end
-            end
-        end
-    end
-
-    local duration;
-    if nextStart and nextDuration then
-        duration = C_DurationUtil.CreateDuration();
-        duration:SetTimeSpan(nextStart, nextStart + nextDuration);
-    end
 
     for i = 1, max do
         frame['container' .. i]:ClearAllPoints();
@@ -197,9 +200,21 @@ local function updateCountBar(resource)
         bar:SetSize(barWidth - 2, 4);
         bar:SetMinMaxValues(0, 1);
 
-        if i <= current then
+        if resource == Enum.PowerType.SoulShards then
+            local completedShards = math.floor(current);
+            if i <= completedShards then
+                bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            elseif i == completedShards + 1 and fractionalSoulShardValue then
+                bar:SetValue(fractionalSoulShardValue, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            else
+                bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            end
+        elseif i <= current then
             bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
-        elseif duration and i == current + 1 then
+        elseif pendingRuneDurations and pendingRuneDurations[i - current] then
+            local pending = pendingRuneDurations[i - current];
+            local duration = C_DurationUtil.CreateDuration();
+            duration:SetTimeSpan(pending.start, pending.start + pending.duration);
             bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
         else
             bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
@@ -282,8 +297,6 @@ local function updateColour()
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
         end
     elseif COUNT_RESOURCES[resource] then
-        -- UnitPowerMax can still report the previous spec's cap for a moment after
-        -- PLAYER_SPECIALIZATION_CHANGED fires, so colour every possible segment instead
         local color = core.resources.resourceColours[resource];
         for i = 1, MAX_COUNT_SEGMENTS do
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)

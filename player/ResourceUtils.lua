@@ -12,7 +12,7 @@ core.resources.resourceColours = {
     [Enum.PowerType.ComboPoints] = { r = 255, g = 245, b = 105 },
     [Enum.PowerType.Runes] = { r = 120, g = 65, b = 110 },
     [Enum.PowerType.RunicPower] = { r = 0, g = 209, b = 255 },
-    [Enum.PowerType.SoulShards] = { r = 128, g = 82, b = 105 },
+    [Enum.PowerType.SoulShards] = { r = 220, g = 65, b = 247 },
     [Enum.PowerType.LunarPower] = { r = 77, g = 133, b = 230 },
     [Enum.PowerType.HolyPower] = { r = 242, g = 230, b = 153 },
     [Enum.PowerType.Maelstrom] = { r = 0, g = 128, b = 255 },

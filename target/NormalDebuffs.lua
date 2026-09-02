@@ -21,7 +21,6 @@ function core:CreateNormalDebuffsFrame(parent)
     frame = CreateFrame("AuraContainer", "TargetNormalDebuffAuraContainer", parent, "CustomAuraContainerTemplate")
     frame:SetSize(20, 20)
     frame:SetUnit("target")
-    -- 5 icons per row (2 rows of 10): 5 * 20px icons + 4 * 2px gaps.
     frame:SetFlowLayoutMaximumLineSize(108)
     frame:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
     frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)

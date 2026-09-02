@@ -54,7 +54,6 @@ function core:CreateMainBuffsFrame(parent)
     frame = CreateFrame("AuraContainer", "TargetMainBuffAuraContainer", parent, "CustomAuraContainerTemplate")
     frame:SetSize(14, 14)
     frame:SetUnit("target")
-    -- 8 icons per row: 8 * 14px icons + 7 * 2px gaps.
     frame:SetFlowLayoutMaximumLineSize(126)
 
     local function initializeFrame(button)
