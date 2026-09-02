@@ -2,7 +2,6 @@ local _, core = ...
 
 local frame = nil;
 
--- Known purge/spellsteal spells used to gate the purgeable-buff outline.
 local PURGE_SPELL_IDS = {
     528,    -- dispel magic
     370,    -- purge
@@ -78,22 +77,18 @@ function core:CreateMainBuffsFrame(parent)
         ApplyPurgeBorder(button)
     end
 
-    -- Matches Blizzard's default target frame buff filter (all buffs, unfiltered), in one group so
-    -- priority buffs (HoTs, CC, etc.) sort ahead of the rest instead of needing manual budgeting.
-    -- ProcessAura populates auraData.isPriorityAura, which AuraContainerSortMethod.Default reads.
+    -- this gives an unknown error i think its the vscode thing being out of date but idk man i copied this code
     frame:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, { ignoreDebuffs = true })
 
     frame:AddAuraGroup("Buffs", AuraUtil.AuraFilters.Helpful, {
         initializeFrame = initializeFrame,
         sortMethod = AuraContainerSortMethod.Default,
         maxFrameCount = MAX_BUFFS,
-        -- Spacing keeps adjacent purge borders from touching and merging into one outline.
         layout = { elementSpacing = 2 },
     })
 
     knowsPurge = CheckKnowsPurge();
 
-    -- AuraContainers don't automatically refresh on target swap; force it like Blizzard's TargetFrameMixin does.
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
     eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")

@@ -9,12 +9,12 @@ local function updateBar()
 end
 
 local function updateColour()
-    -- this is always a bar so we only need to worry about colour
     if not frame or not frame:IsShown() then return end;
     local enum, _, r, g, b = UnitPowerType("target")
     local color = core.resources.resourceColours[enum]
 
-    frame.bar:SetStatusBarColor(r or color and color.r / 255 or 0, g or color and color.g / 255 or 0, b or color and color.b / 255 or 0)
+    frame.bar:SetStatusBarColor(r or color and color.r / 255 or 0, g or color and color.g / 255 or 0,
+        b or color and color.b / 255 or 0)
 end
 
 function core:CreateTargetResourceBar(parent)
@@ -25,13 +25,13 @@ function core:CreateTargetResourceBar(parent)
     frame.bg:SetPoint("CENTER");
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0);
-    frame.bg:SetSize(core.width/3 * 2, 4);
+    frame.bg:SetSize(core.width / 3 * 2, 4);
     frame.bg:SetDrawLayer("OVERLAY", -1);
 
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
     frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(core.width /3 * 2 -2, 2);
+    frame.bar:SetSize(core.width / 3 * 2 - 2, 2);
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")

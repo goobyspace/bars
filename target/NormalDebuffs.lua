@@ -2,14 +2,10 @@ local _, core = ...
 
 local frame = nil;
 
--- Matches Blizzard's default target frame debuff filter.
 local DEBUFF_FILTER_STRING = AuraUtil.AuraFilters.Harmful .. "|" .. AuraUtil.AuraFilters.IncludeNameplateOnly;
 
 local MAX_DEBUFFS = 10
 
--- PlayerDebuffs stays uncapped (at MAX_DEBUFFS) so it never flashes; ImportantDebuffs and
--- OtherDebuffs caps are derived directly from the live counts of the tiers above them, avoiding
--- the widen-then-shrink flicker that came from resetting every group to the full budget.
 local function UpdateDebuffBudgets()
     if frame == nil then return end
 
@@ -52,7 +48,6 @@ function core:CreateNormalDebuffsFrame(parent)
         })
     end
 
-    -- Priority order: your own debuffs, then important ones, then anything left, sharing a 10-icon budget.
     frame:AddAuraGroup("PlayerDebuffs", DEBUFF_FILTER_STRING, {
         initializeFrame = initializeFrame,
         candidateFilters = { isFromPlayerOrPlayerPet = true },
@@ -76,7 +71,6 @@ function core:CreateNormalDebuffsFrame(parent)
 
     UpdateDebuffBudgets();
 
-    -- AuraContainer frames can't RegisterEvent directly (forbidden aspect), so use a plain helper frame.
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     eventFrame:RegisterUnitEvent("UNIT_AURA", "target")

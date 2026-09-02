@@ -90,7 +90,7 @@ local function updateBar(target, kicked)
 end
 
 local function CachePlayerInterrupt()
-    interruptSpellID = nil -- Reset default
+    interruptSpellID = nil
 
     local specIndex = GetSpecialization()
     if not specIndex then return end
@@ -204,7 +204,7 @@ function core:CreateTargetCastbar(parent)
     frame.target:SetSize(core.width / 2, 16)
     frame.target:SetJustifyH("RIGHT")
     frame.target:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
-    -- Events
+
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")

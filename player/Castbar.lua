@@ -109,7 +109,7 @@ function core:CreatePlayerCastbar(parent)
     frame.target:SetSize(core.width / 2, 16)
     frame.target:SetJustifyH("RIGHT")
     frame.target:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
-    -- Events
+
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")

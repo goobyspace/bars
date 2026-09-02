@@ -27,8 +27,8 @@ end
 local function getResourceValue(resource)
     if not resource then return nil, nil end
 
-    local current = UnitPower("player", resource, true)
-    local max = UnitPowerMax("player", resource, true)
+    local current = UnitPower("player", resource)
+    local max = UnitPowerMax("player", resource)
     if max <= 0 then return nil end
 
     return max, current
@@ -77,7 +77,7 @@ function core:CreatePrimaryBar(parent)
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
     frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(core.width-2, 2);
+    frame.bar:SetSize(core.width - 2, 2);
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
@@ -86,7 +86,7 @@ function core:CreatePrimaryBar(parent)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterEvent("UNIT_POWER_FREQUENT")
+    frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
     frame:RegisterUnitEvent("UNIT_MAXPOWER", "player")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")

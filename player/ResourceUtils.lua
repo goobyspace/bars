@@ -28,7 +28,8 @@ core.resources.resourceColours = {
     ["EBON_MIGHT"] = { r = 239, g = 158, b = 78 },
     ["WHIRLWIND"] = { r = 200, g = 210, b = 255 },
     ["ENRAGE"] = { r = 219, g = 145, b = 99 },
-    ["TEACHINGS"] = { r = 133, g = 255, b = 133 },
+    ["TEACHINGS"] = { r = 255, g = 41, b = 135 },
+    ["RENEWING_MIST"] = { r = 2, g = 255, b = 127 },
     ["STAGGER"] = {
         light = { r = 133, g = 255, b = 133 },
         medium = { r = 255, g = 250, b = 184 },
@@ -81,42 +82,33 @@ core.resources.primary = {
 }
 
 core.resources.secondary = {
-    ["EVOKER"] = Enum.PowerType.Essence,
-    ["MONK"]        = {
-        [270] = "TEACHINGS",   -- Mistweaver
+    ["DEATHKNIGHT"] = Enum.PowerType.Runes,
+    ["DEMONHUNTER"] = {
+        [581] = "SOUL_FRAGMENTS_VENGEANCE", -- Vengeance
+        [1480] = "SOUL_FRAGMENTS",          -- Devourer
     },
+    ["DRUID"]       = {
+        [DRUID_CAT_FORM] = Enum.PowerType.ComboPoints,
+    },
+    ["EVOKER"]      = Enum.PowerType.Essence,
+    ["HUNTER"]      = nil,
+    ["MAGE"]        = nil,
+    ["MONK"]        = {
+        [268] = "STAGGER",          -- Brewmaster
+        [269] = Enum.PowerType.Chi, -- Windwalker
+        [270] = "TEACHINGS",        -- Mistweaver
+    },
+    ["PALADIN"]     = Enum.PowerType.HolyPower,
+    ["PRIEST"]      = nil,
+    ["ROGUE"]       = Enum.PowerType.ComboPoints,
+    ["SHAMAN"]      = {
+        [263] = "MAELSTROM_WEAPON", -- Enhancement
+    },
+    ["WARLOCK"]     = Enum.PowerType.SoulShards,
     ["WARRIOR"]     = {
         [72] = "ENRAGE", -- Fury
     },
 }
-
--- core.resources.secondary = {
---     ["DEATHKNIGHT"] = Enum.PowerType.Runes,
---     ["DEMONHUNTER"] = {
---         [581] = "SOUL_FRAGMENTS_VENGEANCE", -- Vengeance
---         [1480] = "SOUL_FRAGMENTS",          -- Devourer
---     },
---     ["DRUID"]       = {
---         [DRUID_CAT_FORM] = Enum.PowerType.ComboPoints,
---     },
---     ["EVOKER"]      = Enum.PowerType.Essence,
---     ["HUNTER"]      = nil,
---     ["MAGE"]        = nil,
---     ["MONK"]        = {
---         [268] = "STAGGER",          -- Brewmaster
---         [269] = Enum.PowerType.Chi, -- Windwalker
---     },
---     ["PALADIN"]     = Enum.PowerType.HolyPower,
---     ["PRIEST"]      = nil,
---     ["ROGUE"]       = Enum.PowerType.ComboPoints,
---     ["SHAMAN"]      = {
---         [263] = "MAELSTROM_WEAPON", -- Enhancement
---     },
---     ["WARLOCK"]     = Enum.PowerType.SoulShards,
---     ["WARRIOR"]     = {
---         [72] = "ENRAGE", -- Fury
---     },
--- }
 
 core.resources.tertiary = {
     ["DEATHKNIGHT"] = nil,
@@ -133,7 +125,9 @@ core.resources.tertiary = {
     },
     ["HUNTER"]      = nil,
     ["MAGE"]        = nil,
-    ["MONK"]        = nil,
+    ["MONK"]        = {
+        [270] = "RENEWING_MIST", -- Mistweaver
+    },
     ["PALADIN"]     = nil,
     ["PRIEST"]      = {
         [258] = Enum.PowerType.Mana, -- Shadow

@@ -14,6 +14,8 @@ player/ResourceUtils.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
+player/TertiaryResource.lua
+player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
 

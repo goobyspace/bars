@@ -38,29 +38,68 @@ function core:InitializeBarFrames()
         primaryResourceBar:SetPoint("BOTTOM")
 
         local secondaryResourceBar = core:CreateSecondaryBar(playerFrame);
-        if secondaryResourceBar then
-            secondaryResourceBar:SetPoint("BOTTOM", 0, 9);
-        end
+        local tertiaryResourceBar = core:CreateTertiaryBar(playerFrame);
 
         local castbar = core:CreatePlayerCastbar(playerFrame)
         castbar:SetPoint("CENTER", 0, -74)
 
-        local tertiaryHeight = secondaryResourceBar:IsShown() and 18 or 9;
-
         local hpBar = core:CreateHPBar(playerFrame);
+        local petFrame = core:CreatePetFrame(playerFrame);
 
+        local secondaryShown = false;
+        local tertiaryShown = false;
 
-        function secondaryResourceBar:SetHidden(hidden)
-            if hidden then
-                secondaryResourceBar:Hide();
-                tertiaryHeight = 9;
-            else
-                secondaryResourceBar:Show();
-                tertiaryHeight = 18;
+        local function updateLayout()
+            -- 9 is the line height for a single resource bar row
+            local offset = 9;
+
+            if secondaryShown then
+                secondaryResourceBar:SetPoint("BOTTOM", 0, 9);
+                offset = offset + 9;
             end
+
             -- 34 is half of the HP bars total size
-            hpBar:SetPoint("BOTTOM", core.width / 3, tertiaryHeight)
+            hpBar:SetPoint("BOTTOM", core.width / 3, offset);
+
+            -- tertiary resource shares the HP bar's line, mirroring its width, aligned left
+            tertiaryResourceBar:SetPoint("BOTTOM", -core.width / 3, offset);
+
+            -- pet sits on the same line as the HP bar, unless a tertiary resource is
+            -- taking up that line, in which case it moves up one line to stay clear of it
+            if tertiaryShown then
+                petFrame:SetPoint("BOTTOM", -core.width / 3, offset + 9);
+            else
+                petFrame:SetPoint("BOTTOM", -core.width / 3, offset);
+            end
         end
+
+        if secondaryResourceBar then
+            function secondaryResourceBar:SetHidden(hidden)
+                if hidden then
+                    secondaryResourceBar:Hide();
+                    secondaryShown = false;
+                else
+                    secondaryResourceBar:Show();
+                    secondaryShown = true;
+                end
+                updateLayout();
+            end
+        end
+
+        if tertiaryResourceBar then
+            function tertiaryResourceBar:SetHidden(hidden)
+                if hidden then
+                    tertiaryResourceBar:Hide();
+                    tertiaryShown = false;
+                else
+                    tertiaryResourceBar:Show();
+                    tertiaryShown = true;
+                end
+                updateLayout();
+            end
+        end
+
+        updateLayout();
     end
 
     -- targetframe

@@ -126,7 +126,7 @@ function core:CreateTargetTargetHPBar(parent)
 
     frame.name = frame.bar:CreateFontString("PrimaryText");
     frame.name:SetDrawLayer("OVERLAY", 1);
-    frame.name:SetPoint("RIGHT", 0, -3);
+    frame.name:SetPoint("RIGHT", 0, -5);
     frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
 
     frame.click = CreateFrame("Button", "TargetFrameClick", frame, "SecureActionButtonTemplate")

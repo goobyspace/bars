@@ -7,8 +7,8 @@ function core:CreateImportantDebuffsFrame(parent)
     frame:SetSize(66, 66)
     frame:SetPoint("CENTER", 0, 0)
     frame:SetUnit("target")
-    -- maximumLineSize is a pixel extent, not an icon count - 2 icons wide at 32px each.
-    frame:SetFlowLayoutMaximumLineSize(64)
+    -- this is pixel count not icon count for some dumb reason so this = overflow once you reach 68 pixels
+    frame:SetFlowLayoutMaximumLineSize(68)
     frame:SetFlowLayoutAnchorPoint("TOPRIGHT")
     frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
 
@@ -43,7 +43,6 @@ function core:CreateImportantDebuffsFrame(parent)
             layout = { layoutIndex = 3 },
         })
 
-    -- Exclude defensive categories because an aura can be both important and defensive.
     frame:AddAuraGroup("OffensiveCooldowns",
         AuraUtil.AuraFilters.Helpful .. "|" .. AuraUtil.AuraFilters.Important
         .. "|!" .. AuraUtil.AuraFilters.BigDefensive
@@ -53,7 +52,6 @@ function core:CreateImportantDebuffsFrame(parent)
             layout = { layoutIndex = 4 },
         })
 
-    -- AuraContainers don't automatically refresh on target swap; force it like Blizzard's TargetFrameMixin does.
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     eventFrame:SetScript("OnEvent", function()
