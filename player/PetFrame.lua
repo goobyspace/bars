@@ -6,14 +6,13 @@ local function updateBar()
     if not frame then return end;
 
     if not UnitExists("pet") then
-        return frame:Hide();
+        return;
     end
-    frame:Show();
 
     local maxHP = UnitHealthMax("pet");
     local currentHP = UnitHealth("pet", true);
-    if not maxHP or maxHP <= 0 then
-        return frame:Hide();
+    if not maxHP or (not issecretvalue(maxHP) and maxHP <= 0) then
+        return;
     end
 
     frame.hpBar:SetMinMaxValues(0, maxHP, Enum.StatusBarInterpolation.ExponentialEaseOut);
@@ -27,7 +26,7 @@ local function updateBar()
     end
 
     local maxPower = UnitPowerMax("pet", powerType);
-    if not maxPower or maxPower <= 0 then
+    if not maxPower or (not issecretvalue(maxPower) and maxPower <= 0) then
         frame.powerBar:Hide();
         frame.powerBg:Hide();
         return;
@@ -47,7 +46,7 @@ local function updateBar()
 end
 
 function core:CreatePetFrame(parent)
-    frame = CreateFrame("Frame", "PetFrameContainer", parent)
+    frame = CreateFrame("Frame", "PetFrameContainer", parent, "SecureHandlerStateTemplate")
     frame:SetSize(core.width / 3, 6);
 
     frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate")
@@ -98,6 +97,9 @@ function core:CreatePetFrame(parent)
     frame:SetScript("OnEvent", function()
         updateBar();
     end)
+
+    frame:SetAttribute("unit", "pet")
+    RegisterUnitWatch(frame, false)
 
     return frame;
 end

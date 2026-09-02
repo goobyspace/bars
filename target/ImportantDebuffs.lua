@@ -54,6 +54,7 @@ function core:CreateImportantDebuffsFrame(parent)
 
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
     eventFrame:SetScript("OnEvent", function()
         frame:UpdateAllAuras()
     end)

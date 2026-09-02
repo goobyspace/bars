@@ -73,10 +73,8 @@ function core:CreateNormalDebuffsFrame(parent)
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
-    eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_TARGET_CHANGED" then
-            frame:UpdateAllAuras()
-        end
+    eventFrame:SetScript("OnEvent", function()
+        frame:UpdateAllAuras()
         UpdateDebuffBudgets()
     end)
 

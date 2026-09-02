@@ -93,11 +93,12 @@ function core:CreateMainBuffsFrame(parent)
     eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
     eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
     eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_TARGET_CHANGED" then
-            frame:UpdateAllAuras()
-        else
+        if event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" then
             UpdateKnowsPurge()
+        else
+            frame:UpdateAllAuras()
         end
     end)
 
