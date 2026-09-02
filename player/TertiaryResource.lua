@@ -74,8 +74,8 @@ local function updateRenewingMistBar()
     local chargeInfo = C_Spell.GetSpellCharges(RENEWING_MIST);
     if not chargeInfo then return end;
 
-    -- maxCharges is not secret, so it is safe to use for layout. currentCharges is only
-    -- passed into StatusBar values below.
+    -- maxCharges is not secret, so it is safe to use for layout. currentCharges and
+    -- the recharge duration object are only passed into status bar APIs below.
     local maxCharges = math.min(chargeInfo.maxCharges, #tracker.bars);
     if maxCharges <= 0 then
         frame:SetScript("OnUpdate", nil);
@@ -86,6 +86,25 @@ local function updateRenewingMistBar()
 
     local segmentGap = 2;
     local segmentBgWidth = ((core.width / 3) - (segmentGap * (maxCharges - 1))) / maxCharges;
+
+    tracker.anchorBar:ClearAllPoints();
+    tracker.anchorBar:SetSize(maxCharges * (segmentBgWidth + segmentGap), 4);
+    tracker.anchorBar:SetPoint("LEFT", frame, "LEFT", 1, 0);
+    tracker.anchorBar:SetMinMaxValues(0, maxCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    tracker.anchorBar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    tracker.anchorBar:Show();
+
+    local rechargeDuration = C_Spell.GetSpellChargeDuration(RENEWING_MIST);
+    if rechargeDuration then
+        tracker.cooldownBar:ClearAllPoints();
+        tracker.cooldownBar:SetSize(segmentBgWidth - 2, 4);
+        tracker.cooldownBar:SetPoint("LEFT", tracker.anchorBar:GetStatusBarTexture(), "RIGHT");
+        tracker.cooldownBar:SetTimerDuration(rechargeDuration, Enum.StatusBarInterpolation.ExponentialEaseOut,
+            Enum.StatusBarTimerDirection.ElapsedTime);
+        tracker.cooldownBar:Show();
+    else
+        tracker.cooldownBar:Hide();
+    end
 
     for i, bar in ipairs(tracker.bars) do
         if i <= maxCharges then
@@ -222,6 +241,21 @@ local trackerBuilders = {
         -- only as many bars as the real (talent-dependent) max charges calls for.
         tracker.bgs = {};
         tracker.bars = {};
+
+        tracker.anchorBar = CreateFrame("StatusBar", nil, frame);
+        tracker.anchorBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
+        tracker.anchorBar:SetStatusBarColor(0, 0, 0, 0);
+        tracker.anchorBar:SetAlpha(0);
+        tracker.anchorBar:Hide();
+
+        tracker.cooldownBar = CreateFrame("StatusBar", nil, frame);
+        tracker.cooldownBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
+        tracker.cooldownBar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+        tracker.cooldownBar:SetMinMaxValues(0, 1);
+        tracker.cooldownBar:Hide();
+
+        table.insert(tracker.visuals, tracker.anchorBar);
+        table.insert(tracker.visuals, tracker.cooldownBar);
 
         for i = 1, RENEWING_MIST_MAX_SEGMENTS do
             local bg = frame:CreateTexture();

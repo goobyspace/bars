@@ -5,7 +5,7 @@ local frame = nil;
 local function updateBar()
     if not frame then return end;
 
-    if not UnitExists("pet") or UnitIsUnit("pet", "vehicle") then
+    if not UnitExists("pet") then
         return frame:Hide();
     end
     frame:Show();
