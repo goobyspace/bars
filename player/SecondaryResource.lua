@@ -5,8 +5,14 @@ local frame;
 local TEACHINGS_OF_THE_MONASTERY = 202090;
 local TEACHINGS_MAX_STACKS = 4;
 local ENRAGE = 184362;
-local SOUL_FRAGMENTS = 203981;
-local SOUL_FRAGMENTS_MAX_STACKS = 5;
+local VENGEANCE_SOUL_FRAGMENTS = 203981;
+local DEVOURER_SOUL_FRAGMENTS = 1225789;
+local VENGEANCE_SOUL_FRAGMENTS_MAX_STACKS = 6;
+local SOUL_GLUTTON = 1247534;
+local SURRENDER_TO_THE_VOID = 1261423;
+local DEVOURER_SOUL_FRAGMENTS_BASE_MAX = 50;
+local DEVOURER_SOUL_GLUTTON_REDUCTION = 15;
+local DEVOURER_SURRENDER_TO_THE_VOID_BONUS = 50;
 local MAELSTROM_WEAPON = 344179;
 local MAELSTROM_WEAPON_MAX_STACKS = 10;
 local STAGGER_YELLOW_TRANSITION = 0.30;
@@ -27,7 +33,7 @@ local CLASS_EVENTS = {
     ["DRUID"]       = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["EVOKER"]      = { { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["MONK"]        = { { "UNIT_AURA", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" }, { "UNIT_HEALTH", "player" } },
-    ["PALADIN"]     = { { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
+    ["PALADIN"]     = { { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["ROGUE"]       = { { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["SHAMAN"]      = { { "UNIT_AURA", "player" } },
     ["WARLOCK"]     = { { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
@@ -150,6 +156,10 @@ local function updateCountBar(resource)
 
     local current = UnitPower("player", resource) or 0;
     local max = UnitPowerMax("player", resource);
+
+    print(current)
+    print(max)
+
     if not max or max <= 0 then return end;
 
     local gap = 4;
@@ -221,6 +231,32 @@ local function updateStaggerBar()
     tracker.bar:SetValue(stagger, Enum.StatusBarInterpolation.ExponentialEaseOut);
 end
 
+-- Devourer's max fragments depends on talents/pvp talents currently active, unlike Vengeance's fixed 6
+local function getDevourerSoulFragmentsMax()
+    local max = DEVOURER_SOUL_FRAGMENTS_BASE_MAX;
+    if C_SpellBook.IsSpellKnown(SOUL_GLUTTON) then
+        max = max - DEVOURER_SOUL_GLUTTON_REDUCTION;
+    end
+    if C_SpellBook.IsSpellKnown(SURRENDER_TO_THE_VOID) then
+        max = max + DEVOURER_SURRENDER_TO_THE_VOID_BONUS;
+    end
+    return max;
+end
+
+local function updateSoulFragmentsBar()
+    local tracker = frame.trackers["SOUL_FRAGMENTS"];
+    if not tracker or not tracker.bar then return end;
+
+    local current = 0;
+    local aura = C_UnitAuras.GetPlayerAuraBySpellID(DEVOURER_SOUL_FRAGMENTS);
+    if aura then
+        current = aura.applications or 0;
+    end
+
+    tracker.bar:SetMinMaxValues(0, getDevourerSoulFragmentsMax());
+    tracker.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
+end
+
 local function updateBar()
     local resource = getResource()
     if not resource then return end;
@@ -231,6 +267,8 @@ local function updateBar()
         updateCountBar(resource);
     elseif resource == "STAGGER" then
         updateStaggerBar();
+    elseif resource == "SOUL_FRAGMENTS" then
+        updateSoulFragmentsBar();
     end
 end
 
@@ -378,23 +416,41 @@ local trackerBuilders = {
     end,
 
     ["SOUL_FRAGMENTS_VENGEANCE"] = function(tracker)
-        local segmentWidth = (core.width - 2) / SOUL_FRAGMENTS_MAX_STACKS;
-        for i = 1, SOUL_FRAGMENTS_MAX_STACKS do
+        -- mirrors the 410px source texture (six 65px segments, five 4px gaps) scaled to the bar's actual width
+        local scale = (core.width - 2) / 410;
+        local segmentWidth = 65 * scale;
+        local gapWidth = 4 * scale;
+        for i = 1, VENGEANCE_SOUL_FRAGMENTS_MAX_STACKS do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth - 1, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
+            bars:SetSize(segmentWidth, 6);
+            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + gapWidth), 0);
             table.insert(tracker.visuals, bars);
         end
 
-        tracker.container = createAuraTracker(SOUL_FRAGMENTS, function(button)
-            local bar = createTrackerBar(button, "SOUL_FRAGMENTS");
+        tracker.container = createAuraTracker(VENGEANCE_SOUL_FRAGMENTS, function(button)
+            local bar = createTrackerBar(button, "SOUL_FRAGMENTS_VENGEANCE",
+                "Interface/Addons/Bars/assets/transparent six segment bar.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = SOUL_FRAGMENTS_MAX_STACKS,
+                maxApplications = VENGEANCE_SOUL_FRAGMENTS_MAX_STACKS,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
+    end,
+
+    ["SOUL_FRAGMENTS"] = function(tracker)
+        local bg = frame:CreateTexture();
+        bg:SetPoint("CENTER");
+        bg:SetTexture(134532)
+        bg:SetColorTexture(0, 0, 0);
+        bg:SetSize(core.width, 6);
+        bg:SetDrawLayer("OVERLAY", -1);
+        table.insert(tracker.visuals, bg);
+
+        local button = CreateFrame("Frame", nil, frame);
+        tracker.bar = createTrackerBar(button, "SOUL_FRAGMENTS");
+        table.insert(tracker.visuals, button);
     end,
 
     ["MAELSTROM_WEAPON"] = function(tracker)
@@ -417,8 +473,6 @@ local trackerBuilders = {
         end);
     end,
 };
-
-trackerBuilders["SOUL_FRAGMENTS"] = trackerBuilders["SOUL_FRAGMENTS_VENGEANCE"];
 
 -- tldr if you switch spec and a tracker isnt relevant anymore hide it
 -- if a tracker is now relevant but we havent created it go make it otherwise show it

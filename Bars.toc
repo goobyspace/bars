@@ -7,7 +7,7 @@
 ## Author: gooby.space
 ## X-Curse-Project-ID: -
 ## X-Wago-ID: -
-## Category: User Interface
+## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
 player/ResourceUtils.lua
