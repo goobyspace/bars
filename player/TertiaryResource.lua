@@ -4,8 +4,9 @@ local frame;
 
 local IMPROVED_WHIRLWIND = 85739;
 local IMPROVED_WHIRLWIND_MAX_STACKS = 4;
-local EBON_MIGHT = 395152;
+local EBON_MIGHT = 395296;
 local RENEWING_MIST = 115151;
+local RENEWING_MIST_MAX_SEGMENTS = 4; -- highest realistic charge cap; actual max can change via talents
 
 local CLASS_EVENTS = {
     ["DRUID"]   = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
@@ -70,6 +71,21 @@ local function updateRenewingMistBar()
 
     tracker.bar:SetMinMaxValues(0, chargeInfo.maxCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.bar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
+
+    -- maxCharges isn't secret (only currentCharges can be), so it's safe to compare/resize with -
+    -- reposition the divider segments to match in case a talent changed the real max
+    local maxCharges = math.min(chargeInfo.maxCharges, #tracker.segments);
+    local segmentWidth = (core.width / 3 - 2) / maxCharges;
+    for i, divider in ipairs(tracker.segments) do
+        if i <= maxCharges then
+            divider:ClearAllPoints();
+            divider:SetSize(segmentWidth - 1, 6);
+            divider:SetPoint("LEFT", frame, "LEFT", (i - 1) * segmentWidth, 0);
+            divider:Show();
+        else
+            divider:Hide();
+        end
+    end
 end
 
 local function updateBar()
@@ -180,17 +196,12 @@ local trackerBuilders = {
     end,
 
     ["RENEWING_MIST"] = function(tracker)
-        local segmentWidth = core.width / 9;
-        -- never secret
-        local charges = C_Spell.GetSpellCharges(RENEWING_MIST)
-        for i = 1, charges.maxCharges do
-            local bars = frame:CreateTexture(nil, "OVERLAY");
-            bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth - 1, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
-            table.insert(tracker.visuals, bars);
-        end
-
+        tracker.bg = frame:CreateTexture();
+        tracker.bg:SetPoint("CENTER");
+        tracker.bg:SetTexture(134532)
+        tracker.bg:SetColorTexture(0, 0, 0);
+        tracker.bg:SetSize(core.width / 3, 6);
+        tracker.bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, tracker.bg);
 
         tracker.bar = CreateFrame("StatusBar", nil, frame);
@@ -202,6 +213,17 @@ local trackerBuilders = {
         local color = core.resources.resourceColours["RENEWING_MIST"];
         tracker.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
         table.insert(tracker.visuals, tracker.bar);
+
+        -- built up front for the highest realistic cap; updateRenewingMistBar shows/positions
+        -- only as many of these as the real (talent-dependent) max charges calls for
+        tracker.segments = {};
+        for i = 1, RENEWING_MIST_MAX_SEGMENTS do
+            local divider = frame:CreateTexture(nil, "OVERLAY");
+            divider:SetColorTexture(0, 0, 0);
+            divider:Hide();
+            table.insert(tracker.segments, divider);
+            table.insert(tracker.visuals, divider);
+        end
     end,
 };
 
