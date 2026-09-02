@@ -1,0 +1,111 @@
+local _, core = ...
+
+local frame = nil;
+
+-- Known purge/spellsteal spells used to gate the purgeable-buff outline.
+local PURGE_SPELL_IDS = {
+    528,    -- dispel magic
+    370,    -- purge
+    30449,  -- spellsteal
+    378438, -- scouring flame
+};
+
+local buffButtons = {};
+local knowsPurge = false;
+
+local function CheckKnowsPurge()
+    for _, spellID in ipairs(PURGE_SPELL_IDS) do
+        if C_SpellBook.IsSpellKnown(spellID) then
+            return true;
+        end
+    end
+    return false;
+end
+
+local function ApplyPurgeBorder(button)
+    if knowsPurge then
+        if not button.purgeBorderIndex then
+            button.purgeBorderIndex = button:AddDispelTypeTexture(button.PurgeBorder, {
+                style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+                showWhenHelpful = true,
+                showWhenHarmful = false,
+                showWithoutDispelType = true,
+                stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
+            });
+        end
+    elseif button.purgeBorderIndex then
+        button:RemoveDispelTypeTexture(button.purgeBorderIndex);
+        button.purgeBorderIndex = nil;
+    end
+end
+
+local function UpdateKnowsPurge()
+    local updated = CheckKnowsPurge();
+    if updated ~= knowsPurge then
+        knowsPurge = updated;
+        for _, button in ipairs(buffButtons) do
+            ApplyPurgeBorder(button);
+        end
+    end
+end
+
+local MAX_BUFFS = 16
+
+function core:CreateMainBuffsFrame(parent)
+    frame = CreateFrame("AuraContainer", "TargetMainBuffAuraContainer", parent, "CustomAuraContainerTemplate")
+    frame:SetSize(14, 14)
+    frame:SetUnit("target")
+    -- 8 icons per row: 8 * 14px icons + 7 * 2px gaps.
+    frame:SetFlowLayoutMaximumLineSize(126)
+
+    local function initializeFrame(button)
+        local icon = button:CreateTexture(nil, "OVERLAY")
+        icon:SetAllPoints()
+        button:SetIcon(icon)
+        button:SetSize(14, 14)
+
+        local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
+        cooldown:SetAllPoints()
+        cooldown:SetHideCountdownNumbers(true)
+        button:SetDurationCooldown(cooldown)
+
+        button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
+        button.PurgeBorder:SetPoint("TOPLEFT")
+        button.PurgeBorder:SetPoint("BOTTOMRIGHT")
+        button.PurgeBorder:SetColorTexture(1, 1, 1, 1)
+
+        table.insert(buffButtons, button)
+        ApplyPurgeBorder(button)
+    end
+
+    -- Matches Blizzard's default target frame buff filter (all buffs, unfiltered), in one group so
+    -- priority buffs (HoTs, CC, etc.) sort ahead of the rest instead of needing manual budgeting.
+    -- ProcessAura populates auraData.isPriorityAura, which AuraContainerSortMethod.Default reads.
+    frame:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, { ignoreDebuffs = true })
+
+    frame:AddAuraGroup("Buffs", AuraUtil.AuraFilters.Helpful, {
+        initializeFrame = initializeFrame,
+        sortMethod = AuraContainerSortMethod.Default,
+        maxFrameCount = MAX_BUFFS,
+        -- Spacing keeps adjacent purge borders from touching and merging into one outline.
+        layout = { elementSpacing = 2 },
+    })
+
+    knowsPurge = CheckKnowsPurge();
+
+    -- AuraContainers don't automatically refresh on target swap; force it like Blizzard's TargetFrameMixin does.
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
+    eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    eventFrame:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_TARGET_CHANGED" then
+            frame:UpdateAllAuras()
+        else
+            UpdateKnowsPurge()
+        end
+    end)
+
+    return frame
+end

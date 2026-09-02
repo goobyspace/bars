@@ -42,6 +42,9 @@ function core:InitializeBarFrames()
             secondaryResourceBar:SetPoint("BOTTOM", 0, 9);
         end
 
+        local castbar = core:CreatePlayerCastbar(playerFrame)
+        castbar:SetPoint("CENTER", 0, -74)
+
         local tertiaryHeight = secondaryResourceBar:IsShown() and 18 or 9;
 
         local hpBar = core:CreateHPBar(playerFrame);
@@ -71,10 +74,10 @@ function core:InitializeBarFrames()
         targetFrame:SetPoint("CENTER", 0, -120);
 
         -- debug BG to show the size of click frame
-        targetFrame.bg = targetFrame:CreateTexture();
-        targetFrame.bg:SetPoint("CENTER");
-        targetFrame.bg:SetColorTexture(0, 0, 0, 0.1);
-        targetFrame.bg:SetSize(core.width, core.targetHeight);
+        -- targetFrame.bg = targetFrame:CreateTexture();
+        -- targetFrame.bg:SetPoint("CENTER");
+        -- targetFrame.bg:SetColorTexture(0, 0, 0, 0.1);
+        -- targetFrame.bg:SetSize(core.width, core.targetHeight);
 
         targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
         targetFrame.click:SetPoint("CENTER");
@@ -98,6 +101,15 @@ function core:InitializeBarFrames()
 
         local castbar = core:CreateTargetCastbar(targetFrame)
         castbar:SetPoint("CENTER", 0, -29)
+
+        local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame)
+        BigDebuffs:SetPoint("TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0)
+
+        local mainBuffs = core:CreateMainBuffsFrame(targetFrame)
+        mainBuffs:SetPoint("TOPLEFT", hpBar, "TOPRIGHT", 4, -7)
+
+        local normalDebuffs = core:CreateNormalDebuffsFrame(targetFrame)
+        normalDebuffs:SetPoint("BOTTOMLEFT", mainBuffs, "TOPLEFT", 0, 8)
 
         -- taint safe way to hide/show this depending on target
         targetFrame:SetAttribute("unit", "target")
