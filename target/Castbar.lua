@@ -225,7 +225,7 @@ function core:CreateTargetCastbar(parent)
         if event == "UNIT_SPELLCAST_INTERRUPTED" then
             -- if kickedBy is not an ID we still wanna make it clear the cast was stopped
             updateBar(target, kickedBy or false)
-        elseif event == "UNIT_SPELLCAST_CHANNEL_START" or event == "EVENT_SPELLCAST_CHANNEL_STOP" or event == "EVENT_SPELLCAST_CHANNEL_UPDATE" or event == "EVENT_SPELLCAST_START" or event == "EVENT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_DELAYED" then
+        elseif event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_DELAYED" then
             updateBar(target, nil)
         else
             updateBar()
