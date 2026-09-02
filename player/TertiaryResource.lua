@@ -141,16 +141,8 @@ local trackerBuilders = {
     end,
 
     ["WHIRLWIND"] = function(tracker)
-        local bg = frame:CreateTexture();
-        bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
-        bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(core.width / 3, 6);
-        bg:SetDrawLayer("OVERLAY", -1);
-        table.insert(tracker.visuals, bg);
-
         local segmentWidth = (core.width / 3 - 2) / IMPROVED_WHIRLWIND_MAX_STACKS;
-        for i = 1, IMPROVED_WHIRLWIND_MAX_STACKS do
+        for i = 1, 4 do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
             bars:SetSize(segmentWidth - 1, 6);
@@ -190,8 +182,8 @@ local trackerBuilders = {
     ["RENEWING_MIST"] = function(tracker)
         local segmentWidth = core.width / 9;
         -- never secret
-        local maxCharges = C_Spell.GetSpellCharges(RENEWING_MIST)
-        for i = 1, maxCharges do
+        local charges = C_Spell.GetSpellCharges(RENEWING_MIST)
+        for i = 1, charges.maxCharges do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
             bars:SetSize(segmentWidth - 1, 6);
@@ -259,6 +251,9 @@ function core:CreateTertiaryBar(parent)
     frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
+    -- talent changes can raise/lower a resource's max (eg. renewing mist charges) without a spec change
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+    frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
     for _, event in ipairs(CLASS_EVENTS[playerClass] or {}) do
         if event[2] then

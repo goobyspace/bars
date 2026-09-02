@@ -244,9 +244,10 @@ local function updateColour()
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
         end
     elseif COUNT_RESOURCES[resource] then
+        -- UnitPowerMax can still report the previous spec's cap for a moment after
+        -- PLAYER_SPECIALIZATION_CHANGED fires, so colour every possible segment instead
         local color = core.resources.resourceColours[resource];
-        local max = UnitPowerMax("player", resource) or MAX_COUNT_SEGMENTS;
-        for i = 1, max do
+        for i = 1, MAX_COUNT_SEGMENTS do
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
         end
     end
@@ -465,6 +466,9 @@ function core:CreateSecondaryBar(parent)
     frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
+    -- talent changes can raise/lower a resource's max (eg. chi charges) without a spec change
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
+    frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
     for _, event in ipairs(CLASS_EVENTS[playerClass] or {}) do
         if event[2] then

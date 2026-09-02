@@ -26,8 +26,8 @@ core.resources.resourceColours = {
     ["SOUL_FRAGMENTS"] = { r = 157, g = 98, b = 209 },
     ["MAELSTROM_WEAPON"] = { r = 70, g = 178, b = 255 },
     ["EBON_MIGHT"] = { r = 239, g = 158, b = 78 },
-    ["WHIRLWIND"] = { r = 200, g = 210, b = 255 },
-    ["ENRAGE"] = { r = 219, g = 145, b = 99 },
+    ["WHIRLWIND"] = { r = 252, g = 205, b = 53 },
+    ["ENRAGE"] = { r = 242, g = 106, b = 33 },
     ["TEACHINGS"] = { r = 255, g = 41, b = 135 },
     ["RENEWING_MIST"] = { r = 2, g = 255, b = 127 },
     ["STAGGER"] = {
