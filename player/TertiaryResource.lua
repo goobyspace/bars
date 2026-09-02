@@ -64,26 +64,46 @@ end
 
 local function updateRenewingMistBar()
     local tracker = frame.trackers["RENEWING_MIST"];
-    if not tracker or not tracker.bar then return end;
+    if getResource() ~= "RENEWING_MIST" then
+        frame:SetScript("OnUpdate", nil);
+        return
+    end
+
+    if not tracker or not tracker.bars then return end;
 
     local chargeInfo = C_Spell.GetSpellCharges(RENEWING_MIST);
     if not chargeInfo then return end;
 
-    tracker.bar:SetMinMaxValues(0, chargeInfo.maxCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
-    tracker.bar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    -- maxCharges is not secret, so it is safe to use for layout. currentCharges is only
+    -- passed into StatusBar values below.
+    local maxCharges = math.min(chargeInfo.maxCharges, #tracker.bars);
+    if maxCharges <= 0 then
+        frame:SetScript("OnUpdate", nil);
+        return
+    end
 
-    -- maxCharges isn't secret (only currentCharges can be), so it's safe to compare/resize with -
-    -- reposition the divider segments to match in case a talent changed the real max
-    local maxCharges = math.min(chargeInfo.maxCharges, #tracker.segments);
-    local segmentWidth = (core.width / 3 - 2) / maxCharges;
-    for i, divider in ipairs(tracker.segments) do
+    frame:SetScript("OnUpdate", nil);
+
+    local segmentGap = 2;
+    local segmentBgWidth = ((core.width / 3) - (segmentGap * (maxCharges - 1))) / maxCharges;
+
+    for i, bar in ipairs(tracker.bars) do
         if i <= maxCharges then
-            divider:ClearAllPoints();
-            divider:SetSize(segmentWidth - 1, 6);
-            divider:SetPoint("LEFT", frame, "LEFT", (i - 1) * segmentWidth, 0);
-            divider:Show();
+            local bg = tracker.bgs[i];
+            bg:ClearAllPoints();
+            bg:SetSize(segmentBgWidth, 6);
+            bg:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentBgWidth + segmentGap), 0);
+            bg:Show();
+
+            bar:ClearAllPoints();
+            bar:SetSize(segmentBgWidth - 2, 4);
+            bar:SetPoint("LEFT", frame, "LEFT", 1 + (i - 1) * (segmentBgWidth + segmentGap), 0);
+            bar:SetMinMaxValues(i - 1, i, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            bar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            bar:Show();
         else
-            divider:Hide();
+            tracker.bgs[i]:Hide();
+            bar:Hide();
         end
     end
 end
@@ -196,33 +216,31 @@ local trackerBuilders = {
     end,
 
     ["RENEWING_MIST"] = function(tracker)
-        tracker.bg = frame:CreateTexture();
-        tracker.bg:SetPoint("CENTER");
-        tracker.bg:SetTexture(134532)
-        tracker.bg:SetColorTexture(0, 0, 0);
-        tracker.bg:SetSize(core.width / 3, 6);
-        tracker.bg:SetDrawLayer("OVERLAY", -1);
-        table.insert(tracker.visuals, tracker.bg);
-
-        tracker.bar = CreateFrame("StatusBar", nil, frame);
-        tracker.bar:SetStatusBarTexture("Interface/Addons/Bars/assets/three segment bar small.png");
-        tracker.bar:SetPoint("CENTER");
-        tracker.bar:SetSize(core.width / 3 - 2, 4);
-        tracker.bar:SetMinMaxValues(0, 1);
-        tracker.bar:SetValue(0);
         local color = core.resources.resourceColours["RENEWING_MIST"];
-        tracker.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
-        table.insert(tracker.visuals, tracker.bar);
 
-        -- built up front for the highest realistic cap; updateRenewingMistBar shows/positions
-        -- only as many of these as the real (talent-dependent) max charges calls for
-        tracker.segments = {};
+        -- Built up front for the highest realistic cap; updateRenewingMistBar shows/positions
+        -- only as many bars as the real (talent-dependent) max charges calls for.
+        tracker.bgs = {};
+        tracker.bars = {};
+
         for i = 1, RENEWING_MIST_MAX_SEGMENTS do
-            local divider = frame:CreateTexture(nil, "OVERLAY");
-            divider:SetColorTexture(0, 0, 0);
-            divider:Hide();
-            table.insert(tracker.segments, divider);
-            table.insert(tracker.visuals, divider);
+            local bg = frame:CreateTexture();
+            bg:SetTexture(134532)
+            bg:SetColorTexture(0, 0, 0);
+            bg:SetDrawLayer("OVERLAY", -1);
+            bg:Hide();
+
+            local bar = CreateFrame("StatusBar", nil, frame);
+            bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
+            bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+            bar:SetMinMaxValues(i - 1, i);
+            bar:SetValue(0);
+            bar:Hide();
+
+            table.insert(tracker.bgs, bg);
+            table.insert(tracker.visuals, bg);
+            table.insert(tracker.bars, bar);
+            table.insert(tracker.visuals, bar);
         end
     end,
 };
