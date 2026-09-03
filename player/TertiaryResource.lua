@@ -27,7 +27,7 @@ local function getResource()
     local resource = resourceTable[playerClass];
 
     if playerClass == "DRUID" then
-        local formID = GetShapeshiftFormID() or 0
+        local formID = core:GetShapeshiftFormKey()
         resource = resource and resource[formID]
     end
 
@@ -330,11 +330,7 @@ function core:CreateTertiaryBar(parent)
     frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
     for _, event in ipairs(CLASS_EVENTS[playerClass] or {}) do
-        if event[2] then
-            frame:RegisterUnitEvent(event[1], event[2])
-        else
-            frame:RegisterEvent(event[1])
-        end
+        core:SafeRegisterEvent(frame, event[1], event[2])
     end
 
     local hidden = true;

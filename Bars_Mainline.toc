@@ -1,0 +1,33 @@
+## Interface: 120100
+## Title: Bars
+## Notes: Party & target replacement with bars
+## Version: @project-version@
+## DefaultState: enabled
+## SavedVariables: BarsGlobalVariables
+## Author: gooby.space
+## X-Curse-Project-ID: -
+## X-Wago-ID: -
+## Category: Unit Frames
+## IconTexture: Interface\FrameGeneral\UIFrameBars
+
+player/ResourceUtils.lua
+player/HPBar.lua
+player/PrimaryResource.lua
+player/SecondaryResource.lua
+player/TertiaryResource.lua
+player/PetFrame.lua
+player/Widgets.lua
+player/Castbar.lua
+
+target/HPBar.lua
+target/Widgets.lua
+target/ResourceBar.lua
+target/TargetOfTarget.lua
+target/retail/Interrupts.lua
+target/Castbar.lua
+target/retail/ImportantDebuffs.lua
+target/retail/MainBuffs.lua
+target/retail/NormalDebuffs.lua
+
+BarFrames.lua
+Init.lua

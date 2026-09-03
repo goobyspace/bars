@@ -1,32 +1,3 @@
-## Interface: 120100
-## Title: Bars
-## Notes: Party & target replacement with bars
-## Version: @project-version@
-## DefaultState: enabled
-## SavedVariables: BarsGlobalVariables
-## Author: gooby.space
-## X-Curse-Project-ID: -
-## X-Wago-ID: -
-## Category: Unit Frames
-## IconTexture: Interface\FrameGeneral\UIFrameBars
+# superseded by Bars_Mainline.toc (retail) and Bars_Classic.toc (Classic Era); WoW loads
+# whichever flavor-suffixed TOC matches the client, so this file is no longer used
 
-player/ResourceUtils.lua
-player/HPBar.lua
-player/PrimaryResource.lua
-player/SecondaryResource.lua
-player/TertiaryResource.lua
-player/PetFrame.lua
-player/Widgets.lua
-player/Castbar.lua
-
-target/HPBar.lua
-target/Widgets.lua
-target/ResourceBar.lua
-target/TargetOfTarget.lua
-target/Castbar.lua
-target/ImportantDebuffs.lua
-target/MainBuffs.lua
-target/NormalDebuffs.lua
-
-BarFrames.lua
-Init.lua

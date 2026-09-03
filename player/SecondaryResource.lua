@@ -51,7 +51,7 @@ local function getResource()
 
     -- druid is form-based
     if playerClass == "DRUID" then
-        local formID = GetShapeshiftFormID()
+        local formID = core:GetShapeshiftFormKey()
         resource = resource and resource[formID or 0]
     end
 
@@ -154,7 +154,10 @@ local function updateCountBar(resource)
         frame['bg' .. i]:Hide();
     end
 
-    local current = UnitPower("player", resource) or 0;
+    -- combo points are stored per-target, not on the player, so they need their own read path
+    local current = resource == Enum.PowerType.ComboPoints
+        and (GetComboPoints("player", "target") or 0)
+        or (UnitPower("player", resource) or 0);
     local max = UnitPowerMax("player", resource);
     if not max or max <= 0 then return end;
 
@@ -536,13 +539,11 @@ function core:CreateSecondaryBar(parent)
     -- talent changes can raise/lower a resource's max (eg. chi charges) without a spec change
     frame:RegisterEvent("PLAYER_TALENT_UPDATE")
     frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    -- combo points are target-specific, so switching target can change the displayed value
+    frame:RegisterEvent("PLAYER_TARGET_CHANGED")
 
     for _, event in ipairs(CLASS_EVENTS[playerClass] or {}) do
-        if event[2] then
-            frame:RegisterUnitEvent(event[1], event[2])
-        else
-            frame:RegisterEvent(event[1])
-        end
+        core:SafeRegisterEvent(frame, event[1], event[2])
     end
 
     local hidden = true;

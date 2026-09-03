@@ -1,5 +1,30 @@
 local _, core = ...
 
+local function configurePingableUnitFrame(frame, unit, isPlayer)
+    frame.unit = unit;
+    frame:SetAttribute("unit", unit);
+    frame:SetAttribute("ping-receiver", true);
+
+    function frame:GetIsPingable()
+        return true;
+    end
+
+    function frame:GetAllowRadialWheel()
+        return true;
+    end
+
+    function frame:GetTargetInfo()
+        local targetInfo = {
+            guid = UnitGUID(self.unit),
+        };
+
+        if isPlayer then
+            targetInfo.isPlayerResource = true;
+        end
+
+        return targetInfo;
+    end
+end
 
 function core:InitializeBarFrames()
     -- core variables before anything else
@@ -13,9 +38,10 @@ function core:InitializeBarFrames()
         PlayerFrame:SetScript("OnEvent", nil);
         PlayerFrame:Hide();
 
-        local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent)
+        local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent, "SecureHandlerStateTemplate")
         playerFrame:SetSize(core.width, core.playerHeight);
         playerFrame:SetPoint("CENTER", 0, -176);
+        configurePingableUnitFrame(playerFrame, "player", true);
 
         -- debug BG to show the size of click frame
         -- playerFrame.bg = playerFrame:CreateTexture();
@@ -30,6 +56,7 @@ function core:InitializeBarFrames()
         playerFrame.click:SetAttribute("type1", "target")
         playerFrame.click:SetAttribute("type2", "togglemenu")
         playerFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+        configurePingableUnitFrame(playerFrame.click, "player", true);
 
         local widgets = core:CreateWidgets(playerFrame);
         widgets:SetPoint("BOTTOM")
@@ -43,15 +70,30 @@ function core:InitializeBarFrames()
         local castbar = core:CreatePlayerCastbar(playerFrame)
         castbar:SetPoint("CENTER", 0, -74)
 
+        -- Classic Era only feature, so the constructor is absent on retail
+        if core.CreateAuraTracker then
+            local auraTracker = core:CreateAuraTracker(playerFrame)
+            auraTracker:SetPoint("TOP", playerFrame, "BOTTOM", 0, -2)
+        end
+
         local hpBar = core:CreateHPBar(playerFrame);
         local petFrame = core:CreatePetFrame(playerFrame);
 
         local secondaryShown = false;
         local tertiaryShown = false;
+        local layoutPending = false;
 
         local function updateLayout()
-            -- 9 is the line height for a single resource bar row
-            local offset = 9;
+            -- petFrame is protected (secure handler + RegisterUnitWatch); repositioning it is
+            -- blocked while in combat, so defer until PLAYER_REGEN_ENABLED fires
+            if InCombatLockdown() then
+                layoutPending = true;
+                return;
+            end
+
+            -- 13 is the line height for a single resource bar row, plus a little extra breathing
+            -- room so the (now taller, name+text) pet frame doesn't feel cramped against it
+            local offset = 13;
 
             if secondaryShown then
                 secondaryResourceBar:SetPoint("BOTTOM", 0, 9);
@@ -72,6 +114,15 @@ function core:InitializeBarFrames()
                 petFrame:SetPoint("BOTTOM", -core.width / 3, offset);
             end
         end
+
+        local layoutRetryFrame = CreateFrame("Frame")
+        layoutRetryFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        layoutRetryFrame:SetScript("OnEvent", function()
+            if layoutPending then
+                layoutPending = false;
+                updateLayout();
+            end
+        end)
 
         if secondaryResourceBar then
             function secondaryResourceBar:SetHidden(hidden)
@@ -111,6 +162,7 @@ function core:InitializeBarFrames()
         local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate")
         targetFrame:SetSize(core.width, core.targetHeight);
         targetFrame:SetPoint("CENTER", 0, -120);
+        configurePingableUnitFrame(targetFrame, "target");
 
         -- debug BG to show the size of click frame
         -- targetFrame.bg = targetFrame:CreateTexture();
@@ -125,6 +177,7 @@ function core:InitializeBarFrames()
         targetFrame.click:SetAttribute("type1", "target")
         targetFrame.click:SetAttribute("type2", "togglemenu")
         targetFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+        configurePingableUnitFrame(targetFrame.click, "target");
 
         local hpBar = core:CreateTargetHPBar(targetFrame)
         hpBar:SetPoint("TOP", 0, -16)
@@ -139,7 +192,9 @@ function core:InitializeBarFrames()
         targetOfTargetBar:SetPoint("TOPRIGHT", core.width / 3 + 1, -23)
 
         local castbar = core:CreateTargetCastbar(targetFrame)
-        castbar:SetPoint("CENTER", 0, -29)
+        -- above the frame instead of below the HP bar, to leave the space below free for the
+        -- player frame's pet row (which sits just below the target frame)
+        castbar:SetPoint("BOTTOM", targetFrame, "TOP", 0, 4)
 
         local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame)
         BigDebuffs:SetPoint("TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0)

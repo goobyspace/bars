@@ -13,7 +13,7 @@ local function getResource()
 
     -- Druid: form-based
     if playerClass == "DRUID" then
-        local formID = GetShapeshiftFormID()
+        local formID = core:GetShapeshiftFormKey()
         resource = resource and resource[formID or 0]
     end
 
