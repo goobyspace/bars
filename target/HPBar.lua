@@ -4,34 +4,34 @@ local frame = nil;
 
 core.ClassColors = {
     --warrior
-    [1] = {r = 0.78, g = 0.61, b = 0.43},
+    [1] = { r = 0.78, g = 0.61, b = 0.43 },
     -- paladin
-    [2] = {r = 0.96, g = 0.55, b = 0.73},
+    [2] = { r = 0.96, g = 0.55, b = 0.73 },
     -- hunter
-    [3] = {r = 0.67, g = 0.83, b = 0.45},
+    [3] = { r = 0.67, g = 0.83, b = 0.45 },
     -- rogue
-    [4] = {r = 1, g = 0.96, b = 0.41},
+    [4] = { r = 1, g = 0.96, b = 0.41 },
     -- priest
-    [5] = {r = 1, g = 1, b = 1},
+    [5] = { r = 1, g = 1, b = 1 },
     -- death knight
-    [6] = {r = 0.77, g = 0.12, b = 0.23},
+    [6] = { r = 0.77, g = 0.12, b = 0.23 },
     -- shaman
-    [7] = {r = 0, g = 0.44, b = 0.87},
+    [7] = { r = 0, g = 0.44, b = 0.87 },
     -- mage
-    [8] = {r = 0.25, g = 0.78, b = 0.92},
+    [8] = { r = 0.25, g = 0.78, b = 0.92 },
     -- warlock
-    [9] = {r = 0.53, g = 0.53, b = 0.93},
+    [9] = { r = 0.53, g = 0.53, b = 0.93 },
     -- monk
-    [10] = {r = 0, g = 1, b = 0.6},
+    [10] = { r = 0, g = 1, b = 0.6 },
     -- druid
-    [11] = {r = 1, g = 0.49, b = 0.04},
+    [11] = { r = 1, g = 0.49, b = 0.04 },
     -- dh
-    [12] = {r = 0.64, g = 0.19, b = 0.79},
+    [12] = { r = 0.64, g = 0.19, b = 0.79 },
     -- evoker
-    [13] = {r = 0.2, g = 0.58, b = 0.50},
-    ["neutral"] = {r = 1, g = 1, b = 0},
-    ["hostile"] = {r = 1, g = 0, b = 0},
-    ["friendly"] = {r = 0, g = 1, b = 0},
+    [13] = { r = 0.2, g = 0.58, b = 0.50 },
+    ["neutral"] = { r = 1, g = 1, b = 0 },
+    ["hostile"] = { r = 1, g = 0, b = 0 },
+    ["friendly"] = { r = 0, g = 1, b = 0 },
 }
 
 local function UpdateBar()
@@ -43,11 +43,14 @@ local function UpdateBar()
         local _, _, id = UnitClass("target");
         frame.bar:SetStatusBarColor(core.ClassColors[id].r, core.ClassColors[id].g, core.ClassColors[id].b)
     elseif threat ~= nil or UnitIsEnemy("player", "target") then
-        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g, core.ClassColors["hostile"].b)
+        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
+            core.ClassColors["hostile"].b)
     elseif UnitIsFriend("player", "target") then
-        frame.bar:SetStatusBarColor(core.ClassColors["friendly"].r, core.ClassColors["friendly"].g, core.ClassColors["friendly"].b)
+        frame.bar:SetStatusBarColor(core.ClassColors["friendly"].r, core.ClassColors["friendly"].g,
+            core.ClassColors["friendly"].b)
     else
-        frame.bar:SetStatusBarColor(core.ClassColors["neutral"].r, core.ClassColors["neutral"].g, core.ClassColors["neutral"].b)
+        frame.bar:SetStatusBarColor(core.ClassColors["neutral"].r, core.ClassColors["neutral"].g,
+            core.ClassColors["neutral"].b)
     end
 
     -- hp:
@@ -86,31 +89,28 @@ end
 
 function core:CreateTargetHPBar(parent)
     frame = CreateFrame("Frame", "TargetHPBarContainer", parent)
-    frame:SetSize(core.width, 4);
+    core:SetPixelSize(frame, core.width, core.barBgHeight);
 
     frame.bg = frame:CreateTexture();
-    frame.bg:SetPoint("CENTER");
+    core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0);
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0);
-    frame.bg:SetSize(core.width, 5);
+    core:SetPixelSize(frame.bg, core.width, core.barBgHeight);
     frame.bg:SetDrawLayer("OVERLAY", -1);
 
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(core.width - 2, 3);
+    core:InsetBarInBackground(frame.bar, frame.bg);
     frame.bar:SetStatusBarColor(1, 1, 1)
 
     frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar)
-    frame.absorbBar:SetPoint("CENTER");
-    frame.absorbBar:SetSize(core.width - 2, 3);
+    frame.absorbBar:SetAllPoints(frame.bar);
     frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
     frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.absorbBar:SetStatusBarColor(1, 1, 1, 0.7)
 
     frame.healAbsorbBar = CreateFrame("StatusBar", nil, frame.bar)
-    frame.healAbsorbBar:SetPoint("CENTER");
-    frame.healAbsorbBar:SetSize(core.width - 2, 3);
+    frame.healAbsorbBar:SetAllPoints(frame.bar);
     frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay")
     frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
     frame.healAbsorbBar:SetStatusBarColor(1, 1, 1, 0.7)

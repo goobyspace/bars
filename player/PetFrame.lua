@@ -1,7 +1,7 @@
 local _, core = ...
 
 local frame = nil;
--- pet happiness doesn't exist on retail (removed in Cataclysm); GetPetHappiness won't even exist there
+-- pet happiness doesn't exist on retail, classic only
 local hasPetHappiness = type(GetPetHappiness) == "function";
 
 local function updateHappiness()
@@ -76,64 +76,64 @@ end
 
 function core:CreatePetFrame(parent)
     frame = CreateFrame("Frame", "PetFrameContainer", parent, "SecureHandlerStateTemplate")
-    frame:SetSize(core.width / 3, 27);
+    -- same height as the HP bar frame so content centered within each lines up vertically
+    core:SetPixelSize(frame, core:EvenPixels(core.width * 2 / 3), core.barBgHeight);
 
     frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate")
-    frame.click:SetPoint("CENTER");
-    frame.click:SetSize(core.width / 3, 27);
+    frame.click:SetAllPoints();
     frame.click:SetAttribute("unit", "pet")
     frame.click:SetAttribute("type1", "target")
     frame.click:SetAttribute("type2", "togglemenu")
     frame.click:RegisterForClicks("AnyUp", "AnyDown")
 
-    -- name + HP value share the top row
-    frame.name = frame:CreateFontString("PetNameText")
-    frame.name:SetDrawLayer("OVERLAY", 1);
-    frame.name:SetPoint("TOPLEFT", 1, 0);
-    frame.name:SetSize(core.width / 6, 9);
-    frame.name:SetJustifyH("LEFT");
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
-
-    frame.hpText = frame:CreateFontString("PetHPText");
-    frame.hpText:SetDrawLayer("OVERLAY", 1);
-    frame.hpText:SetPoint("TOPRIGHT", -1, 0);
-    frame.hpText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+    local barWidth = core.width / 3 - 40;
+    local FOCUS_GAP = 2;
 
     frame.hpBg = frame:CreateTexture();
-    frame.hpBg:SetPoint("TOPLEFT", 0, -10);
+    core:SetPixelPoint(frame.hpBg, "LEFT", frame, "LEFT", 0, 0);
     frame.hpBg:SetTexture(134532)
     frame.hpBg:SetColorTexture(0, 0, 0);
-    frame.hpBg:SetSize(core.width / 3, 4);
+    core:SetPixelSize(frame.hpBg, barWidth, core.barBgHeight);
     frame.hpBg:SetDrawLayer("OVERLAY", -1);
 
     frame.hpBar = CreateFrame("StatusBar", nil, frame);
     frame.hpBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    frame.hpBar:SetPoint("TOPLEFT", 1, -11);
-    frame.hpBar:SetSize(core.width / 3 - 2, 2);
+    core:InsetBarInBackground(frame.hpBar, frame.hpBg);
     frame.hpBar:SetStatusBarColor(200 / 255, 70 / 255, 80 / 255);
 
-    -- power value sits in the gap between the HP bar and the power bar
-    frame.powerText = frame:CreateFontString("PetPowerText");
-    frame.powerText:SetDrawLayer("OVERLAY", 1);
-    frame.powerText:SetPoint("TOPRIGHT", -1, -15);
-    frame.powerText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
-
     frame.powerBg = frame:CreateTexture();
-    frame.powerBg:SetPoint("TOPLEFT", 0, -23);
+    core:SetPixelPoint(frame.powerBg, "LEFT", frame.hpBg, "RIGHT", FOCUS_GAP, 0);
     frame.powerBg:SetTexture(134532)
     frame.powerBg:SetColorTexture(0, 0, 0);
-    frame.powerBg:SetSize(core.width / 3, 4);
+    core:SetPixelSize(frame.powerBg, barWidth, core.barBgHeight);
     frame.powerBg:SetDrawLayer("OVERLAY", -1);
 
     frame.powerBar = CreateFrame("StatusBar", nil, frame);
     frame.powerBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    frame.powerBar:SetPoint("TOPLEFT", 1, -24);
-    frame.powerBar:SetSize(core.width / 3 - 2, 2);
+    core:InsetBarInBackground(frame.powerBar, frame.powerBg);
+
+    frame.name = frame:CreateFontString("PetNameText")
+    frame.name:SetDrawLayer("OVERLAY", 1);
+    frame.name:SetPoint("BOTTOMRIGHT", frame.powerBg, "TOPRIGHT", 0, 0);
+    frame.name:SetJustifyH("RIGHT");
+    frame.name:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+
+    frame.hpText = frame:CreateFontString("PetHPText");
+    frame.hpText:SetDrawLayer("OVERLAY", 1);
+    frame.hpText:SetPoint("BOTTOMLEFT", frame.hpBg, "TOPLEFT", 0, 0);
+    frame.hpText:SetJustifyH("LEFT");
+    frame.hpText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+
+    frame.powerText = frame:CreateFontString("PetPowerText");
+    frame.powerText:SetDrawLayer("OVERLAY", 1);
+    frame.powerText:SetPoint("BOTTOMLEFT", frame.powerBg, "TOPLEFT", 0, 0);
+    frame.powerText:SetJustifyH("LEFT");
+    frame.powerText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
 
     if hasPetHappiness then
         frame.happiness = CreateFrame("Frame", nil, frame);
         frame.happiness:SetSize(20, 19);
-        frame.happiness:SetPoint("TOPRIGHT", frame, "TOPLEFT", -4, 0);
+        frame.happiness:SetPoint("RIGHT", frame.hpBg, "LEFT", -2, 10);
 
         frame.happinessTexture = frame.happiness:CreateTexture(nil, "BACKGROUND");
         frame.happinessTexture:SetAllPoints();

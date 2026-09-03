@@ -2,10 +2,6 @@ local _, core = ...
 
 if core.hasAuraContainer then return end
 
--- manual replacement for the retail-only AuraContainer widget/CustomAuraContainerTemplate
--- (that template does not exist on Classic Era); built entirely on AuraUtil + CreateFramePool,
--- both of which are shared between retail and Classic Era.
-
 local function MatchesCandidateFilters(auraData, candidateFilters)
     if not candidateFilters then return true end
     for key, value in pairs(candidateFilters) do

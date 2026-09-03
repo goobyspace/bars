@@ -1,8 +1,5 @@
 local _, core = ...
 
--- CrowdControl/BigDefensive/ExternalDefensive expose "secret" aura values that can only be
--- read through the sanctioned AuraContainer widget without tainting; Classic Era has no such
--- widget (CustomAuraContainerTemplate doesn't exist there), so this frame is retail-only.
 if not core.hasAuraContainer then return end
 
 function core:CreateImportantDebuffsFrame(parent)

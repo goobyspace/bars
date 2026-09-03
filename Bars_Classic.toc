@@ -20,6 +20,7 @@ player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
 player/classic/AuraTracker.lua
+player/classic/SwingTimer.lua
 
 target/HPBar.lua
 target/Widgets.lua

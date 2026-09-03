@@ -88,8 +88,8 @@ local function updateRenewingMistBar()
     local segmentBgWidth = ((core.width / 3) - (segmentGap * (maxCharges - 1))) / maxCharges;
 
     tracker.anchorBar:ClearAllPoints();
-    tracker.anchorBar:SetSize(maxCharges * (segmentBgWidth + segmentGap), 4);
-    tracker.anchorBar:SetPoint("LEFT", frame, "LEFT", 1, 0);
+    core:SetPixelSize(tracker.anchorBar, maxCharges * (segmentBgWidth + segmentGap), core.barHeight);
+    core:SetPixelPoint(tracker.anchorBar, "LEFT", frame, "LEFT", core.pixel, 0);
     tracker.anchorBar:SetMinMaxValues(0, maxCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.anchorBar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.anchorBar:Show();
@@ -97,7 +97,7 @@ local function updateRenewingMistBar()
     local rechargeDuration = C_Spell.GetSpellChargeDuration(RENEWING_MIST);
     if rechargeDuration then
         tracker.cooldownBar:ClearAllPoints();
-        tracker.cooldownBar:SetSize(segmentBgWidth - 2, 4);
+        core:SetPixelSize(tracker.cooldownBar, segmentBgWidth - 2 * core.pixel, core.barHeight);
         tracker.cooldownBar:SetPoint("LEFT", tracker.anchorBar:GetStatusBarTexture(), "RIGHT");
         tracker.cooldownBar:SetTimerDuration(rechargeDuration, Enum.StatusBarInterpolation.ExponentialEaseOut,
             Enum.StatusBarTimerDirection.ElapsedTime);
@@ -110,13 +110,13 @@ local function updateRenewingMistBar()
         if i <= maxCharges then
             local bg = tracker.bgs[i];
             bg:ClearAllPoints();
-            bg:SetSize(segmentBgWidth, 6);
-            bg:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentBgWidth + segmentGap), 0);
+            core:SetPixelSize(bg, segmentBgWidth, core.barBgHeight);
+            core:SetPixelPoint(bg, "LEFT", frame, "LEFT", (i - 1) * (segmentBgWidth + segmentGap), 0);
             bg:Show();
 
             bar:ClearAllPoints();
-            bar:SetSize(segmentBgWidth - 2, 4);
-            bar:SetPoint("LEFT", frame, "LEFT", 1 + (i - 1) * (segmentBgWidth + segmentGap), 0);
+            core:SetPixelSize(bar, segmentBgWidth - 2 * core.pixel, core.barHeight);
+            core:SetPixelPoint(bar, "LEFT", frame, "LEFT", core.pixel + (i - 1) * (segmentBgWidth + segmentGap), 0);
             bar:SetMinMaxValues(i - 1, i, Enum.StatusBarInterpolation.ExponentialEaseOut);
             bar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
             bar:Show();
@@ -150,7 +150,7 @@ end
 local function createAuraTracker(spellID, configureButton)
     local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
     container:SetPoint("CENTER");
-    container:SetSize(core.width / 3, 6);
+    core:SetPixelSize(container, core.width / 3, core.barBgHeight);
     container:SetUnit("player");
 
     container:AddAuraSlot("tracked", "HELPFUL", {
@@ -163,7 +163,7 @@ end
 
 local function createTrackerBar(button, colorKey, texture)
     texture = texture or "Interface/TargetingFrame/UI-StatusBar"
-    button:SetSize(core.width / 3 - 2, 4);
+    core:SetPixelSize(button, core.width / 3 - 2 * core.pixel, core.barHeight);
     button:SetPoint("CENTER", frame, "CENTER");
 
     local bar = CreateFrame("StatusBar", nil, button);
@@ -184,24 +184,24 @@ local trackerBuilders = {
         tracker.bg:SetPoint("CENTER");
         tracker.bg:SetTexture(134532)
         tracker.bg:SetColorTexture(0, 0, 0);
-        tracker.bg:SetSize(core.width / 3, 6);
+        core:SetPixelSize(tracker.bg, core.width / 3, core.barBgHeight);
         tracker.bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, tracker.bg);
 
         tracker.bar = CreateFrame("StatusBar", nil, frame);
         tracker.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
         tracker.bar:SetPoint("CENTER");
-        tracker.bar:SetSize(core.width / 3 - 2, 4);
+        core:SetPixelSize(tracker.bar, core.width / 3 - 2 * core.pixel, core.barHeight);
         table.insert(tracker.visuals, tracker.bar);
     end,
 
     ["WHIRLWIND"] = function(tracker)
-        local segmentWidth = (core.width / 3 - 2) / IMPROVED_WHIRLWIND_MAX_STACKS;
+        local segmentWidth = (core.width / 3 - 2 * core.pixel) / IMPROVED_WHIRLWIND_MAX_STACKS;
         for i = 1, 4 do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth - 1, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
+            core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
+            core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
         end
 
@@ -220,7 +220,7 @@ local trackerBuilders = {
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
         bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(core.width / 3, 6);
+        core:SetPixelSize(bg, core.width / 3, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
@@ -312,7 +312,7 @@ end
 
 function core:CreateTertiaryBar(parent)
     frame = CreateFrame("Frame", "TertiaryResourceContainer", parent)
-    frame:SetSize(core.width / 3, 6);
+    core:SetPixelSize(frame, core.width / 3, core.barBgHeight);
 
     frame.trackers = {};
 

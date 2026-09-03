@@ -44,6 +44,11 @@ local OUT_OF_RANGE_COLOUR = { r = 1, g = 0.25, b = 0.25 };
         auraFilter          aura filter used for both of the above (default "HARMFUL|PLAYER")
         castCountSpellID    spellID whose resource cost drives the "casts remaining" text
 
+    type == "reminder":
+        icon is grayed out while the aura isn't active on the player, and shows full colour
+        with a centre countdown while it is (e.g. a self buff to keep rolling)
+        auraFilter          aura filter to look for the aura with (default "HELPFUL|PLAYER")
+
     Optional overrides for the resource maths (when the API cost lookup isn't right):
         powerCost           flat resource cost per cast
         powerType           Enum.PowerType.* the cost is paid from
@@ -281,6 +286,21 @@ local function UpdateAuraIcon(button)
     end
 end
 
+local function UpdateReminderIcon(button)
+    local entry = button.entry;
+    local filter = entry.auraFilter or "HELPFUL|PLAYER";
+
+    local auraData = FindAuraOnUnit("player", entry.spellID, filter);
+    local expiration = auraData and auraData.expirationTime;
+    if expiration and expiration > 0 then
+        local remaining = expiration - GetTime();
+        button.centreText:SetText(remaining > 0 and FormatRemaining(remaining) or "");
+    else
+        button.centreText:SetText("");
+    end
+    button.icon:SetDesaturated(auraData == nil or auraData == false);
+end
+
 -- frame ------------------------------------------------------------------------------------
 
 function core:CreateAuraTracker(parent)
@@ -344,6 +364,8 @@ function core:CreateAuraTracker(parent)
             if button.visible then
                 if button.entry.type == "aura" then
                     UpdateAuraIcon(button);
+                elseif button.entry.type == "reminder" then
+                    UpdateReminderIcon(button);
                 else
                     UpdateSpellIcon(button);
                 end

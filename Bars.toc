@@ -1,3 +1,0 @@
-# superseded by Bars_Mainline.toc (retail) and Bars_Classic.toc (Classic Era); WoW loads
-# whichever flavor-suffixed TOC matches the client, so this file is no longer used
-

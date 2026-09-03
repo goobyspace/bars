@@ -124,15 +124,15 @@ local function updateEssenceBar(resource)
 
         for i = 1, max do
             frame['container' .. i]:ClearAllPoints();
-            frame['container' .. i]:SetSize(barWidth, 6);
-            frame['container' .. i]:SetPoint("LEFT", frame, "LEFT", (i - 1) * (barWidth + offset), 0);
+            core:SetPixelSize(frame['container' .. i], barWidth, core.barBgHeight);
+            core:SetPixelPoint(frame['container' .. i], "LEFT", frame, "LEFT", (i - 1) * (barWidth + offset), 0);
 
             frame["bg" .. i]:Show();
-            frame["bg" .. i]:SetSize(barWidth, 6);
+            core:SetPixelSize(frame["bg" .. i], barWidth, core.barBgHeight);
 
             local bar = frame["bar" .. i];
             bar:Show();
-            bar:SetSize(barWidth - 2, 4);
+            core:SetPixelSize(bar, barWidth - 2 * core.pixel, core.barHeight);
 
             bar:SetMinMaxValues(0, 1)
             if i <= current then
@@ -192,15 +192,15 @@ local function updateCountBar(resource)
 
     for i = 1, max do
         frame['container' .. i]:ClearAllPoints();
-        frame['container' .. i]:SetSize(barWidth, 6);
-        frame['container' .. i]:SetPoint("LEFT", frame, "LEFT", (i - 1) * (barWidth + offset), 0);
+        core:SetPixelSize(frame['container' .. i], barWidth, core.barBgHeight);
+        core:SetPixelPoint(frame['container' .. i], "LEFT", frame, "LEFT", (i - 1) * (barWidth + offset), 0);
 
         frame["bg" .. i]:Show();
-        frame["bg" .. i]:SetSize(barWidth, 6);
+        core:SetPixelSize(frame["bg" .. i], barWidth, core.barBgHeight);
 
         local bar = frame["bar" .. i];
         bar:Show();
-        bar:SetSize(barWidth - 2, 4);
+        core:SetPixelSize(bar, barWidth - 2 * core.pixel, core.barHeight);
         bar:SetMinMaxValues(0, 1);
 
         if resource == Enum.PowerType.SoulShards then
@@ -313,7 +313,7 @@ end
 local function createAuraTracker(spellID, configureButton)
     local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
     container:SetPoint("CENTER");
-    container:SetSize(core.width, 6);
+    core:SetPixelSize(container, core.width, core.barBgHeight);
     container:SetUnit("player");
 
     container:AddAuraSlot("tracked", "HELPFUL", {
@@ -326,7 +326,7 @@ end
 
 local function createTrackerBar(button, colorKey, texture)
     texture = texture or "Interface/TargetingFrame/UI-StatusBar"
-    button:SetSize(core.width - 2, 4);
+    core:SetPixelSize(button, core.width - 2 * core.pixel, core.barHeight);
     button:SetPoint("CENTER", frame, "CENTER");
 
     local bar = CreateFrame("StatusBar", nil, button);
@@ -350,14 +350,14 @@ local function buildCountSegments(tracker)
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
         bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(100, 6);
+        core:SetPixelSize(bg, 100, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
 
         frame['bar' .. i] = CreateFrame("StatusBar", nil, frame['container' .. i]);
         local bar = frame['bar' .. i];
         bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
         bar:SetPoint("CENTER");
-        bar:SetSize(100, 4);
+        core:SetPixelSize(bar, 100, core.barHeight);
 
         bg:Hide();
         bar:Hide();
@@ -379,25 +379,25 @@ local trackerBuilders = {
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
         bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(core.width, 6);
+        core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
         tracker.bar = CreateFrame("StatusBar", nil, frame);
         tracker.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
         tracker.bar:SetPoint("CENTER");
-        tracker.bar:SetSize(core.width - 2, 4);
+        core:SetPixelSize(tracker.bar, core.width - 2 * core.pixel, core.barHeight);
         table.insert(tracker.visuals, tracker.bar);
     end,
 
     ["TEACHINGS"] = function(tracker)
-        local segmentWidth = (core.width - 2) / TEACHINGS_MAX_STACKS;
+        local segmentWidth = (core.width - 2 * core.pixel) / TEACHINGS_MAX_STACKS;
 
         for i = 1, TEACHINGS_MAX_STACKS do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth - 1, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
+            core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
+            core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
         end
 
@@ -417,7 +417,7 @@ local trackerBuilders = {
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
         bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(core.width, 6);
+        core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
@@ -433,14 +433,14 @@ local trackerBuilders = {
 
     ["SOUL_FRAGMENTS_VENGEANCE"] = function(tracker)
         -- mirrors the 410px source texture (six 65px segments, five 4px gaps) scaled to the bar's actual width
-        local scale = (core.width - 2) / 410;
+        local scale = (core.width - 2 * core.pixel) / 410;
         local segmentWidth = 65 * scale;
         local gapWidth = 4 * scale;
         for i = 1, VENGEANCE_SOUL_FRAGMENTS_MAX_STACKS do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + gapWidth), 0);
+            core:SetPixelSize(bars, segmentWidth, core.barBgHeight);
+            core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + gapWidth), 0);
             table.insert(tracker.visuals, bars);
         end
 
@@ -460,7 +460,7 @@ local trackerBuilders = {
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
         bg:SetColorTexture(0, 0, 0);
-        bg:SetSize(core.width, 6);
+        core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
@@ -470,12 +470,12 @@ local trackerBuilders = {
     end,
 
     ["MAELSTROM_WEAPON"] = function(tracker)
-        local segmentWidth = (core.width - 2) / MAELSTROM_WEAPON_MAX_STACKS;
+        local segmentWidth = (core.width - 2 * core.pixel) / MAELSTROM_WEAPON_MAX_STACKS;
         for i = 1, MAELSTROM_WEAPON_MAX_STACKS do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
-            bars:SetSize(segmentWidth - 1, 6);
-            bars:SetPoint("LEFT", frame, "LEFT", (i - 1) * (segmentWidth + 1), 0);
+            core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
+            core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
         end
 
@@ -523,7 +523,7 @@ end
 
 function core:CreateSecondaryBar(parent)
     frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
-    frame:SetSize(core.width, 6);
+    core:SetPixelSize(frame, core.width, core.barBgHeight);
 
     local playerClass = select(2, UnitClass("player"))
 

@@ -1,11 +1,8 @@
 local _, core = ...
 
--- ResourceUtils loads first, so these are set early enough for every other file to read them
 core.isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC;
 core.hasAuraContainer = C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate") ~= nil;
 
--- these form-ID globals don't exist on Classic Era; fall back to unique sentinels so the table
--- literals below never get a nil key (which would hard-error and abort this whole file)
 local DRUID_BEAR_FORM = DRUID_BEAR_FORM or -1;
 local DRUID_TREE_FORM = DRUID_TREE_FORM or -2;
 local DRUID_CAT_FORM = DRUID_CAT_FORM or -3;
@@ -15,9 +12,6 @@ local DRUID_FLIGHT_FORM = DRUID_FLIGHT_FORM or -6;
 local DRUID_MOONKIN_FORM_1 = DRUID_MOONKIN_FORM_1 or -7;
 local DRUID_MOONKIN_FORM_2 = DRUID_MOONKIN_FORM_2 or -8;
 
--- Classic Era's GetShapeshiftFormID() is a bar-position index (shifts depending on which forms
--- are known), not a stable ID like retail's DRUID_BEAR_FORM etc., so it can't be used as a table
--- key directly there; resolve the active form by its (stable) spellID instead.
 local CLASSIC_DRUID_FORM_KEYS = {
     [5487]  = "BEAR",    -- Bear Form
     [9634]  = "BEAR",    -- Dire Bear Form
@@ -41,8 +35,6 @@ function core:GetShapeshiftFormKey()
     return 0;
 end
 
--- CLASS_EVENTS tables mix in events that don't exist on every flavor (eg. UNIT_POWER_POINT_CHARGE
--- is retail-only); registering an unknown event throws, so do it defensively instead of assuming
 function core:SafeRegisterEvent(frame, event, unit)
     if unit then
         return pcall(frame.RegisterUnitEvent, frame, event, unit);
@@ -85,6 +77,8 @@ core.resources.resourceColours = {
         medium = { r = 255, g = 250, b = 184 },
         high = { r = 255, g = 107, b = 107 }
     },
+    ["SWING_MELEE"] = { r = 255, g = 140, b = 0 },
+    ["SWING_RANGED"] = { r = 192, g = 192, b = 192 },
 }
 
 core.resources.primary = {

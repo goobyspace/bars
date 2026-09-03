@@ -65,19 +65,18 @@ end
 
 function core:CreatePrimaryBar(parent)
     frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
-    frame:SetSize(core.width, 10);
+    core:SetPixelSize(frame, core.width, core.barBgHeight);
 
     frame.bg = frame:CreateTexture();
-    frame.bg:SetPoint("CENTER");
+    core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0);
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0);
-    frame.bg:SetSize(core.width, 4);
+    core:SetPixelSize(frame.bg, core.width, core.barBgHeight);
     frame.bg:SetDrawLayer("OVERLAY", -1);
 
     frame.bar = CreateFrame("StatusBar", nil, frame);
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    frame.bar:SetPoint("CENTER");
-    frame.bar:SetSize(core.width - 2, 2);
+    core:InsetBarInBackground(frame.bar, frame.bg);
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
