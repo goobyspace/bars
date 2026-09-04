@@ -3,6 +3,7 @@ local _, core = ...
 if not core.isClassicEra then return end
 
 local frame;
+local combatLogGetCurrentEventInfo = rawget(_G, "CombatLogGetCurrentEventInfo");
 
 local AUTO_SHOT_SPELL_ID = 75;
 local SHOOT_BOW_SPELL_ID = 2480;
@@ -198,7 +199,9 @@ function core:CreateSwingTimer(parent)
         elseif event == "STOP_AUTOREPEAT_SPELL" then
             onRangedStopped();
         elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-            local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, spellID = CombatLogGetCurrentEventInfo();
+            if not combatLogGetCurrentEventInfo then return end
+
+            local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, spellID = combatLogGetCurrentEventInfo();
             if sourceGUID ~= playerGUID then return end
 
             if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then

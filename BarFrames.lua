@@ -1,5 +1,8 @@
 local _, core = ...
 
+-- how far incoming heals are allowed to push the heal prediction bar past 100% health
+core.healPredictionOverflow = 1.5;
+
 local function configurePingableUnitFrame(frame, unit, isPlayer)
     frame.unit = unit;
     frame:SetAttribute("unit", unit);

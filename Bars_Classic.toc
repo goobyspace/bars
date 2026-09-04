@@ -11,6 +11,8 @@
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
 player/ResourceUtils.lua
+components/HPBar.lua
+components/Castbar.lua
 player/classic/ResourceOverrides.lua
 player/classic/ManaTick.lua
 player/HPBar.lua
@@ -27,9 +29,9 @@ target/HPBar.lua
 target/Widgets.lua
 target/ResourceBar.lua
 target/TargetOfTarget.lua
-target/classic/Interrupts.lua
+components/classic/Interrupts.lua
 target/Castbar.lua
-target/classic/AuraLayout.lua
+components/classic/AuraLayout.lua
 target/classic/ImportantDebuffs.lua
 target/classic/MainBuffs.lua
 target/classic/NormalDebuffs.lua

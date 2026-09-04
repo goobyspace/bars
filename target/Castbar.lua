@@ -37,17 +37,7 @@ local function updateBar(target, kicked)
     frame:Show();
 
     if kickedWait then
-        frame.name:SetText(savedName)
-        frame.icon:SetTexture(savedIcon)
-        if kickedName then
-            frame.target:SetText(UnitNameFromGUID(kickedName))
-        end
-        frame.bar:SetStatusBarColor(1.0, 0.1, 0.2)
-        local durationObject = C_DurationUtil.CreateDuration()
-        durationObject:SetTimeFromStart(0, 0.1)
-        frame.bar:SetTimerDuration(durationObject,
-            Enum.StatusBarInterpolation.Immediate,
-            Enum.StatusBarTimerDirection.ElapsedTime)
+        core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName)
         return
     end
 
@@ -79,9 +69,9 @@ local function updateBar(target, kicked)
     end
 
     if interruptSpellID ~= nil then
-        -- these values are real the vs code plugin is just out of date
-        local spellCD = C_Spell.GetSpellCooldownDuration(interruptSpellID, true);
-        local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellCD:IsActive(), colorKickNotReady, colorKickReady)
+        local _, spellDuration = GetSpellCooldown(interruptSpellID)
+        local spellReady = spellDuration == nil or spellDuration == 0
+        local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellReady, colorKickReady, colorKickNotReady)
         local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, baseColor)
         local friendlyCheck = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedCheck,
             colorKickNotReady)
@@ -99,39 +89,7 @@ local function CachePlayerInterrupt()
 end
 
 function core:CreateTargetCastbar(parent)
-    frame = CreateFrame("Frame", "TargetCastbar", parent)
-    frame:SetSize(core.width, core.castbarHeight)
-
-    frame.bg = frame:CreateTexture()
-    frame.bg:SetPoint("RIGHT")
-    frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0)
-    frame.bg:SetSize(core.width - core.castbarHeight, core.castbarHeight)
-    frame.bg:SetDrawLayer("OVERLAY", -1)
-
-    frame.bar = CreateFrame("StatusBar", nil, frame)
-    frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
-    frame.bar:SetPoint("RIGHT", -2, 0)
-    frame.bar:SetSize(core.width - core.castbarHeight - 2, core.castbarHeight - 2)
-    frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut)
-
-    frame.icon = frame:CreateTexture()
-    frame.icon:SetPoint("LEFT", 0, 0)
-    frame.icon:SetSize(core.castbarHeight, core.castbarHeight)
-
-    frame.name = frame.bar:CreateFontString("PrimaryText")
-    frame.name:SetDrawLayer("OVERLAY", 1)
-    frame.name:SetPoint("LEFT", 0, 0)
-    frame.name:SetSize(core.width / 2, core.castbarHeight)
-    frame.name:SetJustifyH("LEFT")
-    core:SetBarFont(frame.name, 10)
-
-    frame.target = frame.bar:CreateFontString("PrimaryText")
-    frame.target:SetDrawLayer("OVERLAY", 1)
-    frame.target:SetPoint("RIGHT", 0, 0)
-    frame.target:SetSize(core.width / 2, core.castbarHeight)
-    frame.target:SetJustifyH("RIGHT")
-    core:SetBarFont(frame.target, 10)
+    frame = core:CreateCastbarBase("TargetCastbar", parent)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")

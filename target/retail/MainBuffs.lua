@@ -1,3 +1,5 @@
+---@diagnostic disable: undefined-global
+
 local _, core = ...
 
 if not core.hasAuraContainer then return end
@@ -77,11 +79,14 @@ function core:CreateMainBuffsFrame(parent)
         ApplyPurgeBorder(button)
     end
 
-    frame:SetAuraProcessingPolicy(CustomAuraContainerAuraProcessingPolicy.ProcessAura, { ignoreDebuffs = true })
+    local auraProcessingPolicy = 1
+    local defaultSortMethod = 1
+
+    frame:SetAuraProcessingPolicy(auraProcessingPolicy, { ignoreDebuffs = true })
 
     frame:AddAuraGroup("Buffs", AuraUtil.AuraFilters.Helpful, {
         initializeFrame = initializeFrame,
-        sortMethod = AuraContainerSortMethod.Default,
+        sortMethod = defaultSortMethod,
         maxFrameCount = MAX_BUFFS,
         layout = { elementSpacing = 2 },
     })

@@ -1,6 +1,7 @@
 local _, core = ...
 
 local frame = nil;
+local predictedCost = 0;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
@@ -34,6 +35,22 @@ local function getResourceValue(resource)
     return max, current
 end
 
+-- tracks how much of the resource the spell currently being cast/channeled will consume
+local function updatePredictedCost(resource, isCasting)
+    local cost = 0;
+    if isCasting and resource then
+        local spellID = select(9, UnitCastingInfo("player")) or select(9, UnitChannelInfo("player"));
+        local costTable = spellID and C_Spell.GetSpellPowerCost(spellID) or {};
+        for _, costInfo in pairs(costTable) do
+            if costInfo.type == resource then
+                cost = costInfo.cost;
+                break;
+            end
+        end
+    end
+    predictedCost = cost;
+end
+
 local function updateBar()
     if not frame or not frame:IsShown() then return end;
 
@@ -53,6 +70,20 @@ local function updateBar()
     frame.bar:SetMinMaxValues(0, max, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.text:SetText(AbbreviateNumbers(current));
+
+    -- darken the trailing portion of the resource that the current cast/channel will consume
+    local usedCost = math.min(predictedCost, current);
+    if usedCost > 0 then
+        local barWidth = frame.bar:GetWidth();
+        frame.costPredictionBar:ClearAllPoints();
+        frame.costPredictionBar:SetPoint("TOPLEFT", frame.bar, "TOPLEFT", barWidth * ((current - usedCost) / max), 0);
+        frame.costPredictionBar:SetPoint("BOTTOMLEFT", frame.bar, "BOTTOMLEFT", barWidth * ((current - usedCost) / max),
+            0);
+        frame.costPredictionBar:SetWidth(barWidth * (usedCost / max));
+        frame.costPredictionBar:Show();
+    else
+        frame.costPredictionBar:Hide();
+    end
 end
 
 local function updateColour()
@@ -91,6 +122,15 @@ function core:CreatePrimaryBar(parent)
         frame.manaTicker = core:CreateManaTicker(frame.bar);
     end
 
+    -- positioned/sized dynamically each update (see updateBar) to darken exactly the cost of the current cast/channel
+    frame.costPredictionBar = CreateFrame("StatusBar", nil, frame.bar)
+    frame.costPredictionBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
+    frame.costPredictionBar:SetMinMaxValues(0, 1);
+    frame.costPredictionBar:SetValue(1);
+    frame.costPredictionBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
+    frame.costPredictionBar:SetStatusBarColor(0, 0, 0, 0.6)
+    frame.costPredictionBar:Hide();
+
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
     frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
@@ -100,6 +140,12 @@ function core:CreatePrimaryBar(parent)
     frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
     frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
     frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
 
     local playerClass = select(2, UnitClass("player"))
 
@@ -112,6 +158,10 @@ function core:CreatePrimaryBar(parent)
             or event == "UPDATE_SHAPESHIFT_FORM"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
             updateColour();
+        end
+        if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_FAILED"
+            or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
+            updatePredictedCost(getResource(), event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START");
         end
         updateBar();
     end)

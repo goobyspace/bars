@@ -1,14 +1,15 @@
 local _, core = ...
 
 local frame = nil;
+local getPetHappiness = rawget(_G, "GetPetHappiness");
 -- pet happiness doesn't exist on retail, classic only
-local hasPetHappiness = type(GetPetHappiness) == "function";
+local hasPetHappiness = type(getPetHappiness) == "function";
 
 local function updateHappiness()
     if not frame or not frame.happiness then return end;
 
     local hasPetUI, isHunterPet = HasPetUI();
-    local happiness = hasPetUI and isHunterPet and GetPetHappiness();
+    local happiness = hasPetUI and isHunterPet and getPetHappiness and getPetHappiness();
     if not happiness then
         frame.happiness:Hide();
         return;
