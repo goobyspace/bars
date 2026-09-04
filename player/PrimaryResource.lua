@@ -2,6 +2,10 @@ local _, core = ...
 
 local frame = nil;
 local predictedCostPercent = 0;
+local predictedCostFlat = 0;
+-- Classic has no secret-value system at all, so it's safe to divide by current/max power there;
+-- retail must stick to costPercent (static spell data) since UnitPower/UnitPowerMax may be secret.
+local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
@@ -35,20 +39,23 @@ local function getResourceValue(resource)
     return max, current
 end
 
--- tracks what % of the resource (static spell data, never a live/secret value) the current cast/channel will consume
+-- tracks how much of the resource the current cast/channel will consume. Retail spells mostly report a
+-- percentage (static spell data, never secret); Classic spells mostly only report a flat amount instead.
 local function updatePredictedCost(resource, isCasting)
-    local costPercent = 0;
+    local costPercent, flatCost = 0, 0;
     if isCasting and resource then
         local spellID = select(9, UnitCastingInfo("player")) or select(9, UnitChannelInfo("player"));
         local costTable = spellID and C_Spell.GetSpellPowerCost(spellID) or {};
         for _, costInfo in pairs(costTable) do
             if costInfo.type == resource then
                 costPercent = costInfo.costPercent or 0;
+                flatCost = costInfo.cost or 0;
                 break;
             end
         end
     end
     predictedCostPercent = costPercent;
+    predictedCostFlat = flatCost;
 end
 
 local function updateBar()
@@ -71,11 +78,19 @@ local function updateBar()
     frame.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.text:SetText(AbbreviateNumbers(current));
 
-    -- darken exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.
-    -- costPercent is static spell data (never secret), so this width math is always safe -- no need to
-    -- touch the (possibly secret) current/max power values at all.
+    -- darken exactly the resource the current cast/channel will consume, ending flush with frame.bar's
+    -- current fill. On retail, current/max power may be secret, so only the static costPercent (never
+    -- secret) is used. On Classic there's no secret-value system, so the flat cost can be safely divided
+    -- by current/max directly -- most Classic spells only report a flat cost, not a percentage.
+    local widthFraction = 0;
     if predictedCostPercent > 0 then
-        frame.costPredictionBar:SetWidth(core.width * (predictedCostPercent / 100));
+        widthFraction = predictedCostPercent / 100;
+    elseif not isRetail and predictedCostFlat > 0 and max > 0 then
+        widthFraction = math.min(predictedCostFlat, current) / max;
+    end
+
+    if widthFraction > 0 then
+        frame.costPredictionBar:SetWidth(core.width * widthFraction);
         frame.costPredictionBar:Show();
     else
         frame.costPredictionBar:Hide();

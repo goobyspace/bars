@@ -4,13 +4,14 @@ if not core.isClassicEra then return end
 
 -- Weakaura-like row of spell/aura icons that sits horizontally below the player's primary
 -- resource bar. Everything is driven off the core.auraTracker config table below, so adding a
--- new icon is a matter of adding one entry; icons lay out left to right in the order declared.
+-- new icon is a matter of adding one entry; each entry claims one of the fixed slots in the row.
 
 local ICON_WIDTH = 36;
 local ICON_HEIGHT = 30;
 
--- the row is justified across the full bar width, so the gap is whatever is left over after the
--- icons rather than a fixed value; MIN_ICON_SPACING only kicks in once the row is full
+-- the row is a fixed grid justified across the full bar width; slot 1 sits flush with the left
+-- edge and slot SLOT_COUNT with the right edge, so icons keep their position as others hide
+local SLOT_COUNT = 8;
 local MIN_ICON_SPACING = 2;
 
 -- how often the OnUpdate driven bits (cooldown text, range, cast counts) refresh
@@ -22,56 +23,84 @@ local GCD_THRESHOLD = 1.5;
 local OUT_OF_RANGE_COLOUR = { r = 1, g = 0.25, b = 0.25 };
 
 --[[
-    core.auraTracker is keyed by class token, each value being an ordered list of entries.
+    core.auraTracker is keyed by class token, each value being a list of entries.
 
     Shared fields:
-        type            "spell" | "aura"
+        type            "spell" | "aura" | "reminder"
+        slot            which of the SLOT_COUNT positions in the row the icon occupies (1 = left)
         spellID         spellID used for the icon texture, cooldown, range and usability
+        rankSpellIDs    ordered list of rank spellIDs (lowest first); the highest known rank is
+                        used in place of spellID, and every rank matches when reading auras
         alwaysShow      show the icon even when the spell isn't known (default false)
+
+    Text placement is automatic: a single text sits in the centre of the icon, two split into
+    top and bottom, three use top / centre / bottom.
 
     type == "spell":
         showCooldownSwipe   draw the cooldown swipe (default true)
-        showCooldownText    centre text with the cooldown remaining (default true)
-        showCastCount       corner text with how many casts the current resources allow
-        rangeCheck          recolour the icon red when the target is out of range
+        showCooldownText    text with the cooldown remaining (default true)
+        showCastCount       text with how many casts the current resources allow
+        rangeCheck          red when the target is out of range, desaturated when the spell
+                            can't be used on the current target at all
         resourceDesaturate  desaturate the icon when there aren't enough resources
         trackedAuraSpellID  optional aura to count; shows how many targets have it
         trackedAuraFilter   aura filter for the above (default "HARMFUL|PLAYER")
 
     type == "aura":
-        showTargetCount     corner text with how many targets currently have the aura
-        showTargetDuration  centre text with the time left on the aura on the current target
-        auraFilter          aura filter used for both of the above (default "HARMFUL|PLAYER")
+        showTargetCount     text with how many targets currently have the aura
+        showTargetDuration  text with the time left on the aura on the current target
+        showTargetSwipe     drain the cooldown swipe over the aura's remaining duration
+        showCastCount       text with how many casts the current resources allow
+        auraFilter          aura filter used for the above (default "HARMFUL|PLAYER")
         castCountSpellID    spellID whose resource cost drives the "casts remaining" text
+                            (defaults to the icon's own spellID / highest known rank)
 
     type == "reminder":
         icon is grayed out while the aura isn't active on the player, and shows full colour
-        with a centre countdown while it is (e.g. a self buff to keep rolling)
+        with a countdown while it is (e.g. a self buff to keep rolling)
         auraFilter          aura filter to look for the aura with (default "HELPFUL|PLAYER")
 
     Optional overrides for the resource maths (when the API cost lookup isn't right):
         powerCost           flat resource cost per cast
         powerType           Enum.PowerType.* the cost is paid from
 ]]
+local MOONFIRE_RANKS = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 };
+local WRATH_RANKS = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 };
+local HEALING_TOUCH_RANKS = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 };
+local MARK_OF_THE_WILD_RANKS = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 };
+
 core.auraTracker = {
-    -- examples; fill these in per class
-    -- ["WARLOCK"] = {
-    --     {
-    --         type = "spell",
-    --         spellID = 172, -- corruption
-    --         showCastCount = true,
-    --         rangeCheck = true,
-    --         resourceDesaturate = true,
-    --         trackedAuraSpellID = 172,
-    --     },
-    --     {
-    --         type = "aura",
-    --         spellID = 980, -- curse of agony
-    --         showTargetCount = true,
-    --         showTargetDuration = true,
-    --         castCountSpellID = 980,
-    --     },
-    -- },
+    ["DRUID"] = {
+        {
+            type = "aura",
+            slot = 1,
+            rankSpellIDs = MOONFIRE_RANKS,
+            showTargetDuration = true,
+            showTargetSwipe = true,
+            showCastCount = true,
+        },
+        {
+            type = "spell",
+            slot = 2,
+            rankSpellIDs = WRATH_RANKS,
+            rangeCheck = true,
+            showCooldownText = false,
+            showCastCount = true,
+        },
+        {
+            type = "spell",
+            slot = 3,
+            rankSpellIDs = HEALING_TOUCH_RANKS,
+            showCooldownText = false,
+            showCastCount = true,
+        },
+        {
+            type = "reminder",
+            slot = 8,
+            rankSpellIDs = MARK_OF_THE_WILD_RANKS,
+            alwaysShow = true,
+        },
+    },
 };
 
 -- spell lookups ----------------------------------------------------------------------------
@@ -97,6 +126,34 @@ end
 
 local function IsSpellKnown(spellID)
     return C_SpellBook.IsSpellKnown(spellID) or C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet);
+end
+
+-- highest rank the player currently knows, or nil when none of the ranks are trained
+local function GetKnownSpellID(entry)
+    if entry.rankSpellIDs then
+        local known = nil;
+        for _, spellID in ipairs(entry.rankSpellIDs) do
+            if IsSpellKnown(spellID) then known = spellID end
+        end
+        return known;
+    end
+    return IsSpellKnown(entry.spellID) and entry.spellID or nil;
+end
+
+-- every spellID that counts as "this entry's aura", so lower ranks still register
+local function GetEntryAuraIDs(entry)
+    if not entry.auraIDs then
+        local ids = {};
+        for _, spellID in ipairs(entry.rankSpellIDs or { entry.spellID }) do
+            ids[spellID] = true;
+        end
+        entry.auraIDs = ids;
+    end
+    return entry.auraIDs;
+end
+
+local function GetFallbackSpellID(entry)
+    return entry.spellID or (entry.rankSpellIDs and entry.rankSpellIDs[#entry.rankSpellIDs]);
 end
 
 -- helpers ----------------------------------------------------------------------------------
@@ -140,10 +197,10 @@ local function ForEachTrackedUnit(func)
     visit("target");
 end
 
-local function FindAuraOnUnit(unit, spellID, filter)
+local function FindAuraOnUnit(unit, auraIDs, filter)
     local found = nil;
     AuraUtil.ForEachAura(unit, filter, nil, function(auraData)
-        if auraData.spellId == spellID then
+        if auraIDs[auraData.spellId] then
             found = auraData;
             return true;
         end
@@ -152,10 +209,10 @@ local function FindAuraOnUnit(unit, spellID, filter)
     return found;
 end
 
-local function CountUnitsWithAura(spellID, filter)
+local function CountUnitsWithAura(auraIDs, filter)
     local count = 0;
     ForEachTrackedUnit(function(unit)
-        if FindAuraOnUnit(unit, spellID, filter) then
+        if FindAuraOnUnit(unit, auraIDs, filter) then
             count = count + 1;
         end
     end)
@@ -177,10 +234,37 @@ end
 
 -- icon construction ------------------------------------------------------------------------
 
+-- icon construction ------------------------------------------------------------------------
+
+-- where the texts sit depending on how many an entry actually uses
+local TEXT_ANCHORS = {
+    [1] = { "CENTER" },
+    [2] = { "TOP", "BOTTOM" },
+    [3] = { "TOP", "CENTER", "BOTTOM" },
+};
+
+-- top to bottom order of the texts an entry uses
+local function GetEntryTexts(entry)
+    local texts = {};
+    if entry.showTargetCount or entry.trackedAuraSpellID then
+        table.insert(texts, "auraCountText");
+    end
+    if entry.showCastCount then
+        table.insert(texts, "castCountText");
+    end
+    if entry.type == "reminder"
+        or (entry.type == "aura" and entry.showTargetDuration)
+        or (entry.type ~= "aura" and entry.type ~= "reminder" and entry.showCooldownText ~= false) then
+        table.insert(texts, "centreText");
+    end
+    return texts;
+end
+
 local function CreateIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
     button:SetSize(ICON_WIDTH, ICON_HEIGHT);
     button.entry = entry;
+    button.spellID = GetKnownSpellID(entry) or GetFallbackSpellID(entry);
 
     button.border = button:CreateTexture(nil, "BACKGROUND");
     button.border:SetPoint("TOPLEFT", -1, 1);
@@ -189,7 +273,7 @@ local function CreateIcon(parent, entry)
 
     button.icon = button:CreateTexture(nil, "ARTWORK");
     button.icon:SetAllPoints();
-    button.icon:SetTexture(C_Spell.GetSpellTexture(entry.spellID));
+    button.icon:SetTexture(C_Spell.GetSpellTexture(button.spellID));
     button.icon:SetTexCoord(GetCroppedTexCoords(ICON_WIDTH, ICON_HEIGHT));
 
     button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
@@ -197,28 +281,39 @@ local function CreateIcon(parent, entry)
     button.cooldown:SetHideCountdownNumbers(true);
     button.cooldown:SetDrawEdge(false);
 
-    -- centre slot: cooldown remaining (spells) / aura duration on target (auras)
+    -- cooldown remaining (spells) / aura duration (auras and reminders)
     button.centreText = button:CreateFontString(nil, "OVERLAY");
-    button.centreText:SetPoint("CENTER", 0, 0);
-    core:SetBarFont(button.centreText, 13);
 
-    -- bottom right slot: how many casts the current resources allow
+    -- how many casts the current resources allow
     button.castCountText = button:CreateFontString(nil, "OVERLAY");
-    button.castCountText:SetPoint("BOTTOMRIGHT", -1, 1);
-    core:SetBarFont(button.castCountText, 10);
 
-    -- top right slot: how many targets currently have the tracked aura
+    -- how many targets currently have the tracked aura
     button.auraCountText = button:CreateFontString(nil, "OVERLAY");
-    button.auraCountText:SetPoint("TOPRIGHT", -1, -1);
-    core:SetBarFont(button.auraCountText, 10);
     button.auraCountText:SetTextColor(0.6, 0.9, 1);
+
+    -- every text needs a font and an anchor even when the entry doesn't use it, as the update
+    -- functions still clear it
+    for _, key in ipairs({ "centreText", "castCountText", "auraCountText" }) do
+        button[key]:SetPoint("CENTER", 0, 0);
+        core:SetBarFont(button[key], 11);
+    end
+
+    local texts = GetEntryTexts(entry);
+    local anchors = TEXT_ANCHORS[#texts];
+    for index, key in ipairs(texts) do
+        local anchor = anchors[index];
+        local offset = (anchor == "TOP" and -1) or (anchor == "BOTTOM" and 1) or 0;
+        button[key]:ClearAllPoints();
+        button[key]:SetPoint(anchor, 0, offset);
+        core:SetBarFont(button[key], anchor == "CENTER" and 13 or 11);
+    end
 
     return button;
 end
 
 local function UpdateSpellIcon(button)
     local entry = button.entry;
-    local spellID = entry.spellID;
+    local spellID = button.spellID;
 
     local start, duration, enabled = GetSpellCooldownInfo(spellID);
     local onCooldown = enabled and duration and duration > GCD_THRESHOLD;
@@ -240,48 +335,64 @@ local function UpdateSpellIcon(button)
     end
 
     if entry.trackedAuraSpellID then
-        local count = CountUnitsWithAura(entry.trackedAuraSpellID, entry.trackedAuraFilter or "HARMFUL|PLAYER");
+        entry.trackedAuraIDs = entry.trackedAuraIDs or { [entry.trackedAuraSpellID] = true };
+        local count = CountUnitsWithAura(entry.trackedAuraIDs, entry.trackedAuraFilter or "HARMFUL|PLAYER");
         button.auraCountText:SetText(count > 0 and tostring(count) or "");
     end
 
-    if entry.resourceDesaturate then
-        local _, noResource = C_Spell.IsSpellUsable(spellID);
-        button.icon:SetDesaturated(noResource and true or false);
-    end
-
+    local invalidTarget = false;
     if entry.rangeCheck then
-        local inRange = UnitExists("target") and C_Spell.IsSpellInRange(spellID, "target");
+        local hasTarget = UnitExists("target");
+        -- IsSpellInRange reports true for units the spell can't be cast on at all
+        invalidTarget = hasTarget and not UnitCanAttack("player", "target");
+        local inRange = hasTarget and not invalidTarget and C_Spell.IsSpellInRange(spellID, "target");
         if inRange == false then
             button.icon:SetVertexColor(OUT_OF_RANGE_COLOUR.r, OUT_OF_RANGE_COLOUR.g, OUT_OF_RANGE_COLOUR.b);
         else
             button.icon:SetVertexColor(1, 1, 1);
         end
     end
+
+    if entry.resourceDesaturate or entry.rangeCheck then
+        local _, noResource = C_Spell.IsSpellUsable(spellID);
+        button.icon:SetDesaturated(invalidTarget or (entry.resourceDesaturate and noResource) or false);
+    end
 end
 
 local function UpdateAuraIcon(button)
     local entry = button.entry;
     local filter = entry.auraFilter or "HARMFUL|PLAYER";
+    local auraIDs = GetEntryAuraIDs(entry);
 
-    if entry.showTargetDuration then
-        local auraData = UnitExists("target") and FindAuraOnUnit("target", entry.spellID, filter);
+    if entry.showTargetDuration or entry.showTargetSwipe then
+        local auraData = UnitExists("target") and FindAuraOnUnit("target", auraIDs, filter) or nil;
         local expiration = auraData and auraData.expirationTime;
-        if expiration and expiration > 0 then
-            local remaining = expiration - GetTime();
+        local remaining = expiration and expiration > 0 and (expiration - GetTime()) or 0;
+
+        if entry.showTargetDuration then
             button.centreText:SetText(remaining > 0 and FormatRemaining(remaining) or "");
-        else
-            button.centreText:SetText("");
         end
-        button.icon:SetDesaturated(auraData == nil or auraData == false);
+
+        if entry.showTargetSwipe then
+            local total = auraData and auraData.duration or 0;
+            if remaining > 0 and total > 0 then
+                CooldownFrame_Set(button.cooldown, expiration - total, total, 1);
+            else
+                CooldownFrame_Set(button.cooldown, 0, 0, 0);
+            end
+        end
+
+        button.icon:SetDesaturated(auraData == nil);
     end
 
     if entry.showTargetCount then
-        local count = CountUnitsWithAura(entry.spellID, filter);
+        local count = CountUnitsWithAura(auraIDs, filter);
         button.auraCountText:SetText(count > 0 and tostring(count) or "");
     end
 
-    if entry.castCountSpellID then
-        local casts = GetCastsRemaining(entry, entry.castCountSpellID);
+    local castCountSpellID = entry.showCastCount and (entry.castCountSpellID or button.spellID);
+    if castCountSpellID then
+        local casts = GetCastsRemaining(entry, castCountSpellID);
         button.castCountText:SetText(casts and tostring(casts) or "");
     end
 end
@@ -290,7 +401,7 @@ local function UpdateReminderIcon(button)
     local entry = button.entry;
     local filter = entry.auraFilter or "HELPFUL|PLAYER";
 
-    local auraData = FindAuraOnUnit("player", entry.spellID, filter);
+    local auraData = FindAuraOnUnit("player", GetEntryAuraIDs(entry), filter);
     local expiration = auraData and auraData.expirationTime;
     if expiration and expiration > 0 then
         local remaining = expiration - GetTime();
@@ -298,7 +409,7 @@ local function UpdateReminderIcon(button)
     else
         button.centreText:SetText("");
     end
-    button.icon:SetDesaturated(auraData == nil or auraData == false);
+    button.icon:SetDesaturated(auraData == nil);
 end
 
 -- frame ------------------------------------------------------------------------------------
@@ -312,45 +423,37 @@ function core:CreateAuraTracker(parent)
     if not entries or #entries == 0 then return frame end
 
     local icons = {};
-    for _, entry in ipairs(entries) do
-        table.insert(icons, CreateIcon(frame, entry));
+    for index, entry in ipairs(entries) do
+        local button = CreateIcon(frame, entry);
+        button.slot = entry.slot or index;
+        table.insert(icons, button);
     end
 
-    -- icons grow left to right in declaration order, hidden ones collapse out of the row; the
-    -- leftover width is split evenly between the gaps so the outermost icon edges line up with
-    -- the edges of the bars above
+    -- every icon keeps the slot it declared, so hiding one leaves a gap rather than shuffling
+    -- the rest along; the outermost slots line up with the edges of the bars above
     local function layout()
-        local shown = 0;
+        local step = math.max(ICON_WIDTH + MIN_ICON_SPACING, (core.width - ICON_WIDTH) / (SLOT_COUNT - 1));
         for _, button in ipairs(icons) do
-            if button.visible then shown = shown + 1 end
+            button:ClearAllPoints();
+            button:SetPoint("LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
+            button:SetShown(button.visible);
         end
 
-        local spacing = MIN_ICON_SPACING;
-        if shown > 1 then
-            spacing = math.max(MIN_ICON_SPACING, (core.width - shown * ICON_WIDTH) / (shown - 1));
-        end
-
-        local rowWidth = shown * ICON_WIDTH + math.max(0, shown - 1) * spacing;
-        local index = 0;
-        for _, button in ipairs(icons) do
-            if button.visible then
-                button:ClearAllPoints();
-                button:SetPoint("LEFT", frame, "LEFT", index * (ICON_WIDTH + spacing), 0);
-                button:Show();
-                index = index + 1;
-            else
-                button:Hide();
-            end
-        end
-
-        frame:SetSize(math.max(1, rowWidth), ICON_HEIGHT);
+        frame:SetSize(core.width, ICON_HEIGHT);
     end
 
     local function updateVisibility()
         local changed = false;
         for _, button in ipairs(icons) do
             local entry = button.entry;
-            local visible = entry.alwaysShow or IsSpellKnown(entry.spellID);
+            local knownSpellID = GetKnownSpellID(entry);
+            local spellID = knownSpellID or GetFallbackSpellID(entry);
+            if spellID ~= button.spellID then
+                button.spellID = spellID;
+                button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+            end
+
+            local visible = entry.alwaysShow or knownSpellID ~= nil;
             if visible ~= button.visible then
                 button.visible = visible;
                 changed = true;
@@ -374,7 +477,7 @@ function core:CreateAuraTracker(parent)
     end
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
-    frame:RegisterEvent("LEARNED_SPELL_IN_TAB");
+    frame:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE");
     frame:RegisterEvent("SPELLS_CHANGED");
     frame:RegisterEvent("PLAYER_TARGET_CHANGED");
     frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
@@ -391,7 +494,7 @@ function core:CreateAuraTracker(parent)
         elseif event == "NAME_PLATE_UNIT_REMOVED" then
             nameplateUnits[unit] = nil;
         elseif event == "PLAYER_ENTERING_WORLD"
-            or event == "LEARNED_SPELL_IN_TAB"
+            or event == "LEARNED_SPELL_IN_SKILL_LINE"
             or event == "SPELLS_CHANGED" then
             updateVisibility();
         end
