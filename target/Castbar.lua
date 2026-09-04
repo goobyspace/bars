@@ -69,8 +69,11 @@ local function updateBar(target, kicked)
     end
 
     if interruptSpellID ~= nil then
-        local _, spellDuration = GetSpellCooldown(interruptSpellID)
-        local spellReady = spellDuration == nil or spellDuration == 0
+        -- retail treats cooldown durations as secret numbers, so readiness is read via the duration
+        -- object's own IsZero() instead of comparing the raw seconds value ourselves
+        local ignoreGCD = true
+        local cooldownDuration = C_Spell.GetSpellCooldownDuration(interruptSpellID, ignoreGCD)
+        local spellReady = not cooldownDuration or cooldownDuration:IsZero()
         local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellReady, colorKickReady, colorKickNotReady)
         local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, baseColor)
         local friendlyCheck = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedCheck,

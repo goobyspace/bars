@@ -28,12 +28,12 @@ function core:CreateWidgets(parent)
     frame.afk:SetSize(16, 16);
 
     frame.combat = frame:CreateTexture();
-    frame.combat:SetPoint("CENTER", 180, 10 + core.barGrowth);
+    frame.combat:SetPoint("CENTER", 180, 10);
     frame.combat:SetTexture("Interface/Addons/Bars/assets/combat.png");
     frame.combat:SetSize(16, 16);
 
     frame.rested = frame:CreateTexture();
-    frame.rested:SetPoint("CENTER", -180, 10 + core.barGrowth);
+    frame.rested:SetPoint("CENTER", -180, 10);
     frame.rested:SetTexture("Interface/Addons/Bars/assets/rested.png");
     frame.rested:SetSize(16, 16);
 

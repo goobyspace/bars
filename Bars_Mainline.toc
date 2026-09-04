@@ -11,6 +11,7 @@
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
 player/ResourceUtils.lua
+components/PixelUtils.lua
 components/HPBar.lua
 components/Castbar.lua
 player/HPBar.lua
@@ -31,5 +32,6 @@ target/retail/ImportantDebuffs.lua
 target/retail/MainBuffs.lua
 target/retail/NormalDebuffs.lua
 
+Utils.lua
 BarFrames.lua
 Init.lua

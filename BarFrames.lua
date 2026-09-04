@@ -135,17 +135,28 @@ function core:InitializeBarFrames()
     core.barBgHeight = core.barHeight + 2 * core.pixel;
     core.fontScale = core.thickMode and 1.5 or 1;
     core.castbarHeight = core.thickMode and 28 or 16;
-    -- every stacked row and label offset adds this so the layout expands with the bar height
+    -- how much taller a bar is than the default 5px bg, so labels clear the fill
     core.barGrowth = core.barBgHeight - 5 * core.pixel;
     core.labelAboveBar = 10 * core.fontScale + core.barGrowth / 2;
     core.labelBelowBar = -(8 * core.fontScale + core.barGrowth / 2);
 
+    -- spacing is in physical pixels, not UI units, so rows keep their gaps at any UI scale
+    core.rowGap = 4 * core.pixel;
+    core.rowStep = core.barBgHeight + core.rowGap;
+    core.primaryBarOffset = core.rowGap;
+    core.hpRowOffset = core.primaryBarOffset + 2 * core.rowStep;
+    core.targetHpRowOffset = -16;
+    core.targetResourceRowOffset = core.targetHpRowOffset - core.barBgHeight - core.rowGap;
+
     core.width = core:EvenPixels(340);
-    core.playerHeight = core:EvenPixels(36 + 2 * core.barGrowth);
-    core.targetHeight = core:EvenPixels(28 + 2 * core.barGrowth);
-    core.targetFrameY = -106;
-    core.frameGap = 24;
-    core.playerFrameY = core.targetFrameY - core.targetHeight - core.frameGap - core.playerHeight;
+    core.playerHeight = core:EvenPixels(core.hpRowOffset + 2 * core.rowStep + core.barBgHeight);
+    core.targetHeight = core:EvenPixels(-core.targetResourceRowOffset + core.barBgHeight + 2 * core.pixel);
+    -- the player frame bottom is the fixed anchor other addons position against; the stack grows
+    -- upwards from it and the target frame follows so the gap between the bars stays the same
+    core.playerFrameY = -194;
+    core.frameGap = 43;
+    core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
+        - core.targetResourceRowOffset;
 
     -- playerframe
     do
@@ -178,7 +189,7 @@ function core:InitializeBarFrames()
         widgets:SetPoint("BOTTOM")
 
         local primaryResourceBar = core:CreatePrimaryBar(playerFrame)
-        core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, 3)
+        core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, core.primaryBarOffset)
         core:SnapToPixelGrid(primaryResourceBar)
 
         local secondaryResourceBar = core:CreateSecondaryBar(playerFrame);
@@ -187,7 +198,7 @@ function core:InitializeBarFrames()
         local swingTimer = core.CreateSwingTimer and core:CreateSwingTimer(playerFrame);
 
         local castbar = core:CreatePlayerCastbar(playerFrame)
-        castbar:SetPoint("CENTER", 0, -74)
+        castbar:SetPoint("TOP", playerFrame, "BOTTOM", 0, -48)
 
         if core.CreateAuraTracker then
             local auraTracker = core:CreateAuraTracker(playerFrame)
@@ -208,12 +219,12 @@ function core:InitializeBarFrames()
                 return;
             end
 
-            local growth = core.barGrowth;
-            local offset = 13 + growth;
+            local offset = core.primaryBarOffset + core.rowStep;
 
             if secondaryShown then
-                core:SetPixelPoint(secondaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, 9 + growth);
-                offset = offset + 9 + growth;
+                core:SetPixelPoint(secondaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0,
+                    core.primaryBarOffset + core.rowStep);
+                offset = offset + core.rowStep;
             end
 
             core:SetPixelPoint(hpBar, "BOTTOM", playerFrame, "BOTTOM",
@@ -222,12 +233,13 @@ function core:InitializeBarFrames()
             core:SetPixelPoint(tertiaryResourceBar, "BOTTOM", playerFrame, "BOTTOM",
                 -(core.width - tertiaryResourceBar:GetWidth()) / 2, offset);
 
-            core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
-                tertiaryShown and (offset + 9 + growth) or offset);
+            local petOffset = offset + (tertiaryShown and core.rowStep or 0);
+
+            core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6, petOffset);
 
             if swingTimer then
                 core:SetPixelPoint(swingTimer, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
-                    petShown and (offset + 13 + growth) or offset);
+                    petShown and (petOffset + core.rowStep) or petOffset);
             end
 
             core:SnapToPixelGrid(secondaryResourceBar);
@@ -313,18 +325,18 @@ function core:InitializeBarFrames()
         configurePingableUnitFrame(targetFrame.click, "target");
 
         local hpBar = core:CreateTargetHPBar(targetFrame)
-        core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, -16)
+        core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, core.targetHpRowOffset)
         core:SnapToPixelGrid(hpBar)
 
         local widgets = core:CreateTargetWidgets(targetFrame);
         widgets:SetPoint("TOP")
 
         local primaryResourceBar = core:CreateTargetResourceBar(targetFrame)
-        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, -22 - core.barGrowth)
+        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, core.targetResourceRowOffset)
         core:SnapToPixelGrid(primaryResourceBar)
 
         local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame)
-        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, -22 - core.barGrowth)
+        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, core.targetResourceRowOffset)
         core:SnapToPixelGrid(targetOfTargetBar)
 
         local castbar = core:CreateTargetCastbar(targetFrame)

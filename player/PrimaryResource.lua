@@ -1,7 +1,7 @@
 local _, core = ...
 
 local frame = nil;
-local predictedCost = 0;
+local predictedCostPercent = 0;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
@@ -35,20 +35,20 @@ local function getResourceValue(resource)
     return max, current
 end
 
--- tracks how much of the resource the spell currently being cast/channeled will consume
+-- tracks what % of the resource (static spell data, never a live/secret value) the current cast/channel will consume
 local function updatePredictedCost(resource, isCasting)
-    local cost = 0;
+    local costPercent = 0;
     if isCasting and resource then
         local spellID = select(9, UnitCastingInfo("player")) or select(9, UnitChannelInfo("player"));
         local costTable = spellID and C_Spell.GetSpellPowerCost(spellID) or {};
         for _, costInfo in pairs(costTable) do
             if costInfo.type == resource then
-                cost = costInfo.cost;
+                costPercent = costInfo.costPercent or 0;
                 break;
             end
         end
     end
-    predictedCost = cost;
+    predictedCostPercent = costPercent;
 end
 
 local function updateBar()
@@ -71,15 +71,11 @@ local function updateBar()
     frame.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.text:SetText(AbbreviateNumbers(current));
 
-    -- darken the trailing portion of the resource that the current cast/channel will consume
-    local usedCost = math.min(predictedCost, current);
-    if usedCost > 0 then
-        local barWidth = frame.bar:GetWidth();
-        frame.costPredictionBar:ClearAllPoints();
-        frame.costPredictionBar:SetPoint("TOPLEFT", frame.bar, "TOPLEFT", barWidth * ((current - usedCost) / max), 0);
-        frame.costPredictionBar:SetPoint("BOTTOMLEFT", frame.bar, "BOTTOMLEFT", barWidth * ((current - usedCost) / max),
-            0);
-        frame.costPredictionBar:SetWidth(barWidth * (usedCost / max));
+    -- darken exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.
+    -- costPercent is static spell data (never secret), so this width math is always safe -- no need to
+    -- touch the (possibly secret) current/max power values at all.
+    if predictedCostPercent > 0 then
+        frame.costPredictionBar:SetWidth(core.width * (predictedCostPercent / 100));
         frame.costPredictionBar:Show();
     else
         frame.costPredictionBar:Hide();
@@ -122,13 +118,13 @@ function core:CreatePrimaryBar(parent)
         frame.manaTicker = core:CreateManaTicker(frame.bar);
     end
 
-    -- positioned/sized dynamically each update (see updateBar) to darken exactly the cost of the current cast/channel
-    frame.costPredictionBar = CreateFrame("StatusBar", nil, frame.bar)
-    frame.costPredictionBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
-    frame.costPredictionBar:SetMinMaxValues(0, 1);
-    frame.costPredictionBar:SetValue(1);
-    frame.costPredictionBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
-    frame.costPredictionBar:SetStatusBarColor(0, 0, 0, 0.6)
+    -- darkens exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.
+    -- A plain texture sized directly from costPercent (static spell data, never secret) -- this never
+    -- needs to touch the (possibly secret) current/max power values or rely on any StatusBar fill style.
+    frame.costPredictionBar = frame.bar:CreateTexture(nil, "ARTWORK", nil, 1);
+    frame.costPredictionBar:SetColorTexture(0, 0, 0, 0.6);
+    frame.costPredictionBar:SetPoint("TOPRIGHT", frame.bar:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
+    frame.costPredictionBar:SetPoint("BOTTOMRIGHT", frame.bar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
     frame.costPredictionBar:Hide();
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
