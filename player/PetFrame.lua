@@ -116,24 +116,24 @@ function core:CreatePetFrame(parent)
     frame.name:SetDrawLayer("OVERLAY", 1);
     frame.name:SetPoint("BOTTOMRIGHT", frame.powerBg, "TOPRIGHT", 0, 0);
     frame.name:SetJustifyH("RIGHT");
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+    core:SetBarFont(frame.name, 8);
 
     frame.hpText = frame:CreateFontString("PetHPText");
     frame.hpText:SetDrawLayer("OVERLAY", 1);
     frame.hpText:SetPoint("BOTTOMLEFT", frame.hpBg, "TOPLEFT", 0, 0);
     frame.hpText:SetJustifyH("LEFT");
-    frame.hpText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+    core:SetBarFont(frame.hpText, 8);
 
     frame.powerText = frame:CreateFontString("PetPowerText");
     frame.powerText:SetDrawLayer("OVERLAY", 1);
     frame.powerText:SetPoint("BOTTOMLEFT", frame.powerBg, "TOPLEFT", 0, 0);
     frame.powerText:SetJustifyH("LEFT");
-    frame.powerText:SetFont("Fonts\\FRIZQT__.TTF", 8, "OUTLINE");
+    core:SetBarFont(frame.powerText, 8);
 
     if hasPetHappiness then
         frame.happiness = CreateFrame("Frame", nil, frame);
         frame.happiness:SetSize(20, 19);
-        frame.happiness:SetPoint("RIGHT", frame.hpBg, "LEFT", -2, 10);
+        frame.happiness:SetPoint("RIGHT", frame.hpBg, "LEFT", -2, core.labelAboveBar);
 
         frame.happinessTexture = frame.happiness:CreateTexture(nil, "BACKGROUND");
         frame.happinessTexture:SetAllPoints();

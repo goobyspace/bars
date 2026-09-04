@@ -12,6 +12,7 @@
 
 player/ResourceUtils.lua
 player/classic/ResourceOverrides.lua
+player/classic/ManaTick.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua

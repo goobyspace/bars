@@ -34,7 +34,7 @@ local function addEmpowerStages(numStages, totalDuration)
             marker = frame.bar:CreateTexture(nil, "OVERLAY")
             marker:SetColorTexture(1, 1, 1)
             marker:SetWidth(1)
-            marker:SetHeight(16)
+            marker:SetHeight(core.castbarHeight)
             frame.empowerStages[stageIndex + 1] = marker
         end
 
@@ -140,7 +140,7 @@ end
 
 function core:CreatePlayerCastbar(parent)
     frame = CreateFrame("Frame", "PlayerCastBar", parent)
-    frame:SetSize(core.width, 16)
+    frame:SetSize(core.width, core.castbarHeight)
 
     PlayerCastingBarFrame:SetScript("OnEvent", nil);
     PlayerCastingBarFrame:Hide();
@@ -149,33 +149,33 @@ function core:CreatePlayerCastbar(parent)
     frame.bg:SetPoint("RIGHT")
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0)
-    frame.bg:SetSize(core.width - 16, 16)
+    frame.bg:SetSize(core.width - core.castbarHeight, core.castbarHeight)
     frame.bg:SetDrawLayer("OVERLAY", -1)
 
     frame.bar = CreateFrame("StatusBar", nil, frame)
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
     frame.bar:SetPoint("RIGHT", -2, 0)
-    frame.bar:SetSize(core.width - 16 - 2, 14)
+    frame.bar:SetSize(core.width - core.castbarHeight - 2, core.castbarHeight - 2)
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut)
     frame.empowerStages = {}
 
     frame.icon = frame:CreateTexture()
     frame.icon:SetPoint("LEFT", 0, 0)
-    frame.icon:SetSize(16, 16)
+    frame.icon:SetSize(core.castbarHeight, core.castbarHeight)
 
     frame.name = frame.bar:CreateFontString("PrimaryText")
     frame.name:SetDrawLayer("OVERLAY", 1)
     frame.name:SetPoint("LEFT", 0, 0)
-    frame.name:SetSize(core.width / 2, 16)
+    frame.name:SetSize(core.width / 2, core.castbarHeight)
     frame.name:SetJustifyH("LEFT")
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    core:SetBarFont(frame.name, 10)
 
     frame.target = frame.bar:CreateFontString("PrimaryText")
     frame.target:SetDrawLayer("OVERLAY", 1)
     frame.target:SetPoint("RIGHT", 0, 0)
-    frame.target:SetSize(core.width / 2, 16)
+    frame.target:SetSize(core.width / 2, core.castbarHeight)
     frame.target:SetJustifyH("RIGHT")
-    frame.target:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE")
+    core:SetBarFont(frame.target, 10)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")

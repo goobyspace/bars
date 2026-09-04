@@ -200,17 +200,17 @@ local function CreateIcon(parent, entry)
     -- centre slot: cooldown remaining (spells) / aura duration on target (auras)
     button.centreText = button:CreateFontString(nil, "OVERLAY");
     button.centreText:SetPoint("CENTER", 0, 0);
-    button.centreText:SetFont("Fonts\\FRIZQT__.TTF", 13, "OUTLINE");
+    core:SetBarFont(button.centreText, 13);
 
     -- bottom right slot: how many casts the current resources allow
     button.castCountText = button:CreateFontString(nil, "OVERLAY");
     button.castCountText:SetPoint("BOTTOMRIGHT", -1, 1);
-    button.castCountText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
+    core:SetBarFont(button.castCountText, 10);
 
     -- top right slot: how many targets currently have the tracked aura
     button.auraCountText = button:CreateFontString(nil, "OVERLAY");
     button.auraCountText:SetPoint("TOPRIGHT", -1, -1);
-    button.auraCountText:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
+    core:SetBarFont(button.auraCountText, 10);
     button.auraCountText:SetTextColor(0.6, 0.9, 1);
 
     return button;

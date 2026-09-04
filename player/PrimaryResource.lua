@@ -40,6 +40,10 @@ local function updateBar()
     local resource = getResource();
     if not resource then return end;
 
+    if frame.manaTicker then
+        frame.manaTicker:SetActive(resource == Enum.PowerType.Mana);
+    end
+
     local max, current = getResourceValue(resource);
     if not max then
         return frame:Hide();
@@ -81,7 +85,11 @@ function core:CreatePrimaryBar(parent)
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
     frame.text:SetPoint("CENTER", 0, 0);
-    frame.text:SetFont("Fonts\\FRIZQT__.TTF", 14, "OUTLINE")
+    core:SetBarFont(frame.text, 14)
+
+    if core.CreateManaTicker then
+        frame.manaTicker = core:CreateManaTicker(frame.bar);
+    end
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")

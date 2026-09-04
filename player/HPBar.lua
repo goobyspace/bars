@@ -64,8 +64,8 @@ function core:CreateHPBar(parent)
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
-    frame.text:SetPoint("RIGHT", 0, 10);
-    frame.text:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    frame.text:SetPoint("RIGHT", 0, core.labelAboveBar);
+    core:SetBarFont(frame.text, 12)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")

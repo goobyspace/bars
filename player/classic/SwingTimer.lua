@@ -87,7 +87,7 @@ local function updateBars()
         rangedBg:Show();
 
         if haveMainHand or haveOffHand then
-            rangedBg:SetPoint("BOTTOM", frame, "BOTTOM", 0, 9);
+            rangedBg:SetPoint("BOTTOM", frame, "BOTTOM", 0, 9 + core.barGrowth);
         else
             rangedBg:SetPoint("BOTTOM", frame, "BOTTOM", 0, 0);
         end

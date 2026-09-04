@@ -1,5 +1,7 @@
 local _, core = ...
 
+core.thickMode = true;
+
 function core:InitEventHandler(event, name)
     if event == "ADDON_LOADED" then
         if name ~= "Bars" then return end

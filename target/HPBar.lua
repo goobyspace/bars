@@ -117,18 +117,18 @@ function core:CreateTargetHPBar(parent)
 
     frame.hpText = frame.bar:CreateFontString("PrimaryText");
     frame.hpText:SetDrawLayer("OVERLAY", 1);
-    frame.hpText:SetPoint("LEFT", 0, 10);
-    frame.hpText:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    frame.hpText:SetPoint("LEFT", 0, core.labelAboveBar);
+    core:SetBarFont(frame.hpText, 12)
 
     frame.level = frame.bar:CreateFontString("PrimaryText");
     frame.level:SetDrawLayer("OVERLAY", 1);
-    frame.level:SetPoint("RIGHT", 0, 10);
-    frame.level:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    frame.level:SetPoint("RIGHT", 0, core.labelAboveBar);
+    core:SetBarFont(frame.level, 12)
 
     frame.name = frame.bar:CreateFontString("PrimaryText");
     frame.name:SetDrawLayer("OVERLAY", 1);
-    frame.name:SetPoint("CENTER", 0, 10);
-    frame.name:SetFont("Fonts\\FRIZQT__.TTF", 12, "OUTLINE")
+    frame.name:SetPoint("CENTER", 0, core.labelAboveBar);
+    core:SetBarFont(frame.name, 12)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")

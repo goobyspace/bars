@@ -120,15 +120,29 @@ local function showCopyableText(text)
     copyFrame.edit:HighlightText();
 end
 
+function core:SetBarFont(fontString, size)
+    fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor(size * core.fontScale + 0.5), "OUTLINE");
+end
+
 function core:InitializeBarFrames()
     -- core variables before anything else
     core.pixel = getPixelUnit();
-    core.width = core:EvenPixels(340);
-    core.playerHeight = core:EvenPixels(36);
-    core.targetHeight = core:EvenPixels(28);
     -- fill height of a bar and the bg behind it, which adds the 1px border on each side
-    core.barHeight = 3 * core.pixel;
+    core.barHeight = (core.thickMode and 10 or 3) * core.pixel;
     core.barBgHeight = core.barHeight + 2 * core.pixel;
+    core.fontScale = core.thickMode and 1.5 or 1;
+    core.castbarHeight = core.thickMode and 28 or 16;
+    -- every stacked row and label offset adds this so the layout expands with the bar height
+    core.barGrowth = core.barBgHeight - 5 * core.pixel;
+    core.labelAboveBar = 10 * core.fontScale + core.barGrowth / 2;
+    core.labelBelowBar = -(8 * core.fontScale + core.barGrowth / 2);
+
+    core.width = core:EvenPixels(340);
+    core.playerHeight = core:EvenPixels(36 + 2 * core.barGrowth);
+    core.targetHeight = core:EvenPixels(28 + 2 * core.barGrowth);
+    core.targetFrameY = -106;
+    core.frameGap = 24;
+    core.playerFrameY = core.targetFrameY - core.targetHeight - core.frameGap - core.playerHeight;
 
     -- playerframe
     do
@@ -138,7 +152,7 @@ function core:InitializeBarFrames()
 
         local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent, "SecureHandlerStateTemplate")
         core:SetPixelSize(playerFrame, core.width, core.playerHeight);
-        core:SetPixelPoint(playerFrame, "CENTER", UIParent, "CENTER", 0, -176);
+        core:SetPixelPoint(playerFrame, "BOTTOM", UIParent, "CENTER", 0, core.playerFrameY);
         core:SnapToPixelGrid(playerFrame);
         configurePingableUnitFrame(playerFrame, "player", true);
 
@@ -191,11 +205,12 @@ function core:InitializeBarFrames()
                 return;
             end
 
-            local offset = 13;
+            local growth = core.barGrowth;
+            local offset = 13 + growth;
 
             if secondaryShown then
-                core:SetPixelPoint(secondaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, 9);
-                offset = offset + 9;
+                core:SetPixelPoint(secondaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, 9 + growth);
+                offset = offset + 9 + growth;
             end
 
             core:SetPixelPoint(hpBar, "BOTTOM", playerFrame, "BOTTOM",
@@ -205,11 +220,11 @@ function core:InitializeBarFrames()
                 -(core.width - tertiaryResourceBar:GetWidth()) / 2, offset);
 
             core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
-                tertiaryShown and (offset + 9) or offset);
+                tertiaryShown and (offset + 9 + growth) or offset);
 
             if swingTimer then
                 core:SetPixelPoint(swingTimer, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
-                    petShown and (offset + 13) or offset);
+                    petShown and (offset + 13 + growth) or offset);
             end
 
             core:SnapToPixelGrid(secondaryResourceBar);
@@ -275,7 +290,7 @@ function core:InitializeBarFrames()
 
         local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate")
         core:SetPixelSize(targetFrame, core.width, core.targetHeight);
-        core:SetPixelPoint(targetFrame, "CENTER", UIParent, "CENTER", 0, -120);
+        core:SetPixelPoint(targetFrame, "TOP", UIParent, "CENTER", 0, core.targetFrameY);
         core:SnapToPixelGrid(targetFrame);
         configurePingableUnitFrame(targetFrame, "target");
 
@@ -302,15 +317,15 @@ function core:InitializeBarFrames()
         widgets:SetPoint("TOP")
 
         local primaryResourceBar = core:CreateTargetResourceBar(targetFrame)
-        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, -22)
+        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, -22 - core.barGrowth)
         core:SnapToPixelGrid(primaryResourceBar)
 
         local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame)
-        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, -22)
+        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, -22 - core.barGrowth)
         core:SnapToPixelGrid(targetOfTargetBar)
 
         local castbar = core:CreateTargetCastbar(targetFrame)
-        castbar:SetPoint("BOTTOM", targetFrame, "TOP", 0, 4)
+        castbar:SetPoint("BOTTOM", targetFrame, "TOP", 0, 4 * core.fontScale + core.barGrowth)
 
         local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame)
         BigDebuffs:SetPoint("TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0)
