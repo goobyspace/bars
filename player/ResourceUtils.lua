@@ -44,8 +44,6 @@ end
 
 core.resources = {}
 
--- using our own instead of the blizz one
--- because i like having slightly different colours :3
 core.resources.resourceColours = {
     [Enum.PowerType.Mana] = { r = 20, g = 90, b = 205 },
     [Enum.PowerType.Rage] = { r = 255, g = 20, b = 60 },

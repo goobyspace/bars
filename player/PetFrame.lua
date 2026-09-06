@@ -2,7 +2,6 @@ local _, core = ...
 
 local frame = nil;
 local getPetHappiness = rawget(_G, "GetPetHappiness");
--- pet happiness doesn't exist on retail, classic only
 local hasPetHappiness = type(getPetHappiness) == "function";
 
 local function updateHappiness()
@@ -77,7 +76,6 @@ end
 
 function core:CreatePetFrame(parent)
     frame = CreateFrame("Frame", "PetFrameContainer", parent, "SecureHandlerStateTemplate")
-    -- same height as the HP bar frame so content centered within each lines up vertically
     core:SetPixelSize(frame, core:EvenPixels(core.width * 2 / 3), core.barBgHeight);
 
     frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate")

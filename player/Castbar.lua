@@ -115,8 +115,8 @@ local function updateBar(kicked, empowerEvent)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)       -- red
-    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0); -- gray
+    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)
+    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0);
 
     -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
     -- Era); UNIT_SPELLCAST_(NOT_)INTERRUPTIBLE below keeps currentNotInterruptible in sync instead
@@ -153,7 +153,6 @@ function core:CreatePlayerCastbar(parent)
 
     frame:HookScript("OnEvent", function(self, event, target, _, _, kickedBy)
         if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_START" then
-            -- cancel the kickedClock incase the enemy immediately starts casting again
             if kickedClock then kickedClock:Cancel() end
             kickedWait = false
             castSucceeded = false
@@ -164,7 +163,6 @@ function core:CreatePlayerCastbar(parent)
             currentNotInterruptible = event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE";
             updateBar()
         elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
-            -- if kickedBy is not an ID we still wanna make it clear the cast was stopped
             updateBar(kickedBy or false)
         elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
             castSucceeded = true

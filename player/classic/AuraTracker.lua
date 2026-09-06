@@ -2,22 +2,14 @@ local _, core = ...
 
 if not core.isClassicEra then return end
 
--- Weakaura-like row of spell/aura icons that sits horizontally below the player's primary
--- resource bar. Everything is driven off the core.auraTracker config table below, so adding a
--- new icon is a matter of adding one entry; each entry claims one of the fixed slots in the row.
-
 local iconWidth = 36;
 local iconHeight = 30;
 
--- the row is a fixed grid justified across the full bar width; slot 1 sits flush with the left
--- edge and slot SLOT_COUNT with the right edge, so icons keep their position as others hide
 local slotCount = 8;
 local minIconSpacing = 2;
 
--- how often the OnUpdate driven bits (cooldown text, range, cast counts) refresh
 local updateInterval = 0.1;
 
--- cooldowns at or below this are treated as the global cooldown and not drawn
 local gcdThreshold = 1.5;
 
 local outOfRangeColour = { r = 1, g = 0.25, b = 0.25 };
@@ -136,10 +128,6 @@ core.auraTracker = {
     },
 };
 
--- spell lookups ----------------------------------------------------------------------------
--- Classic Era 1.15 carries the modern C_Spell/C_SpellBook namespaces, so the pre-11.0 globals
--- (GetSpellInfo, IsUsableSpell, IsSpellInRange, IsSpellKnown, ...) are deprecated and unused.
-
 local function GetSpellCooldownInfo(spellID)
     local info = C_Spell.GetSpellCooldown(spellID);
     if not info then return 0, 0, false end
@@ -161,7 +149,6 @@ local function IsSpellKnown(spellID)
     return C_SpellBook.IsSpellKnown(spellID) or C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet);
 end
 
--- highest rank the player currently knows, or nil when none of the ranks are trained
 local function GetKnownSpellID(entry)
     if entry.rankSpellIDs then
         local known = nil;
@@ -173,7 +160,6 @@ local function GetKnownSpellID(entry)
     return IsSpellKnown(entry.spellID) and entry.spellID or nil;
 end
 
--- every spellID that counts as "this entry's aura", so lower ranks still register
 local function GetEntryAuraIDs(entry)
     if not entry.auraIDs then
         local ids = {};
@@ -196,8 +182,6 @@ local function EntryAllowedInCurrentForm(entry, currentForm)
     return form == currentForm;
 end
 
--- helpers ----------------------------------------------------------------------------------
-
 local function FormatRemaining(seconds)
     if seconds >= 60 then
         return string.format("%dm", math.ceil(seconds / 60));
@@ -207,8 +191,6 @@ local function FormatRemaining(seconds)
     return string.format("%.1f", seconds);
 end
 
--- spell icons are square textures; crop them (after the usual border trim) so they fill the
--- non-square button without stretching
 local function GetCroppedTexCoords(width, height)
     local trim = 0.08;
     local span = 1 - (trim * 2);
@@ -272,18 +254,12 @@ local function GetCastsRemaining(entry, spellID)
     return math.floor(current / cost);
 end
 
--- icon construction ------------------------------------------------------------------------
-
--- icon construction ------------------------------------------------------------------------
-
--- where the texts sit depending on how many an entry actually uses
 local textAnchors = {
     [1] = { "CENTER" },
     [2] = { "TOP", "BOTTOM" },
     [3] = { "TOP", "CENTER", "BOTTOM" },
 };
 
--- top to bottom order of the texts an entry uses
 local function GetEntryTexts(entry)
     local texts = {};
     if entry.showTargetCount or entry.trackedAuraSpellID then
@@ -321,18 +297,13 @@ local function CreateIcon(parent, entry)
     button.cooldown:SetHideCountdownNumbers(true);
     button.cooldown:SetDrawEdge(false);
 
-    -- cooldown remaining (spells) / aura duration (auras and reminders)
     button.centreText = button:CreateFontString(nil, "OVERLAY");
 
-    -- how many casts the current resources allow
     button.castCountText = button:CreateFontString(nil, "OVERLAY");
 
-    -- how many targets currently have the tracked aura
     button.auraCountText = button:CreateFontString(nil, "OVERLAY");
     button.auraCountText:SetTextColor(0.6, 0.9, 1);
 
-    -- every text needs a font and an anchor even when the entry doesn't use it, as the update
-    -- functions still clear it
     for _, key in ipairs({ "centreText", "castCountText", "auraCountText" }) do
         button[key]:SetPoint("CENTER", 0, 0);
         core:SetBarFont(button[key], 11);
@@ -452,8 +423,6 @@ local function UpdateReminderIcon(button)
     button.icon:SetDesaturated(auraData == nil);
 end
 
--- frame ------------------------------------------------------------------------------------
-
 function core:CreateAuraTracker(parent)
     local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
     frame:SetSize(core.width, iconHeight);
@@ -469,8 +438,6 @@ function core:CreateAuraTracker(parent)
         table.insert(icons, button);
     end
 
-    -- every icon keeps the slot it declared, so hiding one leaves a gap rather than shuffling
-    -- the rest along; the outermost slots line up with the edges of the bars above
     local function layout()
         local step = math.max(iconWidth + minIconSpacing, (core.width - iconWidth) / (slotCount - 1));
         for _, button in ipairs(icons) do

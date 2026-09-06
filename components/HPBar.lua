@@ -1,40 +1,24 @@
 local _, core = ...
 
 core.ClassColors = {
-    --warrior
     [1] = { r = 0.78, g = 0.61, b = 0.43 },
-    -- paladin
     [2] = { r = 0.96, g = 0.55, b = 0.73 },
-    -- hunter
     [3] = { r = 0.67, g = 0.83, b = 0.45 },
-    -- rogue
     [4] = { r = 1, g = 0.96, b = 0.41 },
-    -- priest
     [5] = { r = 1, g = 1, b = 1 },
-    -- death knight
     [6] = { r = 0.77, g = 0.12, b = 0.23 },
-    -- shaman
     [7] = { r = 0, g = 0.44, b = 0.87 },
-    -- mage
     [8] = { r = 0.25, g = 0.78, b = 0.92 },
-    -- warlock
     [9] = { r = 0.53, g = 0.53, b = 0.93 },
-    -- monk
     [10] = { r = 0, g = 1, b = 0.6 },
-    -- druid
     [11] = { r = 1, g = 0.49, b = 0.04 },
-    -- dh
     [12] = { r = 0.64, g = 0.19, b = 0.79 },
-    -- evoker
     [13] = { r = 0.2, g = 0.58, b = 0.50 },
     ["neutral"] = { r = 1, g = 1, b = 0 },
     ["hostile"] = { r = 1, g = 0, b = 0 },
     ["friendly"] = { r = 0, g = 1, b = 0 },
 }
 
--- creates the chrome shared by every HP bar: background, status bar, and the absorb/heal-absorb/
--- heal-prediction overlay bars. Callers add their own text/labels, unit-specific colouring, and
--- event wiring on top of the returned frame.
 function core:CreateHPBarBase(name, parent, width, height, template)
     local frame = CreateFrame("Frame", name, parent, template);
     core:SetPixelSize(frame, width, height);
@@ -104,8 +88,6 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     return frame;
 end
 
--- updates the bar fill, absorb/heal-absorb overlays, and heal-prediction sliver for `unit`.
--- returns currentHP, maxHP; both nil if the unit has no valid health (caller should Hide()).
 function core:UpdateHPBarValues(frame, unit)
     local maxHP = UnitHealthMax(unit);
     local currentHP = UnitHealth(unit, true);

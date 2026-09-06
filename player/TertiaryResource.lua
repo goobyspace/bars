@@ -6,7 +6,7 @@ local improvedWhirlwind = 85739;
 local improvedWhirlwindMaxStacks = 4;
 local ebonMight = 395296;
 local renewingMist = 115151;
-local renewingMistMaxSegments = 4; -- highest realistic charge cap; actual max can change via talents
+local renewingMistMaxSegments = 4;
 
 local classEvents = {
     ["DRUID"]   = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
@@ -246,8 +246,6 @@ local trackerBuilders = {
     ["RENEWING_MIST"] = function(tracker)
         local color = core.resources.resourceColours["RENEWING_MIST"];
 
-        -- Built up front for the highest realistic cap; updateRenewingMistBar shows/positions
-        -- only as many bars as the real (talent-dependent) max charges calls for.
         tracker.bgs = {};
         tracker.bars = {};
 
@@ -288,8 +286,6 @@ local trackerBuilders = {
     end,
 };
 
--- tldr if you switch spec/form and a tracker isnt relevant anymore hide it
--- if a tracker is now relevant but we havent created it go make it otherwise show it
 local function refreshTrackers()
     for _, tracker in pairs(frame.trackers) do
         if tracker.manaTicker then

@@ -5,9 +5,6 @@ function core:GetPixelUnit()
     return UIParent:GetHeight() / screenHeight;
 end
 
--- UI units are not physical pixels (UIParent is scaled), so every size and offset that has to land
--- on an exact pixel is rounded to a whole number of pixels; otherwise a 1px border ends up straddling
--- two pixel rows and renders as 2px on one side and nothing on the other
 local function snap(units)
     if not units or units == 0 then return 0 end;
     local pixels = math.floor(math.abs(units) / core.pixel + 0.5);

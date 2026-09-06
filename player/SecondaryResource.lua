@@ -49,7 +49,6 @@ local function getResource()
 
     local resource = resourceTable[playerClass];
 
-    -- druid is form-based
     if playerClass == "DRUID" then
         local formID = core:GetShapeshiftFormKey()
         resource = resource and resource[formID or 0]
@@ -68,7 +67,6 @@ local startTime = nil;
 
 local function updateEssenceBar(resource)
     for i = 1, 6 do
-        -- hide just incase
         frame['bar' .. i]:Hide();
         frame['bg' .. i]:Hide();
     end
@@ -91,7 +89,6 @@ local function updateEssenceBar(resource)
         local tickDuration = 5 / (5 / (1 / regenRate))
         local now = GetTime()
 
-        -- If we gained an essence, reset timer
         if current > lastEssence then
             if current < max then
                 startTime = now;
@@ -102,13 +99,11 @@ local function updateEssenceBar(resource)
             end
         end
 
-        -- If missing essence and no timer, start it
         if current < max and not nextEssenceTick then
             startTime = now;
             nextEssenceTick = now + tickDuration
         end
 
-        -- If full essence, hide timer
         if current >= max then
             startTime = nil;
             nextEssenceTick = nil
@@ -146,8 +141,6 @@ local function updateEssenceBar(resource)
     end
 end
 
--- discrete count resources with seperate little bars
--- all the combo points and those who have stolen valor
 local function updateCountBar(resource)
     for i = 1, maxCountSegments do
         frame['bar' .. i]:Hide();
@@ -307,9 +300,6 @@ local function updateColour()
     end
 end
 
--- 12.1 you create these auracontainers to track stuff like stacks in widgets
--- can only really be either an icon or a bar, and not multiple bars either
--- use textures to make fake segments in a progress bar if you need to
 local function createAuraTracker(spellID, configureButton)
     local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
     container:SetPoint("CENTER");
@@ -490,8 +480,6 @@ local trackerBuilders = {
     end,
 };
 
--- tldr if you switch spec and a tracker isnt relevant anymore hide it
--- if a tracker is now relevant but we havent created it go make it otherwise show it
 local function refreshTrackers()
     for _, tracker in pairs(frame.trackers) do
         if tracker.container then

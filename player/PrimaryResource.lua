@@ -16,7 +16,6 @@ local function getResource()
 
     local resource = core.resources.primary[playerClass]
 
-    -- Druid: form-based
     if playerClass == "DRUID" then
         local formID = core:GetShapeshiftFormKey()
         resource = resource and resource[formID or 0]
@@ -98,7 +97,6 @@ local function updateBar()
 end
 
 local function updateColour()
-    -- this is always a bar so we only need to worry about colour
     if not frame or not frame:IsShown() then return end;
 
     local resource = getResource();

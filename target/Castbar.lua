@@ -58,9 +58,9 @@ local function updateBar(target, kicked)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)       -- red
-    local colorKickReady    = CreateColor(0.1, 1, 0.1, 1.0)    -- Green
-    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0); -- gray
+    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)
+    local colorKickReady    = CreateColor(0.1, 1, 0.1, 1.0)
+    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0);
 
     -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
     -- Era); UNIT_SPELLCAST_(NOT_)INTERRUPTIBLE below keeps currentNotInterruptible in sync instead
@@ -69,9 +69,8 @@ local function updateBar(target, kicked)
     end
 
     if interruptSpellID ~= nil then
-        -- retail treats cooldown durations as secret numbers, so readiness is read via the duration
-        -- object's own IsZero() instead of comparing the raw seconds value ourselves
         local ignoreGCD = true
+        -- wrong global this accepts 2 values
         local cooldownDuration = C_Spell.GetSpellCooldownDuration(interruptSpellID, ignoreGCD)
         local spellReady = not cooldownDuration or cooldownDuration:IsZero()
         local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellReady, colorKickReady, colorKickNotReady)
@@ -109,7 +108,6 @@ function core:CreateTargetCastbar(parent)
 
     frame:HookScript("OnEvent", function(self, event, target, _, _, kickedBy)
         if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_START" then
-            -- cancel the kickedClock incase the enemy immediately starts casting again
             if kickedClock then kickedClock:Cancel() end
             kickedWait = false
             currentNotInterruptible = false
@@ -118,7 +116,6 @@ function core:CreateTargetCastbar(parent)
             currentNotInterruptible = event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE";
             updateBar()
         elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
-            -- if kickedBy is not an ID we still wanna make it clear the cast was stopped
             updateBar(target, kickedBy or false)
         elseif event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_DELAYED" then
             updateBar(target, nil)

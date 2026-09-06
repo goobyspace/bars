@@ -1,6 +1,5 @@
 local _, core = ...
 
--- how far incoming heals are allowed to push the heal prediction bar past 100% health
 core.healPredictionOverflow = 1.5;
 
 local function configurePingableUnitFrame(frame, unit, isPlayer)
@@ -128,19 +127,15 @@ function core:SetBarFont(fontString, size)
 end
 
 function core:InitializeBarFrames()
-    -- core variables before anything else
     core.pixel = getPixelUnit();
-    -- fill height of a bar and the bg behind it, which adds the 1px border on each side
     core.barHeight = (core.thickMode and 10 or 3) * core.pixel;
     core.barBgHeight = core.barHeight + 2 * core.pixel;
     core.fontScale = core.thickMode and 1.5 or 1;
     core.castbarHeight = core.thickMode and 28 or 16;
-    -- how much taller a bar is than the default 5px bg, so labels clear the fill
     core.barGrowth = core.barBgHeight - 5 * core.pixel;
     core.labelAboveBar = 10 * core.fontScale + core.barGrowth / 2;
     core.labelBelowBar = -(8 * core.fontScale + core.barGrowth / 2);
 
-    -- spacing is in physical pixels, not UI units, so rows keep their gaps at any UI scale
     core.rowGap = 4 * core.pixel;
     core.rowStep = core.barBgHeight + core.rowGap;
     core.primaryBarOffset = core.rowGap;
@@ -151,16 +146,12 @@ function core:InitializeBarFrames()
     core.width = core:EvenPixels(340);
     core.playerHeight = core:EvenPixels(core.hpRowOffset + 2 * core.rowStep + core.barBgHeight);
     core.targetHeight = core:EvenPixels(-core.targetResourceRowOffset + core.barBgHeight + 2 * core.pixel);
-    -- the player frame bottom is the fixed anchor other addons position against; the stack grows
-    -- upwards from it and the target frame follows so the gap between the bars stays the same
     core.playerFrameY = -194;
     core.frameGap = 43;
     core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
         - core.targetResourceRowOffset;
 
-    -- playerframe
     do
-        -- hide defaults
         PlayerFrame:SetScript("OnEvent", nil);
         PlayerFrame:Hide();
 
@@ -169,12 +160,6 @@ function core:InitializeBarFrames()
         core:SetPixelPoint(playerFrame, "BOTTOM", UIParent, "CENTER", 0, core.playerFrameY);
         core:SnapToPixelGrid(playerFrame);
         configurePingableUnitFrame(playerFrame, "player", true);
-
-        -- debug BG to show the size of click frame
-        -- playerFrame.bg = playerFrame:CreateTexture();
-        -- playerFrame.bg:SetPoint("CENTER");
-        -- playerFrame.bg:SetColorTexture(0, 0, 0, 0.1);
-        -- playerFrame.bg:SetSize(core.width, core.playerHeight);
 
         playerFrame.click = CreateFrame("Button", "PlayerFrameClick", playerFrame, "SecureActionButtonTemplate")
         playerFrame.click:SetPoint("CENTER");
@@ -297,9 +282,7 @@ function core:InitializeBarFrames()
         updateLayout();
     end
 
-    -- targetframe
     do
-        -- hide defaults
         TargetFrame:SetScript("OnEvent", nil);
         TargetFrame:Hide();
 
@@ -308,12 +291,6 @@ function core:InitializeBarFrames()
         core:SetPixelPoint(targetFrame, "TOP", UIParent, "CENTER", 0, core.targetFrameY);
         core:SnapToPixelGrid(targetFrame);
         configurePingableUnitFrame(targetFrame, "target");
-
-        -- debug BG to show the size of click frame
-        -- targetFrame.bg = targetFrame:CreateTexture();
-        -- targetFrame.bg:SetPoint("CENTER");
-        -- targetFrame.bg:SetColorTexture(0, 0, 0, 0.1);
-        -- targetFrame.bg:SetSize(core.width, core.targetHeight);
 
         targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
         targetFrame.click:SetPoint("CENTER");

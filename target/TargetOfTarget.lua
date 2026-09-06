@@ -58,11 +58,6 @@ function core:CreateTargetTargetHPBar(parent)
     frame.click:SetAttribute("type2", "togglemenu")
     frame.click:RegisterForClicks("AnyUp", "AnyDown")
 
-    -- frame.bg = frame:CreateTexture();
-    -- frame.bg:SetPoint("CENTER");
-    -- frame.bg:SetColorTexture(1, 0, 0, 0.1);
-    -- frame.bg:SetSize(core.width/4, 12);
-
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")
     frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "targettarget")

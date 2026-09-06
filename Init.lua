@@ -9,8 +9,6 @@ function core:InitEventHandler(event, name)
         return
     end
 
-    -- UIParent is still at scale 1 during ADDON_LOADED, so the pixel size the bars are built from
-    -- would be wrong; wait for login when the UI scale has been applied
     core:InitializeBarFrames()
 end
 

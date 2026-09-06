@@ -1,7 +1,5 @@
 local _, core = ...
 
--- creates the chrome shared by every castbar: background, status bar, icon, and name/target
--- fontstrings. Callers add their own event wiring (and, for the player, empower stages) on top.
 function core:CreateCastbarBase(name, parent)
     local frame = CreateFrame("Frame", name, parent)
     frame:SetSize(core.width, core.castbarHeight)
@@ -40,7 +38,6 @@ function core:CreateCastbarBase(name, parent)
     return frame;
 end
 
--- renders the frozen "kicked" red bar state shared by the player/target castbars
 function core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName)
     frame.name:SetText(savedName)
     frame.icon:SetTexture(savedIcon)

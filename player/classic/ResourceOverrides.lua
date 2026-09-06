@@ -2,7 +2,6 @@ local _, core = ...
 
 if not core.isClassicEra then return end
 
--- Overwrite everything that doesn't exist
 core.resources.primary["DEATHKNIGHT"] = nil;
 core.resources.primary["DEMONHUNTER"] = nil;
 core.resources.primary["EVOKER"] = nil;
