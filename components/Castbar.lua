@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 function core:CreateCastbarBase(name, parent)
     local frame = CreateFrame("Frame", name, parent)
@@ -7,7 +8,7 @@ function core:CreateCastbarBase(name, parent)
     frame.bg = frame:CreateTexture()
     core:SetPixelPoint(frame.bg, "RIGHT", frame, "RIGHT", 0, 0)
     frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0)
+    frame.bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b)
     core:SetPixelSize(frame.bg, core.width - core.castbarHeight, core.castbarHeight)
     frame.bg:SetDrawLayer("OVERLAY", -1)
 
@@ -43,7 +44,7 @@ function core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName)
     if kickedName then
         frame.target:SetText(UnitNameFromGUID(kickedName))
     end
-    frame.bar:SetStatusBarColor(1.0, 0.1, 0.2)
+    frame.bar:SetStatusBarColor(colours.castKicked.r, colours.castKicked.g, colours.castKicked.b)
     local durationObject = C_DurationUtil.CreateDuration()
     durationObject:SetTimeFromStart(0, 0.1)
     frame.bar:SetTimerDuration(durationObject,

@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 if not core.isClassicEra then return end
 
@@ -76,7 +77,7 @@ function core:CreateManaTicker(bar)
     ticker:Hide();
 
     local line = ticker:CreateTexture(nil, "OVERLAY", nil, 2);
-    line:SetColorTexture(1, 1, 1, 1);
+    line:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a);
     core:SetPixelSize(line, core.pixel, core.barHeight);
     core:SetPixelPoint(line, "LEFT", ticker, "LEFT", 0, 0);
 

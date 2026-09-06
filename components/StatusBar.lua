@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 function core:CreateSimpleStatusBar(name, parent, width, height, opts)
     opts = opts or {}
@@ -8,7 +9,7 @@ function core:CreateSimpleStatusBar(name, parent, width, height, opts)
     frame.bg = frame:CreateTexture()
     core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0)
     frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0)
+    frame.bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b)
     core:SetPixelSize(frame.bg, width, height)
     frame.bg:SetDrawLayer("OVERLAY", -1)
 

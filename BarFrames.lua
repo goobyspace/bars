@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local function configurePingableUnitFrame(frame, unit, isPlayer)
     frame.unit = unit;
@@ -92,7 +93,7 @@ local function showCopyableText(text)
 
         local bg = copyFrame:CreateTexture(nil, "BACKGROUND");
         bg:SetAllPoints();
-        bg:SetColorTexture(0, 0, 0, 0.92);
+        bg:SetColorTexture(colours.blackDialog.r, colours.blackDialog.g, colours.blackDialog.b, colours.blackDialog.a);
 
         local close = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton");
         close:SetPoint("TOPRIGHT");

@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 if core.hasAuraContainer then return end
 
@@ -11,7 +12,7 @@ local function InitializeButton(button)
     button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
     button.PurgeBorder:SetPoint("TOPLEFT")
     button.PurgeBorder:SetPoint("BOTTOMRIGHT")
-    button.PurgeBorder:SetColorTexture(1, 1, 1, 1)
+    button.PurgeBorder:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a)
 end
 
 local function UpdateButton(button, auraData)

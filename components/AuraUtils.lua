@@ -2,7 +2,8 @@ local _, core = ...
 
 function core:InitializeAuraButtonBase(button, iconSize)
     if not button.icon then
-        button.icon = button:CreateTexture(nil, "ARTWORK")
+        -- native AuraContainer buttons expect an OVERLAY-layer icon texture, or it renders blank/white
+        button.icon = button:CreateTexture(nil, "OVERLAY")
         button.icon:SetAllPoints()
         if button.SetIcon then button:SetIcon(button.icon) end
     end

@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame = nil;
 local predictedCostPercent = 0;
@@ -121,7 +122,8 @@ function core:CreatePrimaryBar(parent)
     -- A plain texture sized directly from costPercent (static spell data, never secret) -- this never
     -- needs to touch the (possibly secret) current/max power values or rely on any StatusBar fill style.
     frame.costPredictionBar = frame.bar:CreateTexture(nil, "ARTWORK", nil, 1);
-    frame.costPredictionBar:SetColorTexture(0, 0, 0, 0.6);
+    frame.costPredictionBar:SetColorTexture(colours.blackCostPrediction.r, colours.blackCostPrediction.g,
+        colours.blackCostPrediction.b, colours.blackCostPrediction.a);
     frame.costPredictionBar:SetPoint("TOPRIGHT", frame.bar:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
     frame.costPredictionBar:SetPoint("BOTTOMRIGHT", frame.bar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
     frame.costPredictionBar:Hide();

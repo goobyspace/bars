@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 if not core.isClassicEra then return end
 
@@ -46,7 +47,7 @@ local rangedBar, rangedBg;
 local function createSwingBar(colorKey)
     local bg = frame:CreateTexture();
     bg:SetTexture(134532)
-    bg:SetColorTexture(0, 0, 0);
+    bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
     bg:SetHeight(core.barBgHeight);
     bg:SetDrawLayer("OVERLAY", -1);
     bg:Hide();

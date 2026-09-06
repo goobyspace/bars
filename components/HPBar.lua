@@ -1,27 +1,11 @@
 local _, core = ...
 
-core.ClassColors = {
-    [1] = { r = 0.78, g = 0.61, b = 0.43 },
-    [2] = { r = 0.96, g = 0.55, b = 0.73 },
-    [3] = { r = 0.67, g = 0.83, b = 0.45 },
-    [4] = { r = 1, g = 0.96, b = 0.41 },
-    [5] = { r = 1, g = 1, b = 1 },
-    [6] = { r = 0.77, g = 0.12, b = 0.23 },
-    [7] = { r = 0, g = 0.44, b = 0.87 },
-    [8] = { r = 0.25, g = 0.78, b = 0.92 },
-    [9] = { r = 0.53, g = 0.53, b = 0.93 },
-    [10] = { r = 0, g = 1, b = 0.6 },
-    [11] = { r = 1, g = 0.49, b = 0.04 },
-    [12] = { r = 0.64, g = 0.19, b = 0.79 },
-    [13] = { r = 0.2, g = 0.58, b = 0.50 },
-    ["neutral"] = { r = 1, g = 1, b = 0 },
-    ["hostile"] = { r = 1, g = 0, b = 0 },
-    ["friendly"] = { r = 0, g = 1, b = 0 },
-}
+local colours = core.colours
+core.ClassColors = colours.classes
 
 function core:CreateHPBarBase(name, parent, width, height, template)
     local frame = core:CreateSimpleStatusBar(name, parent, width, height, { template = template });
-    frame.bar:SetStatusBarColor(1, 1, 1);
+    frame.bar:SetStatusBarColor(colours.white.r, colours.white.g, colours.white.b);
 
     frame.healCalc = CreateUnitHealPredictionCalculator();
     frame.healCalc:SetIncomingHealOverflowPercent(core.healPredictionOverflow);
@@ -38,7 +22,8 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     frame.healPredictionBar:SetPoint("LEFT", frame.bar:GetStatusBarTexture(), "RIGHT", 0, 0);
     frame.healPredictionBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
     frame.healPredictionBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
-    frame.healPredictionBar:SetStatusBarColor(0, 1, 0.59, 0.8)
+    frame.healPredictionBar:SetStatusBarColor(colours.healPrediction.r, colours.healPrediction.g,
+        colours.healPrediction.b, colours.healPrediction.a)
 
     -- shield/absorb amount: like CompactUnitFrame's totalAbsorb bar, drawn as an extension past
     -- wherever current health + predicted healing ends, via the same zero-offset anchor trick as
@@ -48,7 +33,7 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     frame.absorbBar:SetPoint("LEFT", frame.healPredictionBar:GetStatusBarTexture(), "RIGHT", 0, 0);
     frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
     frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 2)
-    frame.absorbBar:SetStatusBarColor(1, 1, 1, 0.7)
+    frame.absorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
 
     -- shield overflow: retail won't let Lua subtract two secret numbers, so instead of computing the
     -- overflow amount ourselves this bar is clamped to (missingHealthBoundary, maxHP) and fed the raw
@@ -61,7 +46,7 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     core:SetPixelSize(frame.absorbOverflowBar, width, height);
     frame.absorbOverflowBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
     frame.absorbOverflowBar:SetFrameLevel(frame.bar:GetFrameLevel() + 4)
-    frame.absorbOverflowBar:SetStatusBarColor(1, 1, 1, 0.7)
+    frame.absorbOverflowBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
 
     -- heal-absorb debuff: like CompactUnitFrame's myHealAbsorb bar, eats into current health from its
     -- right edge inward, so it's reverse-filled and anchored to that same edge instead of overlaid
@@ -71,7 +56,7 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     frame.healAbsorbBar:SetReverseFill(true);
     frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay")
     frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 3)
-    frame.healAbsorbBar:SetStatusBarColor(1, 1, 1, 0.7)
+    frame.healAbsorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
 
     return frame;
 end

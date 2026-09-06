@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame = nil;
 local interruptSpellID = nil
@@ -58,9 +59,10 @@ local function updateBar(target, kicked)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)
-    local colorKickReady    = CreateColor(0.1, 1, 0.1, 1.0)
-    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0);
+    local colorKickNotReady = CreateColor(colours.castKickNotReady.r, colours.castKickNotReady.g,
+        colours.castKickNotReady.b)
+    local colorKickReady = CreateColor(colours.castKickReady.r, colours.castKickReady.g, colours.castKickReady.b)
+    local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
     -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
     -- Era); UNIT_SPELLCAST_(NOT_)INTERRUPTIBLE below keeps currentNotInterruptible in sync instead
@@ -70,7 +72,7 @@ local function updateBar(target, kicked)
 
     if interruptSpellID ~= nil then
         local ignoreGCD = true
-        -- wrong global this accepts 2 values
+        -- this accepts 2 values the language server is wrong
         local cooldownDuration = C_Spell.GetSpellCooldownDuration(interruptSpellID, ignoreGCD)
         local spellReady = not cooldownDuration or cooldownDuration:IsZero()
         local baseColor = C_CurveUtil.EvaluateColorFromBoolean(spellReady, colorKickReady, colorKickNotReady)

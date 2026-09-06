@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame = nil;
 local savedIcon = nil
@@ -32,7 +33,7 @@ local function addEmpowerStages(numStages, totalDuration)
         local marker = frame.empowerStages[stageIndex + 1]
         if not marker then
             marker = frame.bar:CreateTexture(nil, "OVERLAY")
-            marker:SetColorTexture(1, 1, 1)
+            marker:SetColorTexture(colours.white.r, colours.white.g, colours.white.b)
             marker:SetWidth(1)
             marker:SetHeight(core.castbarHeight)
             frame.empowerStages[stageIndex + 1] = marker
@@ -115,8 +116,9 @@ local function updateBar(kicked, empowerEvent)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(1.0, 0.8, 0.2)
-    local colorBlocked      = CreateColor(0.5, 0.5, 0.5, 1.0);
+    local colorKickNotReady = CreateColor(colours.castKickNotReady.r, colours.castKickNotReady.g,
+        colours.castKickNotReady.b)
+    local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
     -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
     -- Era); UNIT_SPELLCAST_(NOT_)INTERRUPTIBLE below keeps currentNotInterruptible in sync instead

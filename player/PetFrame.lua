@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame = nil;
 local getPetHappiness = rawget(_G, "GetPetHappiness");
@@ -92,7 +93,7 @@ function core:CreatePetFrame(parent)
     core:SetPixelPoint(hpFrame.bg, "LEFT", frame, "LEFT", 0, 0);
     frame.hpBg = hpFrame.bg;
     frame.hpBar = hpFrame.bar;
-    frame.hpBar:SetStatusBarColor(200 / 255, 70 / 255, 80 / 255);
+    frame.hpBar:SetStatusBarColor(colours.playerHealth.r, colours.playerHealth.g, colours.playerHealth.b);
 
     local powerFrame = core:CreateSimpleStatusBar(nil, frame, barWidth, core.barBgHeight);
     core:SetPixelPoint(powerFrame.bg, "LEFT", frame.hpBg, "RIGHT", FOCUS_GAP, 0);
@@ -101,6 +102,7 @@ function core:CreatePetFrame(parent)
 
     frame.name = frame:CreateFontString("PetNameText")
     frame.name:SetDrawLayer("OVERLAY", 1);
+    frame.name:SetSize(barWidth * 0.6, core.barBgHeight)
     frame.name:SetPoint("BOTTOMRIGHT", frame.powerBg, "TOPRIGHT", 0, 0);
     frame.name:SetJustifyH("RIGHT");
     core:SetBarFont(frame.name, 8);

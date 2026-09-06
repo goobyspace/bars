@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 if not core.isClassicEra then return end
 
@@ -12,7 +13,7 @@ local updateInterval = 0.1;
 
 local gcdThreshold = 1.5;
 
-local outOfRangeColour = { r = 1, g = 0.25, b = 0.25 };
+local outOfRangeColour = colours.outOfRange;
 
 --[[
     core.auraTracker is keyed by class token, each value being a list of entries.
@@ -285,7 +286,7 @@ local function CreateIcon(parent, entry)
     button.border = button:CreateTexture(nil, "BACKGROUND");
     button.border:SetPoint("TOPLEFT", -1, 1);
     button.border:SetPoint("BOTTOMRIGHT", 1, -1);
-    button.border:SetColorTexture(0, 0, 0);
+    button.border:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
 
     button.icon = button:CreateTexture(nil, "ARTWORK");
     button.icon:SetAllPoints();
@@ -302,7 +303,7 @@ local function CreateIcon(parent, entry)
     button.castCountText = button:CreateFontString(nil, "OVERLAY");
 
     button.auraCountText = button:CreateFontString(nil, "OVERLAY");
-    button.auraCountText:SetTextColor(0.6, 0.9, 1);
+    button.auraCountText:SetTextColor(colours.auraCountText.r, colours.auraCountText.g, colours.auraCountText.b);
 
     for _, key in ipairs({ "centreText", "castCountText", "auraCountText" }) do
         button[key]:SetPoint("CENTER", 0, 0);
@@ -360,7 +361,7 @@ local function UpdateSpellIcon(button)
         if inRange == false then
             button.icon:SetVertexColor(outOfRangeColour.r, outOfRangeColour.g, outOfRangeColour.b);
         else
-            button.icon:SetVertexColor(1, 1, 1);
+            button.icon:SetVertexColor(colours.white.r, colours.white.g, colours.white.b);
         end
     end
 

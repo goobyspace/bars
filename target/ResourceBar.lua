@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame = nil;
 
@@ -13,8 +14,9 @@ local function updateColour()
     local enum, _, r, g, b = UnitPowerType("target")
     local color = core.resources.resourceColours[enum]
 
-    frame.bar:SetStatusBarColor(r or color and color.r / 255 or 0, g or color and color.g / 255 or 0,
-        b or color and color.b / 255 or 0)
+    frame.bar:SetStatusBarColor(r or color and color.r / 255 or colours.black.r,
+        g or color and color.g / 255 or colours.black.g,
+        b or color and color.b / 255 or colours.black.b)
 end
 
 function core:CreateTargetResourceBar(parent)

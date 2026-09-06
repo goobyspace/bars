@@ -1,6 +1,7 @@
 ---@diagnostic disable: undefined-global
 
 local _, core = ...
+local colours = core.colours
 
 if not core.hasAuraContainer then return end
 
@@ -48,7 +49,7 @@ function core:CreateMainBuffsFrame(parent)
         button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
         button.PurgeBorder:SetPoint("TOPLEFT")
         button.PurgeBorder:SetPoint("BOTTOMRIGHT")
-        button.PurgeBorder:SetColorTexture(1, 1, 1, 1)
+        button.PurgeBorder:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a)
 
         table.insert(buffButtons, button)
         ApplyPurgeBorder(button)
@@ -66,7 +67,7 @@ function core:CreateMainBuffsFrame(parent)
         layout = { elementSpacing = 2 },
     })
 
-    knowsPurge = CheckKnowsPurge();
+    knowsPurge = core:CheckKnowsPurge();
 
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")

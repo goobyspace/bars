@@ -1,4 +1,5 @@
 local _, core = ...
+local colours = core.colours
 
 local frame;
 
@@ -339,7 +340,7 @@ local function buildCountSegments(tracker)
         local bg = frame['bg' .. i];
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
-        bg:SetColorTexture(0, 0, 0);
+        bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, 100, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
 
@@ -366,6 +367,7 @@ local trackerBuilders = {
 
     ["STAGGER"] = function(tracker)
         local barFrame = core:CreateSimpleStatusBar(nil, frame, core.width, core.barBgHeight);
+        core:SetPixelPoint(barFrame.bg, "CENTER", frame, "CENTER", 0, 0);
         tracker.bar = barFrame.bar;
         table.insert(tracker.visuals, barFrame.bg);
         table.insert(tracker.visuals, barFrame.bar);
@@ -376,7 +378,7 @@ local trackerBuilders = {
 
         for i = 1, teachingsMaxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
-            bars:SetColorTexture(0, 0, 0);
+            bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
@@ -397,7 +399,7 @@ local trackerBuilders = {
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
-        bg:SetColorTexture(0, 0, 0);
+        bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
@@ -419,7 +421,7 @@ local trackerBuilders = {
         local gapWidth = 4 * scale;
         for i = 1, vengeanceSoulFragmentsMaxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
-            bars:SetColorTexture(0, 0, 0);
+            bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + gapWidth), 0);
             table.insert(tracker.visuals, bars);
@@ -440,7 +442,7 @@ local trackerBuilders = {
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
         bg:SetTexture(134532)
-        bg:SetColorTexture(0, 0, 0);
+        bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
@@ -454,7 +456,7 @@ local trackerBuilders = {
         local segmentWidth = (core.width - 2 * core.pixel) / maelstromWeaponMaxStacks;
         for i = 1, maelstromWeaponMaxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
-            bars:SetColorTexture(0, 0, 0);
+            bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
