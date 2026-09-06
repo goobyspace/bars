@@ -21,6 +21,13 @@ local rangedSpellIDs = {
 local defaultRangedSpeed = 2.0;
 local maxMeasuredRangedInterval = 10;
 
+local nextSwingSpellNames = {
+    ["Heroic Strike"] = true,
+    ["Cleave"] = true,
+    ["Maul"] = true,
+    ["Raptor Strike"] = true,
+};
+
 local playerGUID;
 local inCombat = false;
 
@@ -201,7 +208,7 @@ function core:CreateSwingTimer(parent)
         elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
             if not combatLogGetCurrentEventInfo then return end
 
-            local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, spellID = combatLogGetCurrentEventInfo();
+            local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, spellID, spellName = combatLogGetCurrentEventInfo();
             if sourceGUID ~= playerGUID then return end
 
             if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then
@@ -209,6 +216,9 @@ function core:CreateSwingTimer(parent)
             elseif rangedSpellIDs[spellID]
                 and (subevent == "SPELL_CAST_SUCCESS" or subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
                 onRangedShotLanded();
+            elseif nextSwingSpellNames[spellName]
+                and (subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
+                onMeleeSwingLanded();
             end
         end
     end)

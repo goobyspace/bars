@@ -36,7 +36,7 @@ local function updateBar()
 
     local maxHP = UnitHealthMax("pet");
     local currentHP = UnitHealth("pet", true);
-    if not maxHP or (not issecretvalue(maxHP) and maxHP <= 0) then
+    if not maxHP or not core:IsSafePositiveNumber(maxHP) then
         return;
     end
 
@@ -53,7 +53,7 @@ local function updateBar()
     end
 
     local maxPower = UnitPowerMax("pet", powerType);
-    if not maxPower or (not issecretvalue(maxPower) and maxPower <= 0) then
+    if not maxPower or not core:IsSafePositiveNumber(maxPower) then
         frame.powerBar:Hide();
         frame.powerBg:Hide();
         frame.powerText:SetText("");
@@ -88,28 +88,16 @@ function core:CreatePetFrame(parent)
     local barWidth = core.width / 3 - 40;
     local FOCUS_GAP = 2;
 
-    frame.hpBg = frame:CreateTexture();
-    core:SetPixelPoint(frame.hpBg, "LEFT", frame, "LEFT", 0, 0);
-    frame.hpBg:SetTexture(134532)
-    frame.hpBg:SetColorTexture(0, 0, 0);
-    core:SetPixelSize(frame.hpBg, barWidth, core.barBgHeight);
-    frame.hpBg:SetDrawLayer("OVERLAY", -1);
-
-    frame.hpBar = CreateFrame("StatusBar", nil, frame);
-    frame.hpBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    core:InsetBarInBackground(frame.hpBar, frame.hpBg);
+    local hpFrame = core:CreateSimpleStatusBar(nil, frame, barWidth, core.barBgHeight);
+    core:SetPixelPoint(hpFrame.bg, "LEFT", frame, "LEFT", 0, 0);
+    frame.hpBg = hpFrame.bg;
+    frame.hpBar = hpFrame.bar;
     frame.hpBar:SetStatusBarColor(200 / 255, 70 / 255, 80 / 255);
 
-    frame.powerBg = frame:CreateTexture();
-    core:SetPixelPoint(frame.powerBg, "LEFT", frame.hpBg, "RIGHT", FOCUS_GAP, 0);
-    frame.powerBg:SetTexture(134532)
-    frame.powerBg:SetColorTexture(0, 0, 0);
-    core:SetPixelSize(frame.powerBg, barWidth, core.barBgHeight);
-    frame.powerBg:SetDrawLayer("OVERLAY", -1);
-
-    frame.powerBar = CreateFrame("StatusBar", nil, frame);
-    frame.powerBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    core:InsetBarInBackground(frame.powerBar, frame.powerBg);
+    local powerFrame = core:CreateSimpleStatusBar(nil, frame, barWidth, core.barBgHeight);
+    core:SetPixelPoint(powerFrame.bg, "LEFT", frame.hpBg, "RIGHT", FOCUS_GAP, 0);
+    frame.powerBg = powerFrame.bg;
+    frame.powerBar = powerFrame.bar;
 
     frame.name = frame:CreateFontString("PetNameText")
     frame.name:SetDrawLayer("OVERLAY", 1);

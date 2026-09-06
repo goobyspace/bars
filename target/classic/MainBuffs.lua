@@ -2,45 +2,11 @@ local _, core = ...
 
 if core.hasAuraContainer then return end
 
--- classic era purges are on the player's own spellbook (priest/shaman) or the pet's (warlock)
-local classicPurgeSpellIDs = {
-    527,  -- priest: dispel magic
-    370,  -- shaman: purge (rank 1)
-    8012, -- shaman: purge (rank 2)
-};
-
-local classicPetPurgeSpellIDs = {
-    19505, -- warlock felhunter: devour magic (rank 1)
-    19731, -- rank 2
-    19734, -- rank 3
-    19736, -- rank 4
-};
-
 local knowsPurge = false;
-
-local function CheckKnowsPurge()
-    for _, spellID in ipairs(classicPurgeSpellIDs) do
-        if C_SpellBook.IsSpellKnown(spellID) then
-            return true;
-        end
-    end
-    for _, spellID in ipairs(classicPetPurgeSpellIDs) do
-        if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
-            return true;
-        end
-    end
-    return false;
-end
-
 local maxBuffs = 16
 
 local function InitializeButton(button)
-    button.icon = button:CreateTexture(nil, "ARTWORK")
-    button.icon:SetAllPoints()
-
-    button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-    button.cooldown:SetAllPoints()
-    button.cooldown:SetHideCountdownNumbers(true)
+    core:InitializeAuraButtonBase(button)
 
     button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
     button.PurgeBorder:SetPoint("TOPLEFT")
@@ -49,12 +15,7 @@ local function InitializeButton(button)
 end
 
 local function UpdateButton(button, auraData)
-    button.icon:SetTexture(auraData.icon)
-
-    local duration = auraData.duration or 0
-    local start = duration > 0 and (auraData.expirationTime - duration) or 0
-    CooldownFrame_Set(button.cooldown, start, duration, duration > 0)
-
+    core:UpdateAuraCooldown(button, auraData)
     button.PurgeBorder:SetShown(knowsPurge and auraData.isStealable);
 end
 
@@ -78,7 +39,7 @@ function core:CreateMainBuffsFrame(parent)
         maxFrameCount = maxBuffs,
     })
 
-    knowsPurge = CheckKnowsPurge();
+    knowsPurge = core:CheckKnowsPurge();
 
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
@@ -88,7 +49,7 @@ function core:CreateMainBuffsFrame(parent)
     eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
     eventFrame:SetScript("OnEvent", function(_, event)
         if event == "PLAYER_TALENT_UPDATE" or event == "UNIT_PET" then
-            knowsPurge = CheckKnowsPurge();
+            knowsPurge = core:CheckKnowsPurge();
         end
         container:Update()
     end)

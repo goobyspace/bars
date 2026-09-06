@@ -14,15 +14,7 @@ function core:CreateImportantDebuffsFrame(parent)
     frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down)
 
     local function initializeFrame(button)
-        local icon = button:CreateTexture(nil, "OVERLAY")
-        icon:SetAllPoints()
-        button:SetIcon(icon)
-        button:SetSize(32, 32)
-
-        local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-        cooldown:SetAllPoints()
-        cooldown:SetHideCountdownNumbers(true)
-        button:SetDurationCooldown(cooldown)
+        core:InitializeAuraButtonBase(button, 32)
     end
 
     frame:AddAuraGroup("CrowdControl", AuraUtil.AuraFilters.Harmful .. "|" .. AuraUtil.AuraFilters.CrowdControl, {

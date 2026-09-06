@@ -33,7 +33,7 @@ function core.Utils:MapUnique(arr, func)
 end
 
 function core.Utils:FormatTime(seconds)
-    local minutes = floor(seconds / 60)
+    local minutes = math.floor(seconds / 60)
     local secondsLeft = seconds % 60
     if secondsLeft < 10 and minutes > 0 then
         secondsLeft = "0" .. secondsLeft

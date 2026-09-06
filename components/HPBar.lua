@@ -20,20 +20,8 @@ core.ClassColors = {
 }
 
 function core:CreateHPBarBase(name, parent, width, height, template)
-    local frame = CreateFrame("Frame", name, parent, template);
-    core:SetPixelSize(frame, width, height);
-
-    frame.bg = frame:CreateTexture();
-    core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0);
-    frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0);
-    core:SetPixelSize(frame.bg, width, height);
-    frame.bg:SetDrawLayer("OVERLAY", -1);
-
-    frame.bar = CreateFrame("StatusBar", nil, frame);
-    frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    core:InsetBarInBackground(frame.bar, frame.bg);
-    frame.bar:SetStatusBarColor(1, 1, 1)
+    local frame = core:CreateSimpleStatusBar(name, parent, width, height, { template = template });
+    frame.bar:SetStatusBarColor(1, 1, 1);
 
     frame.healCalc = CreateUnitHealPredictionCalculator();
     frame.healCalc:SetIncomingHealOverflowPercent(core.healPredictionOverflow);

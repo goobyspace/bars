@@ -18,19 +18,7 @@ local function updateColour()
 end
 
 function core:CreateTargetResourceBar(parent)
-    frame = CreateFrame("Frame", "TargetResourceContainer", parent)
-    core:SetPixelSize(frame, core.width / 3 * 2, core.barBgHeight);
-
-    frame.bg = frame:CreateTexture();
-    core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0);
-    frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0);
-    core:SetPixelSize(frame.bg, core.width / 3 * 2, core.barBgHeight);
-    frame.bg:SetDrawLayer("OVERLAY", -1);
-
-    frame.bar = CreateFrame("StatusBar", nil, frame);
-    frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    core:InsetBarInBackground(frame.bar, frame.bg);
+    frame = core:CreateSimpleStatusBar("TargetResourceContainer", parent, core.width / 3 * 2, core.barBgHeight);
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")

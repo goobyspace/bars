@@ -10,8 +10,16 @@
 ## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
+utils/Utils.lua
+utils/LayoutConfig.lua
+utils/VersionCompat.lua
+utils/SecretUtils.lua
+utils/ResourceData.lua
+
 player/ResourceUtils.lua
 components/PixelUtils.lua
+components/StatusBar.lua
+components/AuraUtils.lua
 components/HPBar.lua
 components/Castbar.lua
 player/classic/ResourceOverrides.lua
@@ -37,6 +45,5 @@ target/classic/ImportantDebuffs.lua
 target/classic/MainBuffs.lua
 target/classic/NormalDebuffs.lua
 
-Utils.lua
 BarFrames.lua
 Init.lua

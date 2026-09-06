@@ -186,21 +186,13 @@ end
 
 local trackerBuilders = {
     [Enum.PowerType.Mana] = function(tracker)
-        tracker.bg = frame:CreateTexture();
-        tracker.bg:SetPoint("CENTER");
-        tracker.bg:SetTexture(134532)
-        tracker.bg:SetColorTexture(0, 0, 0);
-        core:SetPixelSize(tracker.bg, core.width / 3, core.barBgHeight);
-        tracker.bg:SetDrawLayer("OVERLAY", -1);
-        table.insert(tracker.visuals, tracker.bg);
-
-        tracker.bar = CreateFrame("StatusBar", nil, frame);
-        tracker.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-        tracker.bar:SetPoint("CENTER");
-        core:SetPixelSize(tracker.bar, core.width / 3 - 2 * core.pixel, core.barHeight);
+        local barFrame = core:CreateSimpleStatusBar(nil, frame, core.width / 3, core.barBgHeight);
+        tracker.bg = barFrame.bg;
+        tracker.bar = barFrame.bar;
         if core.CreateManaTicker then
             tracker.manaTicker = core:CreateManaTicker(tracker.bar);
         end
+        table.insert(tracker.visuals, tracker.bg);
         table.insert(tracker.visuals, tracker.bar);
     end,
 

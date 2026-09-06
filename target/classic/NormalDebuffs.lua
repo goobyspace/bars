@@ -8,12 +8,7 @@ local debuffFilterString = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harm
 local maxDebuffs = 10
 
 local function InitializeButton(button)
-    button.icon = button:CreateTexture(nil, "ARTWORK")
-    button.icon:SetAllPoints()
-
-    button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-    button.cooldown:SetAllPoints()
-    button.cooldown:SetHideCountdownNumbers(true)
+    core:InitializeAuraButtonBase(button)
 
     button.border = button:CreateTexture(nil, "OVERLAY")
     button.border:SetPoint("TOPLEFT", -1, 1)
@@ -21,11 +16,7 @@ local function InitializeButton(button)
 end
 
 local function UpdateButton(button, auraData)
-    button.icon:SetTexture(auraData.icon)
-
-    local duration = auraData.duration or 0
-    local start = duration > 0 and (auraData.expirationTime - duration) or 0
-    CooldownFrame_Set(button.cooldown, start, duration, duration > 0)
+    core:UpdateAuraCooldown(button, auraData)
 
     AuraUtil.SetAuraBorderColor(button.border, auraData.dispelName);
 end

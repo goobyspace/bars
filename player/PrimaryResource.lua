@@ -108,24 +108,10 @@ local function updateColour()
 end
 
 function core:CreatePrimaryBar(parent)
-    frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
-    core:SetPixelSize(frame, core.width, core.barBgHeight);
-
-    frame.bg = frame:CreateTexture();
-    core:SetPixelPoint(frame.bg, "CENTER", frame, "CENTER", 0, 0);
-    frame.bg:SetTexture(134532)
-    frame.bg:SetColorTexture(0, 0, 0);
-    core:SetPixelSize(frame.bg, core.width, core.barBgHeight);
-    frame.bg:SetDrawLayer("OVERLAY", -1);
-
-    frame.bar = CreateFrame("StatusBar", nil, frame);
-    frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-    core:InsetBarInBackground(frame.bar, frame.bg);
-
-    frame.text = frame.bar:CreateFontString("PrimaryText");
-    frame.text:SetDrawLayer("OVERLAY", 1);
-    frame.text:SetPoint("CENTER", 0, 0);
-    core:SetBarFont(frame.text, 14)
+    frame = core:CreateSimpleStatusBar("PrimaryResourceContainer", parent, core.width, core.barBgHeight, {
+        includeText = true,
+        fontSize = 14,
+    });
 
     if core.CreateManaTicker then
         frame.manaTicker = core:CreateManaTicker(frame.bar);

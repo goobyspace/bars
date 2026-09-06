@@ -25,15 +25,7 @@ function core:CreateNormalDebuffsFrame(parent)
     end
 
     local function initializeFrame(button)
-        local icon = button:CreateTexture(nil, "OVERLAY")
-        icon:SetAllPoints()
-        button:SetIcon(icon)
-        button:SetSize(20, 20)
-
-        local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-        cooldown:SetAllPoints()
-        cooldown:SetHideCountdownNumbers(true)
-        button:SetDurationCooldown(cooldown)
+        core:InitializeAuraButtonBase(button, 20)
 
         local border = button:CreateTexture(nil, "OVERLAY")
         border:SetPoint("TOPLEFT", -1, 1)

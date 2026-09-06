@@ -4,24 +4,7 @@ local _, core = ...
 
 if not core.hasAuraContainer then return end
 
-local purgeSpellIDs = {
-    528,    -- dispel magic
-    370,    -- purge
-    30449,  -- spellsteal
-    378438, -- scouring flame
-};
-
 local knowsPurge = false;
-
-local function CheckKnowsPurge()
-    for _, spellID in ipairs(purgeSpellIDs) do
-        if C_SpellBook.IsSpellKnown(spellID) then
-            return true;
-        end
-    end
-    return false;
-end
-
 local maxBuffs = 16
 
 function core:CreateMainBuffsFrame(parent)
@@ -45,7 +28,7 @@ function core:CreateMainBuffsFrame(parent)
     end
 
     local function UpdateKnowsPurge()
-        local updated = CheckKnowsPurge();
+        local updated = core:CheckKnowsPurge();
         if updated ~= knowsPurge then
             knowsPurge = updated;
             for _, button in ipairs(buffButtons) do
@@ -60,15 +43,7 @@ function core:CreateMainBuffsFrame(parent)
     frame:SetFlowLayoutMaximumLineSize(126)
 
     local function initializeFrame(button)
-        local icon = button:CreateTexture(nil, "OVERLAY")
-        icon:SetAllPoints()
-        button:SetIcon(icon)
-        button:SetSize(14, 14)
-
-        local cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate")
-        cooldown:SetAllPoints()
-        cooldown:SetHideCountdownNumbers(true)
-        button:SetDurationCooldown(cooldown)
+        core:InitializeAuraButtonBase(button, 14)
 
         button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
         button.PurgeBorder:SetPoint("TOPLEFT")

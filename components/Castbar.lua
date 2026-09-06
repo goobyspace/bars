@@ -2,24 +2,23 @@ local _, core = ...
 
 function core:CreateCastbarBase(name, parent)
     local frame = CreateFrame("Frame", name, parent)
-    frame:SetSize(core.width, core.castbarHeight)
+    core:SetPixelSize(frame, core.width, core.castbarHeight)
 
     frame.bg = frame:CreateTexture()
-    frame.bg:SetPoint("RIGHT")
+    core:SetPixelPoint(frame.bg, "RIGHT", frame, "RIGHT", 0, 0)
     frame.bg:SetTexture(134532)
     frame.bg:SetColorTexture(0, 0, 0)
-    frame.bg:SetSize(core.width - core.castbarHeight, core.castbarHeight)
+    core:SetPixelSize(frame.bg, core.width - core.castbarHeight, core.castbarHeight)
     frame.bg:SetDrawLayer("OVERLAY", -1)
 
     frame.bar = CreateFrame("StatusBar", nil, frame)
     frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
-    frame.bar:SetPoint("RIGHT", -2, 0)
-    frame.bar:SetSize(core.width - core.castbarHeight - 2, core.castbarHeight - 2)
+    core:InsetBarInBackground(frame.bar, frame.bg)
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut)
 
     frame.icon = frame:CreateTexture()
-    frame.icon:SetPoint("LEFT", 0, 0)
-    frame.icon:SetSize(core.castbarHeight, core.castbarHeight)
+    core:SetPixelPoint(frame.icon, "LEFT", frame, "LEFT", 0, 0)
+    core:SetPixelSize(frame.icon, core.castbarHeight, core.castbarHeight)
 
     frame.name = frame.bar:CreateFontString("PrimaryText")
     frame.name:SetDrawLayer("OVERLAY", 1)

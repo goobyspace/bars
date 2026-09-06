@@ -1,7 +1,5 @@
 local _, core = ...
 
-core.healPredictionOverflow = 1.5;
-
 local function configurePingableUnitFrame(frame, unit, isPlayer)
     frame.unit = unit;
     frame:SetAttribute("unit", unit);
@@ -199,9 +197,9 @@ function core:InitializeBarFrames()
         local layoutPending = false;
 
         local function updateLayout()
-            if InCombatLockdown() then
+            local canMovePet = not InCombatLockdown();
+            if not canMovePet then
                 layoutPending = true;
-                return;
             end
 
             local offset = core.primaryBarOffset + core.rowStep;
@@ -220,7 +218,9 @@ function core:InitializeBarFrames()
 
             local petOffset = offset + (tertiaryShown and core.rowStep or 0);
 
-            core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6, petOffset);
+            if canMovePet then
+                core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6, petOffset);
+            end
 
             if swingTimer then
                 core:SetPixelPoint(swingTimer, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
@@ -230,7 +230,9 @@ function core:InitializeBarFrames()
             core:SnapToPixelGrid(secondaryResourceBar);
             core:SnapToPixelGrid(hpBar);
             core:SnapToPixelGrid(tertiaryResourceBar);
-            core:SnapToPixelGrid(petFrame);
+            if canMovePet then
+                core:SnapToPixelGrid(petFrame);
+            end
             core:SnapToPixelGrid(swingTimer);
         end
 

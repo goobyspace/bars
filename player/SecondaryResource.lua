@@ -365,19 +365,10 @@ local trackerBuilders = {
     [Enum.PowerType.SoulShards] = buildCountSegments,
 
     ["STAGGER"] = function(tracker)
-        local bg = frame:CreateTexture();
-        bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
-        bg:SetColorTexture(0, 0, 0);
-        core:SetPixelSize(bg, core.width, core.barBgHeight);
-        bg:SetDrawLayer("OVERLAY", -1);
-        table.insert(tracker.visuals, bg);
-
-        tracker.bar = CreateFrame("StatusBar", nil, frame);
-        tracker.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
-        tracker.bar:SetPoint("CENTER");
-        core:SetPixelSize(tracker.bar, core.width - 2 * core.pixel, core.barHeight);
-        table.insert(tracker.visuals, tracker.bar);
+        local barFrame = core:CreateSimpleStatusBar(nil, frame, core.width, core.barBgHeight);
+        tracker.bar = barFrame.bar;
+        table.insert(tracker.visuals, barFrame.bg);
+        table.insert(tracker.visuals, barFrame.bar);
     end,
 
     ["TEACHINGS"] = function(tracker)
