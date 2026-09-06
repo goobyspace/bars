@@ -4,7 +4,7 @@ local _, core = ...
 
 if not core.hasAuraContainer then return end
 
-local PURGE_SPELL_IDS = {
+local purgeSpellIDs = {
     528,    -- dispel magic
     370,    -- purge
     30449,  -- spellsteal
@@ -14,7 +14,7 @@ local PURGE_SPELL_IDS = {
 local knowsPurge = false;
 
 local function CheckKnowsPurge()
-    for _, spellID in ipairs(PURGE_SPELL_IDS) do
+    for _, spellID in ipairs(purgeSpellIDs) do
         if C_SpellBook.IsSpellKnown(spellID) then
             return true;
         end
@@ -22,7 +22,7 @@ local function CheckKnowsPurge()
     return false;
 end
 
-local MAX_BUFFS = 16
+local maxBuffs = 16
 
 function core:CreateMainBuffsFrame(parent)
     local buffButtons = {};
@@ -87,7 +87,7 @@ function core:CreateMainBuffsFrame(parent)
     frame:AddAuraGroup("Buffs", AuraUtil.AuraFilters.Helpful, {
         initializeFrame = initializeFrame,
         sortMethod = defaultSortMethod,
-        maxFrameCount = MAX_BUFFS,
+        maxFrameCount = maxBuffs,
         layout = { elementSpacing = 2 },
     })
 

@@ -2,10 +2,10 @@ local _, core = ...
 
 if core.hasAuraContainer then return end
 
-local DEBUFF_FILTER_STRING = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful,
+local debuffFilterString = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful,
     AuraUtil.AuraFilters.IncludeNameplateOnly);
 
-local MAX_DEBUFFS = 10
+local maxDebuffs = 10
 
 local function InitializeButton(button)
     button.icon = button:CreateTexture(nil, "ARTWORK")
@@ -31,8 +31,8 @@ local function UpdateButton(button, auraData)
 end
 
 local function UpdateDebuffBudgets(container)
-    local playerCount = math.min(container:GetGroupCount("PlayerDebuffs"), MAX_DEBUFFS)
-    local remainingAfterPlayer = MAX_DEBUFFS - playerCount
+    local playerCount = math.min(container:GetGroupCount("PlayerDebuffs"), maxDebuffs)
+    local remainingAfterPlayer = maxDebuffs - playerCount
     container:SetGroupMaxCount("ImportantDebuffs", remainingAfterPlayer)
 
     local importantCount = math.min(container:GetGroupCount("ImportantDebuffs"), remainingAfterPlayer)
@@ -53,21 +53,21 @@ function core:CreateNormalDebuffsFrame(parent)
         growY = 1,
     })
 
-    container:AddGroup("PlayerDebuffs", DEBUFF_FILTER_STRING, {
+    container:AddGroup("PlayerDebuffs", debuffFilterString, {
         initializeFrame = InitializeButton,
         updateFrame = UpdateButton,
         candidateFilters = { isFromPlayerOrPlayerPet = true },
-        maxFrameCount = MAX_DEBUFFS,
+        maxFrameCount = maxDebuffs,
     })
 
-    container:AddGroup("ImportantDebuffs", DEBUFF_FILTER_STRING, {
+    container:AddGroup("ImportantDebuffs", debuffFilterString, {
         initializeFrame = InitializeButton,
         updateFrame = UpdateButton,
         candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = true },
         maxFrameCount = 0,
     })
 
-    container:AddGroup("OtherDebuffs", DEBUFF_FILTER_STRING, {
+    container:AddGroup("OtherDebuffs", debuffFilterString, {
         initializeFrame = InitializeButton,
         updateFrame = UpdateButton,
         candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = false },

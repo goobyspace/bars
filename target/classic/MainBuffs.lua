@@ -3,13 +3,13 @@ local _, core = ...
 if core.hasAuraContainer then return end
 
 -- classic era purges are on the player's own spellbook (priest/shaman) or the pet's (warlock)
-local CLASSIC_PURGE_SPELL_IDS = {
+local classicPurgeSpellIDs = {
     527,  -- priest: dispel magic
     370,  -- shaman: purge (rank 1)
     8012, -- shaman: purge (rank 2)
 };
 
-local CLASSIC_PET_PURGE_SPELL_IDS = {
+local classicPetPurgeSpellIDs = {
     19505, -- warlock felhunter: devour magic (rank 1)
     19731, -- rank 2
     19734, -- rank 3
@@ -19,12 +19,12 @@ local CLASSIC_PET_PURGE_SPELL_IDS = {
 local knowsPurge = false;
 
 local function CheckKnowsPurge()
-    for _, spellID in ipairs(CLASSIC_PURGE_SPELL_IDS) do
+    for _, spellID in ipairs(classicPurgeSpellIDs) do
         if C_SpellBook.IsSpellKnown(spellID) then
             return true;
         end
     end
-    for _, spellID in ipairs(CLASSIC_PET_PURGE_SPELL_IDS) do
+    for _, spellID in ipairs(classicPetPurgeSpellIDs) do
         if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
             return true;
         end
@@ -32,7 +32,7 @@ local function CheckKnowsPurge()
     return false;
 end
 
-local MAX_BUFFS = 16
+local maxBuffs = 16
 
 local function InitializeButton(button)
     button.icon = button:CreateTexture(nil, "ARTWORK")
@@ -75,7 +75,7 @@ function core:CreateMainBuffsFrame(parent)
     container:AddGroup("Buffs", AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Helpful), {
         initializeFrame = InitializeButton,
         updateFrame = UpdateButton,
-        maxFrameCount = MAX_BUFFS,
+        maxFrameCount = maxBuffs,
     })
 
     knowsPurge = CheckKnowsPurge();

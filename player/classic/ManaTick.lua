@@ -3,14 +3,75 @@ local _, core = ...
 if not core.isClassicEra then return end
 
 -- Classic mana regen lands on a fixed 2 second server clock
-local TICK_INTERVAL = 2;
+local tickInterval = 2;
 -- spending mana pauses regen for 5 seconds (the "five second rule")
-local FSR_DURATION = 5;
+local fsrDuration = 5;
 
 local isSecret = issecretvalue or function() return false end;
 
+local manaState = {
+    nextTick = nil,
+    fsrStart = nil,
+    fsrResume = nil,
+    lastMana = nil,
+    isFull = false,
+};
+
+local function readMana()
+    local current = UnitPower("player", Enum.PowerType.Mana);
+    local max = UnitPowerMax("player", Enum.PowerType.Mana);
+    if isSecret(current) or isSecret(max) then return nil end
+    return current, max;
+end
+
+local function startFiveSecondRule(now)
+    manaState.fsrStart = now;
+    local fsrEnd = now + fsrDuration;
+    manaState.fsrResume = fsrEnd;
+    if manaState.nextTick then
+        local boundary = manaState.nextTick;
+        while boundary < fsrEnd do
+            boundary = boundary + tickInterval;
+        end
+        manaState.fsrResume = boundary;
+    end
+end
+
+local manaEvents = CreateFrame("Frame");
+manaEvents:RegisterEvent("PLAYER_ENTERING_WORLD");
+manaEvents:RegisterUnitEvent("UNIT_POWER_UPDATE", "player");
+manaEvents:RegisterUnitEvent("UNIT_MAXPOWER", "player");
+manaEvents:SetScript("OnEvent", function(_, event, _, powerType)
+    if event == "PLAYER_ENTERING_WORLD" then
+        manaState.nextTick = nil;
+        manaState.fsrStart = nil;
+        manaState.fsrResume = nil;
+        local current, max = readMana();
+        manaState.lastMana = current;
+        manaState.isFull = current ~= nil and max > 0 and current >= max;
+        return
+    end
+
+    if powerType ~= "MANA" then return end
+
+    local current, max = readMana();
+    if not current then return end
+
+    manaState.isFull = max > 0 and current >= max;
+
+    if manaState.lastMana then
+        if current > manaState.lastMana then
+            manaState.nextTick = GetTime() + tickInterval;
+            manaState.fsrStart, manaState.fsrResume = nil, nil;
+        elseif current < manaState.lastMana then
+            startFiveSecondRule(GetTime());
+        end
+    end
+    manaState.lastMana = current;
+end);
+
 function core:CreateManaTicker(bar)
-    local ticker = CreateFrame("Frame", "ManaTickerContainer", bar);
+    local ticker = CreateFrame("Frame", nil, bar);
     ticker:SetAllPoints(bar);
     ticker:Hide();
 
@@ -20,112 +81,49 @@ function core:CreateManaTicker(bar)
     core:SetPixelPoint(line, "LEFT", ticker, "LEFT", 0, 0);
 
     local active = false;
-    local nextTick = nil;
-    local fsrStart, fsrResume = nil, nil;
-    local lastMana = nil;
-    local isFull = false;
-
-    local function readMana()
-        local current = UnitPower("player", Enum.PowerType.Mana);
-        local max = UnitPowerMax("player", Enum.PowerType.Mana);
-        if isSecret(current) or isSecret(max) then return nil end
-        return current, max;
-    end
 
     local function refresh()
-        if active and not isFull and (fsrResume or nextTick) then
+        if active and not manaState.isFull and (manaState.fsrResume or manaState.nextTick) then
             ticker:Show();
         else
             ticker:Hide();
         end
     end
 
-    -- the 2s server clock keeps running through the five second rule, so regen resumes on the
-    -- first tick boundary at or after the rule expires rather than exactly 5s after the spend
-    local function startFiveSecondRule(now)
-        fsrStart = now;
-        local fsrEnd = now + FSR_DURATION;
-        fsrResume = fsrEnd;
-        if nextTick then
-            local boundary = nextTick;
-            while boundary < fsrEnd do
-                boundary = boundary + TICK_INTERVAL;
-            end
-            fsrResume = boundary;
-        end
-    end
-
     ticker:SetScript("OnUpdate", function()
         local now = GetTime();
 
-        if nextTick then
-            while now >= nextTick do
-                nextTick = nextTick + TICK_INTERVAL;
+        if manaState.nextTick then
+            while now >= manaState.nextTick do
+                manaState.nextTick = manaState.nextTick + tickInterval;
             end
         end
 
         local progress;
-        if fsrResume then
-            if now >= fsrResume then
-                fsrStart, fsrResume = nil, nil;
+        if manaState.fsrResume then
+            if now >= manaState.fsrResume then
+                manaState.fsrStart, manaState.fsrResume = nil, nil;
                 refresh();
             else
-                progress = (now - fsrStart) / (fsrResume - fsrStart);
+                progress = (now - manaState.fsrStart) / (manaState.fsrResume - manaState.fsrStart);
             end
         end
 
         if not progress then
-            if not nextTick then return end
-            progress = 1 - (nextTick - now) / TICK_INTERVAL;
+            if not manaState.nextTick then return end
+            progress = 1 - (manaState.nextTick - now) / tickInterval;
         end
 
         local travel = ticker:GetWidth() - line:GetWidth();
         core:SetPixelPoint(line, "LEFT", ticker, "LEFT", progress * travel, 0);
     end)
 
-    ticker:RegisterEvent("PLAYER_ENTERING_WORLD");
-    ticker:RegisterUnitEvent("UNIT_POWER_UPDATE", "player");
-    ticker:RegisterUnitEvent("UNIT_MAXPOWER", "player");
-    ticker:SetScript("OnEvent", function(_, event, _, powerType)
-        if event == "PLAYER_ENTERING_WORLD" then
-            nextTick = nil;
-            fsrStart, fsrResume = nil, nil;
-            local current, max = readMana();
-            lastMana = current;
-            isFull = current ~= nil and max > 0 and current >= max;
-            refresh();
-            return;
-        end
-
-        if powerType ~= "MANA" then return end
-
-        local current, max = readMana();
-        if not current then return end
-
-        isFull = max > 0 and current >= max;
-
-        if lastMana then
-            if current > lastMana then
-                -- any mana gain lands on the tick clock, so it resyncs the cadence
-                nextTick = GetTime() + TICK_INTERVAL;
-                fsrStart, fsrResume = nil, nil;
-            elseif current < lastMana then
-                startFiveSecondRule(GetTime());
-            end
-        end
-        lastMana = current;
-
-        refresh();
-    end)
-
     function ticker:SetActive(isActive)
         active = isActive;
-        if not isActive then
-            lastMana = nil;
-        elseif lastMana == nil then
+        if isActive and manaState.lastMana == nil then
             local current, max = readMana();
-            lastMana = current;
-            isFull = current ~= nil and max > 0 and current >= max;
+            manaState.lastMana = current;
+            manaState.isFull = current ~= nil and max > 0 and current >= max;
         end
         refresh();
     end

@@ -6,21 +6,21 @@ if not core.isClassicEra then return end
 -- resource bar. Everything is driven off the core.auraTracker config table below, so adding a
 -- new icon is a matter of adding one entry; each entry claims one of the fixed slots in the row.
 
-local ICON_WIDTH = 36;
-local ICON_HEIGHT = 30;
+local iconWidth = 36;
+local iconHeight = 30;
 
 -- the row is a fixed grid justified across the full bar width; slot 1 sits flush with the left
 -- edge and slot SLOT_COUNT with the right edge, so icons keep their position as others hide
-local SLOT_COUNT = 8;
-local MIN_ICON_SPACING = 2;
+local slotCount = 8;
+local minIconSpacing = 2;
 
 -- how often the OnUpdate driven bits (cooldown text, range, cast counts) refresh
-local UPDATE_INTERVAL = 0.1;
+local updateInterval = 0.1;
 
 -- cooldowns at or below this are treated as the global cooldown and not drawn
-local GCD_THRESHOLD = 1.5;
+local gcdThreshold = 1.5;
 
-local OUT_OF_RANGE_COLOUR = { r = 1, g = 0.25, b = 0.25 };
+local outOfRangeColour = { r = 1, g = 0.25, b = 0.25 };
 
 --[[
     core.auraTracker is keyed by class token, each value being a list of entries.
@@ -32,6 +32,10 @@ local OUT_OF_RANGE_COLOUR = { r = 1, g = 0.25, b = 0.25 };
         rankSpellIDs    ordered list of rank spellIDs (lowest first); the highest known rank is
                         used in place of spellID, and every rank matches when reading auras
         alwaysShow      show the icon even when the spell isn't known (default false)
+        form            restrict visibility to a shapeshift form key from core:GetShapeshiftFormKey()
+                        (e.g. "CAT", "BEAR", "MOONKIN", "AQUATIC", "TRAVEL"): shows the icon
+                        only in that form; prefixing with "!" (e.g. "!CAT") shows it everywhere
+                        except that form (default: always)
 
     Text placement is automatic: a single text sits in the centre of the icon, two split into
     top and bottom, three use top / centre / bottom.
@@ -64,17 +68,15 @@ local OUT_OF_RANGE_COLOUR = { r = 1, g = 0.25, b = 0.25 };
         powerCost           flat resource cost per cast
         powerType           Enum.PowerType.* the cost is paid from
 ]]
-local MOONFIRE_RANKS = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 };
-local WRATH_RANKS = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 };
-local HEALING_TOUCH_RANKS = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 };
-local MARK_OF_THE_WILD_RANKS = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 };
 
 core.auraTracker = {
     ["DRUID"] = {
         {
             type = "aura",
             slot = 1,
-            rankSpellIDs = MOONFIRE_RANKS,
+            -- moonfire
+            rankSpellIDs = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
+            form = "!CAT",
             showTargetDuration = true,
             showTargetSwipe = true,
             showCastCount = true,
@@ -82,22 +84,53 @@ core.auraTracker = {
         {
             type = "spell",
             slot = 2,
-            rankSpellIDs = WRATH_RANKS,
+            -- wrath
+            rankSpellIDs = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 },
+            form = "!CAT",
             rangeCheck = true,
             showCooldownText = false,
             showCastCount = true,
         },
         {
+            type = "aura",
+            slot = 1,
+            -- rip
+            rankSpellIDs = { 1079, 9492, 9493, 9752, 9894, 9896 },
+            form = "CAT",
+            showTargetDuration = true,
+            showTargetSwipe = true,
+            showCastCount = true,
+        },
+        {
+            type = "aura",
+            slot = 2,
+            -- rake
+            rankSpellIDs = { 1822, 1823, 1824, 9904 },
+            form = "CAT",
+            showTargetDuration = true,
+            showTargetSwipe = true,
+            showCastCount = true,
+        },
+        {
             type = "spell",
             slot = 3,
-            rankSpellIDs = HEALING_TOUCH_RANKS,
+            -- healing touch
+            rankSpellIDs = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 },
             showCooldownText = false,
             showCastCount = true,
         },
         {
             type = "reminder",
+            slot = 7,
+            -- thorns
+            rankSpellIDs = { 467, 782, 1075, 8914, 9756, 9910 },
+            alwaysShow = true,
+        },
+        {
+            type = "reminder",
             slot = 8,
-            rankSpellIDs = MARK_OF_THE_WILD_RANKS,
+            -- motw
+            rankSpellIDs = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 },
             alwaysShow = true,
         },
     },
@@ -154,6 +187,13 @@ end
 
 local function GetFallbackSpellID(entry)
     return entry.spellID or (entry.rankSpellIDs and entry.rankSpellIDs[#entry.rankSpellIDs]);
+end
+
+local function EntryAllowedInCurrentForm(entry, currentForm)
+    local form = entry.form;
+    if not form then return true end
+    if form:sub(1, 1) == "!" then return form:sub(2) ~= currentForm end
+    return form == currentForm;
 end
 
 -- helpers ----------------------------------------------------------------------------------
@@ -237,7 +277,7 @@ end
 -- icon construction ------------------------------------------------------------------------
 
 -- where the texts sit depending on how many an entry actually uses
-local TEXT_ANCHORS = {
+local textAnchors = {
     [1] = { "CENTER" },
     [2] = { "TOP", "BOTTOM" },
     [3] = { "TOP", "CENTER", "BOTTOM" },
@@ -262,7 +302,7 @@ end
 
 local function CreateIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
-    button:SetSize(ICON_WIDTH, ICON_HEIGHT);
+    button:SetSize(iconWidth, iconHeight);
     button.entry = entry;
     button.spellID = GetKnownSpellID(entry) or GetFallbackSpellID(entry);
 
@@ -274,7 +314,7 @@ local function CreateIcon(parent, entry)
     button.icon = button:CreateTexture(nil, "ARTWORK");
     button.icon:SetAllPoints();
     button.icon:SetTexture(C_Spell.GetSpellTexture(button.spellID));
-    button.icon:SetTexCoord(GetCroppedTexCoords(ICON_WIDTH, ICON_HEIGHT));
+    button.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
 
     button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
     button.cooldown:SetAllPoints();
@@ -299,7 +339,7 @@ local function CreateIcon(parent, entry)
     end
 
     local texts = GetEntryTexts(entry);
-    local anchors = TEXT_ANCHORS[#texts];
+    local anchors = textAnchors[#texts];
     for index, key in ipairs(texts) do
         local anchor = anchors[index];
         local offset = (anchor == "TOP" and -1) or (anchor == "BOTTOM" and 1) or 0;
@@ -316,7 +356,7 @@ local function UpdateSpellIcon(button)
     local spellID = button.spellID;
 
     local start, duration, enabled = GetSpellCooldownInfo(spellID);
-    local onCooldown = enabled and duration and duration > GCD_THRESHOLD;
+    local onCooldown = enabled and duration and duration > gcdThreshold;
 
     if entry.showCooldownSwipe ~= false then
         CooldownFrame_Set(button.cooldown, start, duration, onCooldown and 1 or 0);
@@ -347,7 +387,7 @@ local function UpdateSpellIcon(button)
         invalidTarget = hasTarget and not UnitCanAttack("player", "target");
         local inRange = hasTarget and not invalidTarget and C_Spell.IsSpellInRange(spellID, "target");
         if inRange == false then
-            button.icon:SetVertexColor(OUT_OF_RANGE_COLOUR.r, OUT_OF_RANGE_COLOUR.g, OUT_OF_RANGE_COLOUR.b);
+            button.icon:SetVertexColor(outOfRangeColour.r, outOfRangeColour.g, outOfRangeColour.b);
         else
             button.icon:SetVertexColor(1, 1, 1);
         end
@@ -416,7 +456,7 @@ end
 
 function core:CreateAuraTracker(parent)
     local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
-    frame:SetSize(core.width, ICON_HEIGHT);
+    frame:SetSize(core.width, iconHeight);
 
     local playerClass = select(2, UnitClass("player"));
     local entries = core.auraTracker[playerClass];
@@ -432,18 +472,19 @@ function core:CreateAuraTracker(parent)
     -- every icon keeps the slot it declared, so hiding one leaves a gap rather than shuffling
     -- the rest along; the outermost slots line up with the edges of the bars above
     local function layout()
-        local step = math.max(ICON_WIDTH + MIN_ICON_SPACING, (core.width - ICON_WIDTH) / (SLOT_COUNT - 1));
+        local step = math.max(iconWidth + minIconSpacing, (core.width - iconWidth) / (slotCount - 1));
         for _, button in ipairs(icons) do
             button:ClearAllPoints();
             button:SetPoint("LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
             button:SetShown(button.visible);
         end
 
-        frame:SetSize(core.width, ICON_HEIGHT);
+        frame:SetSize(core.width, iconHeight);
     end
 
     local function updateVisibility()
         local changed = false;
+        local currentForm = core:GetShapeshiftFormKey();
         for _, button in ipairs(icons) do
             local entry = button.entry;
             local knownSpellID = GetKnownSpellID(entry);
@@ -453,7 +494,7 @@ function core:CreateAuraTracker(parent)
                 button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
             end
 
-            local visible = entry.alwaysShow or knownSpellID ~= nil;
+            local visible = (entry.alwaysShow or knownSpellID ~= nil) and EntryAllowedInCurrentForm(entry, currentForm);
             if visible ~= button.visible then
                 button.visible = visible;
                 changed = true;
@@ -479,6 +520,7 @@ function core:CreateAuraTracker(parent)
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE");
     frame:RegisterEvent("SPELLS_CHANGED");
+    frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM");
     frame:RegisterEvent("PLAYER_TARGET_CHANGED");
     frame:RegisterEvent("NAME_PLATE_UNIT_ADDED");
     frame:RegisterEvent("NAME_PLATE_UNIT_REMOVED");
@@ -495,7 +537,8 @@ function core:CreateAuraTracker(parent)
             nameplateUnits[unit] = nil;
         elseif event == "PLAYER_ENTERING_WORLD"
             or event == "LEARNED_SPELL_IN_SKILL_LINE"
-            or event == "SPELLS_CHANGED" then
+            or event == "SPELLS_CHANGED"
+            or event == "UPDATE_SHAPESHIFT_FORM" then
             updateVisibility();
         end
         updateAll();
@@ -504,7 +547,7 @@ function core:CreateAuraTracker(parent)
     local elapsedSinceUpdate = 0;
     frame:SetScript("OnUpdate", function(_, elapsed)
         elapsedSinceUpdate = elapsedSinceUpdate + elapsed;
-        if elapsedSinceUpdate < UPDATE_INTERVAL then return end
+        if elapsedSinceUpdate < updateInterval then return end
         elapsedSinceUpdate = 0;
         updateAll();
     end)

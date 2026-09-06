@@ -3,16 +3,16 @@ local _, core = ...
 core.isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC;
 core.hasAuraContainer = C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate") ~= nil;
 
-local DRUID_BEAR_FORM = DRUID_BEAR_FORM or -1;
-local DRUID_TREE_FORM = DRUID_TREE_FORM or -2;
-local DRUID_CAT_FORM = DRUID_CAT_FORM or -3;
-local DRUID_TRAVEL_FORM = DRUID_TRAVEL_FORM or -4;
-local DRUID_ACQUATIC_FORM = DRUID_ACQUATIC_FORM or -5;
-local DRUID_FLIGHT_FORM = DRUID_FLIGHT_FORM or -6;
-local DRUID_MOONKIN_FORM_1 = DRUID_MOONKIN_FORM_1 or -7;
-local DRUID_MOONKIN_FORM_2 = DRUID_MOONKIN_FORM_2 or -8;
+local druidBearForm = DRUID_BEAR_FORM or -1;
+local druidTreeForm = DRUID_TREE_FORM or -2;
+local druidCatForm = DRUID_CAT_FORM or -3;
+local druidTravelForm = DRUID_TRAVEL_FORM or -4;
+local druidAcquaticForm = DRUID_ACQUATIC_FORM or -5;
+local druidFlightForm = DRUID_FLIGHT_FORM or -6;
+local druidMoonkinForm1 = DRUID_MOONKIN_FORM_1 or -7;
+local druidMoonkinForm2 = DRUID_MOONKIN_FORM_2 or -8;
 
-local CLASSIC_DRUID_FORM_KEYS = {
+local classicDruidFormKeys = {
     [5487]  = "BEAR",    -- Bear Form
     [9634]  = "BEAR",    -- Dire Bear Form
     [1066]  = "AQUATIC", -- Aquatic Form
@@ -29,7 +29,7 @@ function core:GetShapeshiftFormKey()
     for i = 1, GetNumShapeshiftForms() do
         local _, isActive, _, spellID = GetShapeshiftFormInfo(i)
         if isActive then
-            return CLASSIC_DRUID_FORM_KEYS[spellID] or 0;
+            return classicDruidFormKeys[spellID] or 0;
         end
     end
     return 0;
@@ -85,21 +85,21 @@ core.resources.primary = {
     ["DEATHKNIGHT"] = Enum.PowerType.RunicPower,
     ["DEMONHUNTER"] = Enum.PowerType.Fury,
     ["DRUID"]       = {
-        [0]                    = {
+        [0]                 = {
             [102] = Enum.PowerType.LunarPower, -- Balance
             [103] = Enum.PowerType.Mana,       -- Feral
             [104] = Enum.PowerType.Mana,       -- Guardian
             [105] = Enum.PowerType.Mana,       -- Restoration
         },
-        [DRUID_BEAR_FORM]      = Enum.PowerType.Rage,
-        [DRUID_TREE_FORM]      = Enum.PowerType.Mana,
-        [36]                   = Enum.PowerType.Mana, -- Tome of the Wilds: Treant Form
-        [DRUID_CAT_FORM]       = Enum.PowerType.Energy,
-        [DRUID_TRAVEL_FORM]    = Enum.PowerType.Mana,
-        [DRUID_ACQUATIC_FORM]  = Enum.PowerType.Mana,
-        [DRUID_FLIGHT_FORM]    = Enum.PowerType.Mana,
-        [DRUID_MOONKIN_FORM_1] = Enum.PowerType.LunarPower,
-        [DRUID_MOONKIN_FORM_2] = Enum.PowerType.LunarPower,
+        [druidBearForm]     = Enum.PowerType.Rage,
+        [druidTreeForm]     = Enum.PowerType.Mana,
+        [36]                = Enum.PowerType.Mana, -- Tome of the Wilds: Treant Form
+        [druidCatForm]      = Enum.PowerType.Energy,
+        [druidTravelForm]   = Enum.PowerType.Mana,
+        [druidAcquaticForm] = Enum.PowerType.Mana,
+        [druidFlightForm]   = Enum.PowerType.Mana,
+        [druidMoonkinForm1] = Enum.PowerType.LunarPower,
+        [druidMoonkinForm2] = Enum.PowerType.LunarPower,
     },
     ["EVOKER"]      = Enum.PowerType.Mana,
     ["HUNTER"]      = Enum.PowerType.Focus,
@@ -132,7 +132,7 @@ core.resources.secondary = {
         [1480] = "SOUL_FRAGMENTS",          -- Devourer
     },
     ["DRUID"]       = {
-        [DRUID_CAT_FORM] = Enum.PowerType.ComboPoints,
+        [druidCatForm] = Enum.PowerType.ComboPoints,
     },
     ["EVOKER"]      = Enum.PowerType.Essence,
     ["HUNTER"]      = nil,
@@ -158,11 +158,11 @@ core.resources.tertiary = {
     ["DEATHKNIGHT"] = nil,
     ["DEMONHUNTER"] = nil,
     ["DRUID"]       = {
-        [0]                    = {
+        [0]                 = {
             [102] = Enum.PowerType.Mana, -- Balance
         },
-        [DRUID_MOONKIN_FORM_1] = Enum.PowerType.Mana,
-        [DRUID_MOONKIN_FORM_2] = Enum.PowerType.Mana,
+        [druidMoonkinForm1] = Enum.PowerType.Mana,
+        [druidMoonkinForm2] = Enum.PowerType.Mana,
     },
     ["EVOKER"]      = {
         [1473] = "EBON_MIGHT", -- Augmentation

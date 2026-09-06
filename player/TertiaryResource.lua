@@ -2,13 +2,13 @@ local _, core = ...
 
 local frame;
 
-local IMPROVED_WHIRLWIND = 85739;
-local IMPROVED_WHIRLWIND_MAX_STACKS = 4;
-local EBON_MIGHT = 395296;
-local RENEWING_MIST = 115151;
-local RENEWING_MIST_MAX_SEGMENTS = 4; -- highest realistic charge cap; actual max can change via talents
+local improvedWhirlwind = 85739;
+local improvedWhirlwindMaxStacks = 4;
+local ebonMight = 395296;
+local renewingMist = 115151;
+local renewingMistMaxSegments = 4; -- highest realistic charge cap; actual max can change via talents
 
-local CLASS_EVENTS = {
+local classEvents = {
     ["DRUID"]   = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["EVOKER"]  = { { "UNIT_AURA", "player" } },
     ["MONK"]    = { { "SPELL_UPDATE_CHARGES" } },
@@ -45,10 +45,16 @@ local function updateManaBar(resource)
     local current = UnitPower("player", resource);
     local max = UnitPowerMax("player", resource);
     if not max or max <= 0 then
+        if tracker.manaTicker then
+            tracker.manaTicker:SetActive(false);
+        end
         return tracker.bar:Hide(), tracker.bg:Hide();
     end
     tracker.bg:Show();
     tracker.bar:Show();
+    if tracker.manaTicker then
+        tracker.manaTicker:SetActive(true);
+    end
 
     tracker.bar:SetMinMaxValues(0, max, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
@@ -71,7 +77,7 @@ local function updateRenewingMistBar()
 
     if not tracker or not tracker.bars then return end;
 
-    local chargeInfo = C_Spell.GetSpellCharges(RENEWING_MIST);
+    local chargeInfo = C_Spell.GetSpellCharges(renewingMist);
     if not chargeInfo then return end;
 
     -- maxCharges is not secret, so it is safe to use for layout. currentCharges and
@@ -94,7 +100,7 @@ local function updateRenewingMistBar()
     tracker.anchorBar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.anchorBar:Show();
 
-    local rechargeDuration = C_Spell.GetSpellChargeDuration(RENEWING_MIST);
+    local rechargeDuration = C_Spell.GetSpellChargeDuration(renewingMist);
     if rechargeDuration then
         tracker.cooldownBar:ClearAllPoints();
         core:SetPixelSize(tracker.cooldownBar, segmentBgWidth - 2 * core.pixel, core.barHeight);
@@ -192,11 +198,14 @@ local trackerBuilders = {
         tracker.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
         tracker.bar:SetPoint("CENTER");
         core:SetPixelSize(tracker.bar, core.width / 3 - 2 * core.pixel, core.barHeight);
+        if core.CreateManaTicker then
+            tracker.manaTicker = core:CreateManaTicker(tracker.bar);
+        end
         table.insert(tracker.visuals, tracker.bar);
     end,
 
     ["WHIRLWIND"] = function(tracker)
-        local segmentWidth = (core.width / 3 - 2 * core.pixel) / IMPROVED_WHIRLWIND_MAX_STACKS;
+        local segmentWidth = (core.width / 3 - 2 * core.pixel) / improvedWhirlwindMaxStacks;
         for i = 1, 4 do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(0, 0, 0);
@@ -205,11 +214,11 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end
 
-        tracker.container = createAuraTracker(IMPROVED_WHIRLWIND, function(button)
+        tracker.container = createAuraTracker(improvedWhirlwind, function(button)
             local bar = createTrackerBar(button, "WHIRLWIND", "Interface/Addons/Bars/assets/four segment bar small.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = IMPROVED_WHIRLWIND_MAX_STACKS,
+                maxApplications = improvedWhirlwindMaxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
@@ -224,7 +233,7 @@ local trackerBuilders = {
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
-        tracker.container = createAuraTracker(EBON_MIGHT, function(button)
+        tracker.container = createAuraTracker(ebonMight, function(button)
             local bar = createTrackerBar(button, "EBON_MIGHT");
 
             button:SetDurationBar(bar, {
@@ -257,7 +266,7 @@ local trackerBuilders = {
         table.insert(tracker.visuals, tracker.anchorBar);
         table.insert(tracker.visuals, tracker.cooldownBar);
 
-        for i = 1, RENEWING_MIST_MAX_SEGMENTS do
+        for i = 1, renewingMistMaxSegments do
             local bg = frame:CreateTexture();
             bg:SetTexture(134532)
             bg:SetColorTexture(0, 0, 0);
@@ -283,6 +292,9 @@ local trackerBuilders = {
 -- if a tracker is now relevant but we havent created it go make it otherwise show it
 local function refreshTrackers()
     for _, tracker in pairs(frame.trackers) do
+        if tracker.manaTicker then
+            tracker.manaTicker:SetActive(false);
+        end
         if tracker.container then
             tracker.container:Hide();
         end
@@ -329,7 +341,7 @@ function core:CreateTertiaryBar(parent)
     frame:RegisterEvent("PLAYER_TALENT_UPDATE")
     frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
 
-    for _, event in ipairs(CLASS_EVENTS[playerClass] or {}) do
+    for _, event in ipairs(classEvents[playerClass] or {}) do
         core:SafeRegisterEvent(frame, event[1], event[2])
     end
 

@@ -5,21 +5,21 @@ if not core.isClassicEra then return end
 local frame;
 local combatLogGetCurrentEventInfo = rawget(_G, "CombatLogGetCurrentEventInfo");
 
-local AUTO_SHOT_SPELL_ID = 75;
-local SHOOT_BOW_SPELL_ID = 2480;
-local SHOOT_GUN_SPELL_ID = 7918;
-local SHOOT_CROSSBOW_SPELL_ID = 7919;
-local SHOOT_WAND_SPELL_ID = 5019;
-local RANGED_SPELL_IDS = {
-    [AUTO_SHOT_SPELL_ID] = true,
-    [SHOOT_BOW_SPELL_ID] = true,
-    [SHOOT_GUN_SPELL_ID] = true,
-    [SHOOT_CROSSBOW_SPELL_ID] = true,
-    [SHOOT_WAND_SPELL_ID] = true,
+local autoShotSpellID = 75;
+local shootBowSpellID = 2480;
+local shootGunSpellID = 7918;
+local shootCrossbowSpellID = 7919;
+local shootWandSpellID = 5019;
+local rangedSpellIDs = {
+    [autoShotSpellID] = true,
+    [shootBowSpellID] = true,
+    [shootGunSpellID] = true,
+    [shootCrossbowSpellID] = true,
+    [shootWandSpellID] = true,
 };
 
-local DEFAULT_RANGED_SPEED = 2.0;
-local MAX_MEASURED_RANGED_INTERVAL = 10;
+local defaultRangedSpeed = 2.0;
+local maxMeasuredRangedInterval = 10;
 
 local playerGUID;
 local inCombat = false;
@@ -28,7 +28,7 @@ local mainHandSpeed, offHandSpeed;
 local mainHandStart, mainHandExpiry;
 local offHandStart, offHandExpiry;
 
-local rangedSpeed = DEFAULT_RANGED_SPEED;
+local rangedSpeed = defaultRangedSpeed;
 local rangedStart, rangedExpiry;
 local lastRangedShotTime;
 
@@ -122,7 +122,7 @@ local function onRangedShotLanded()
     local now = GetTime();
     if lastRangedShotTime then
         local measured = now - lastRangedShotTime;
-        if measured > 0.2 and measured < MAX_MEASURED_RANGED_INTERVAL then
+        if measured > 0.2 and measured < maxMeasuredRangedInterval then
             rangedSpeed = measured;
         end
     end
@@ -206,7 +206,7 @@ function core:CreateSwingTimer(parent)
 
             if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then
                 onMeleeSwingLanded();
-            elseif RANGED_SPELL_IDS[spellID]
+            elseif rangedSpellIDs[spellID]
                 and (subevent == "SPELL_CAST_SUCCESS" or subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
                 onRangedShotLanded();
             end

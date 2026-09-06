@@ -31,4 +31,9 @@ core.resources.secondary["DRUID"] = {
     ["CAT"] = Enum.PowerType.ComboPoints,
 };
 
-core.resources.tertiary = {};
+core.resources.tertiary = {
+    ["DRUID"] = {
+        ["BEAR"] = Enum.PowerType.Mana,
+        ["CAT"]  = Enum.PowerType.Mana,
+    },
+};

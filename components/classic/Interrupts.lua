@@ -2,7 +2,7 @@ local _, core = ...
 
 if not core.isClassicEra then return end
 
-local CLASS_INTERRUPTS = {
+local classInterrupts = {
     ["ROGUE"]   = { 1769, 1766 },                                  -- Kick (rank 2, rank 1)
     ["WARRIOR"] = { 7355, 7354, 72, 6554, 6552 },                  -- Shield Bash (r3/r2/r1), Pummel (r2/r1)
     ["MAGE"]    = { 2139 },                                        -- Counterspell
@@ -10,20 +10,20 @@ local CLASS_INTERRUPTS = {
     ["DRUID"]   = { 16979 },                                       -- Feral Charge (Bear Form only)
 };
 
-local CLASS_PET_INTERRUPTS = {
+local classPetInterrupts = {
     ["WARLOCK"] = { 19647, 19244 }, -- Spell Lock (rank 2, rank 1)
 };
 
 function core:GetPlayerInterruptSpellID()
     local playerClass = select(2, UnitClass("player"))
 
-    for _, spellID in ipairs(CLASS_INTERRUPTS[playerClass] or {}) do
+    for _, spellID in ipairs(classInterrupts[playerClass] or {}) do
         if C_SpellBook.IsSpellKnown(spellID) then
             return spellID
         end
     end
 
-    for _, spellID in ipairs(CLASS_PET_INTERRUPTS[playerClass] or {}) do
+    for _, spellID in ipairs(classPetInterrupts[playerClass] or {}) do
         if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
             return spellID
         end
