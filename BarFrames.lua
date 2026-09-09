@@ -1,5 +1,4 @@
 local _, core = ...
-local colours = core.colours
 
 local function configurePingableUnitFrame(frame, unit, isPlayer)
     frame.unit = unit;
@@ -15,8 +14,15 @@ local function configurePingableUnitFrame(frame, unit, isPlayer)
     end
 
     function frame:GetTargetInfo()
+        local guid = UnitGUID(self.unit);
+        -- retail can return a secret (opaque) guid for non-player units in combat; the ping
+        -- system's securecopy() errors if we hand that back, so drop it and fall back to a generic ping
+        if issecretvalue and issecretvalue(guid) then
+            guid = nil;
+        end
+
         local targetInfo = {
-            guid = UnitGUID(self.unit),
+            guid = guid,
         };
 
         if isPlayer then
@@ -78,49 +84,6 @@ function core:InsetBarInBackground(bar, bg)
     core:SetPixelPoint(bar, "BOTTOMRIGHT", bg, "BOTTOMRIGHT", -core.pixel, core.pixel);
 end
 
-local copyFrame;
-local function showCopyableText(text)
-    if not copyFrame then
-        copyFrame = CreateFrame("Frame", "BarsCopyFrame", UIParent);
-        copyFrame:SetSize(620, 320);
-        copyFrame:SetPoint("CENTER");
-        copyFrame:SetFrameStrata("DIALOG");
-        copyFrame:EnableMouse(true);
-        copyFrame:SetMovable(true);
-        copyFrame:RegisterForDrag("LeftButton");
-        copyFrame:SetScript("OnDragStart", copyFrame.StartMoving);
-        copyFrame:SetScript("OnDragStop", copyFrame.StopMovingOrSizing);
-
-        local bg = copyFrame:CreateTexture(nil, "BACKGROUND");
-        bg:SetAllPoints();
-        bg:SetColorTexture(colours.blackDialog.r, colours.blackDialog.g, colours.blackDialog.b, colours.blackDialog.a);
-
-        local close = CreateFrame("Button", nil, copyFrame, "UIPanelCloseButton");
-        close:SetPoint("TOPRIGHT");
-
-        local scroll = CreateFrame("ScrollFrame", "BarsCopyScrollFrame", copyFrame, "UIPanelScrollFrameTemplate");
-        scroll:SetPoint("TOPLEFT", 12, -30);
-        scroll:SetPoint("BOTTOMRIGHT", -32, 12);
-
-        copyFrame.edit = CreateFrame("EditBox", nil, scroll);
-        copyFrame.edit:SetMultiLine(true);
-        copyFrame.edit:SetFontObject("ChatFontNormal");
-        copyFrame.edit:SetWidth(560);
-        copyFrame.edit:SetAutoFocus(false);
-        copyFrame.edit:SetScript("OnEscapePressed", function()
-            copyFrame:Hide();
-        end);
-        scroll:SetScrollChild(copyFrame.edit);
-
-        table.insert(UISpecialFrames, "BarsCopyFrame");
-    end
-
-    copyFrame.edit:SetText(text);
-    copyFrame:Show();
-    copyFrame.edit:SetFocus();
-    copyFrame.edit:HighlightText();
-end
-
 function core:SetBarFont(fontString, size)
     fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor(size * core.fontScale + 0.5), "OUTLINE");
 end
@@ -145,7 +108,7 @@ function core:InitializeBarFrames()
     core.width = core:EvenPixels(340);
     core.playerHeight = core:EvenPixels(core.hpRowOffset + 2 * core.rowStep + core.barBgHeight);
     core.targetHeight = core:EvenPixels(-core.targetResourceRowOffset + core.barBgHeight + 2 * core.pixel);
-    core.playerFrameY = -194;
+    core.playerFrameY = -244;
     core.frameGap = 43;
     core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
         - core.targetResourceRowOffset;
@@ -153,6 +116,18 @@ function core:InitializeBarFrames()
     do
         PlayerFrame:SetScript("OnEvent", nil);
         PlayerFrame:Hide();
+
+        local function disableBlizzardResourceFrame(resourceFrame)
+            if not resourceFrame then return end
+            resourceFrame:SetScript("OnEvent", nil);
+            resourceFrame:Hide();
+            resourceFrame:HookScript("OnShow", function(self)
+                self:Hide();
+            end);
+        end
+
+        disableBlizzardResourceFrame(ComboFrame);
+        disableBlizzardResourceFrame(PlayerFrame.classPowerBar);
 
         local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent, "SecureHandlerStateTemplate")
         core:SetPixelSize(playerFrame, core.width, core.playerHeight);
@@ -182,7 +157,12 @@ function core:InitializeBarFrames()
         local swingTimer = core.CreateSwingTimer and core:CreateSwingTimer(playerFrame);
 
         local castbar = core:CreatePlayerCastbar(playerFrame)
-        castbar:SetPoint("TOP", playerFrame, "BOTTOM", 0, -48)
+        castbar:SetPoint("TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY)
+
+        local flightPathTimer = core:CreateFlightPathTimer(playerFrame)
+        flightPathTimer:SetPoint("TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY)
+
+        core:CreateBreathBar(UIParent)
 
         if core.CreateAuraTracker then
             local auraTracker = core:CreateAuraTracker(playerFrame)
@@ -334,28 +314,5 @@ function core:InitializeBarFrames()
         -- taint safe way to hide/show this depending on target
         targetFrame:SetAttribute("unit", "target")
         RegisterUnitWatch(targetFrame, false)
-    end
-
-    SLASH_BARSPX1 = "/barspx";
-    SlashCmdList["BARSPX"] = function()
-        local screenWidth, screenHeight = GetPhysicalScreenSize();
-        local lines = {
-            format("screen %dx%d, UIParent %.2fx%.2f units, effective scale %.4f, 1px = %.4f units",
-                screenWidth, screenHeight, UIParent:GetWidth(), UIParent:GetHeight(),
-                UIParent:GetEffectiveScale(), core.pixel),
-        };
-
-        for _, name in ipairs({ "PlayerFrameContainer", "HPBarContainer", "PrimaryResourceContainer",
-            "PetFrameContainer", "SwingTimerContainer", "TargetFrameContainer", "TargetHPBarContainer",
-            "TargetResourceContainer", "TargetTargetHPBarContainer" }) do
-            local f = _G[name];
-            if f and f:GetLeft() then
-                table.insert(lines, format("%s: left %.2f bottom %.2f width %.2f height %.2f", name,
-                    f:GetLeft() / core.pixel, f:GetBottom() / core.pixel,
-                    f:GetWidth() / core.pixel, f:GetHeight() / core.pixel));
-            end
-        end
-
-        showCopyableText(table.concat(lines, "\n"));
     end
 end

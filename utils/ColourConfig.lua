@@ -15,6 +15,14 @@ core.colours = {
     playerHealth = { r = 200 / 255, g = 70 / 255, b = 80 / 255 },
     outOfRange = { r = 1, g = 0.25, b = 0.25 },
     auraCountText = { r = 0.6, g = 0.9, b = 1 },
+    flightPath = { r = 0.1, g = 1, b = 0.1 },
+
+    mirrorTimers = {
+        BREATH = { r = 0.1, g = 0.55, b = 1 },
+        EXHAUSTION = { r = 1, g = 0.9, b = 0 },
+        DEATH = { r = 1, g = 0.7, b = 0 },
+        FEIGNDEATH = { r = 1, g = 0.7, b = 0 },
+    },
 
     classes = {
         [1] = { r = 0.78, g = 0.61, b = 0.43 },
@@ -57,8 +65,8 @@ core.colours = {
         SOUL_FRAGMENTS = { r = 157, g = 98, b = 209 },
         MAELSTROM_WEAPON = { r = 70, g = 178, b = 255 },
         EBON_MIGHT = { r = 239, g = 158, b = 78 },
-        WHIRLWIND = { r = 252, g = 205, b = 53 },
-        ENRAGE = { r = 242, g = 106, b = 33 },
+        WHIRLWIND = { r = 104, g = 172, b = 219 },
+        ENRAGE = { r = 255, g = 202, b = 136 },
         TEACHINGS = { r = 255, g = 41, b = 135 },
         RENEWING_MIST = { r = 2, g = 255, b = 127 },
         STAGGER = {

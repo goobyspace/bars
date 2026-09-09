@@ -16,6 +16,8 @@ utils/VersionCompat.lua
 utils/SecretUtils.lua
 utils/ColourConfig.lua
 utils/ResourceData.lua
+utils/FlightPathData.lua
+utils/Debug.lua
 
 player/ResourceUtils.lua
 components/PixelUtils.lua
@@ -23,6 +25,8 @@ components/StatusBar.lua
 components/AuraUtils.lua
 components/HPBar.lua
 components/Castbar.lua
+widgets/BreathBar.lua
+widgets/FlightPathTimer.lua
 player/classic/ResourceOverrides.lua
 player/classic/ManaTick.lua
 player/HPBar.lua

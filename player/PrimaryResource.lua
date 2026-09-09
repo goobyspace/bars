@@ -64,8 +64,9 @@ local function updateBar()
     local resource = getResource();
     if not resource then return end;
 
-    if frame.manaTicker then
-        frame.manaTicker:SetActive(resource == Enum.PowerType.Mana);
+    if frame.resourceTicker then
+        local tickResource = resource == Enum.PowerType.Mana or resource == Enum.PowerType.Energy;
+        frame.resourceTicker:SetActive(tickResource and resource or nil);
     end
 
     local max, current = getResourceValue(resource);
@@ -114,8 +115,8 @@ function core:CreatePrimaryBar(parent)
         fontSize = 14,
     });
 
-    if core.CreateManaTicker then
-        frame.manaTicker = core:CreateManaTicker(frame.bar);
+    if core.CreateResourceTicker then
+        frame.resourceTicker = core:CreateResourceTicker(frame.bar);
     end
 
     -- darkens exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.

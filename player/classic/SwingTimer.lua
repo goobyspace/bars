@@ -5,6 +5,7 @@ if not core.isClassicEra then return end
 
 local frame;
 local combatLogGetCurrentEventInfo = rawget(_G, "CombatLogGetCurrentEventInfo");
+local getSpellInfo = rawget(_G, "GetSpellInfo");
 
 local autoShotSpellID = 75;
 local shootBowSpellID = 2480;
@@ -43,6 +44,50 @@ local lastRangedShotTime;
 local mainHandBar, mainHandBg;
 local offHandBar, offHandBg;
 local rangedBar, rangedBg;
+local mainHandSwingSpellBorder, offHandSwingSpellBorder;
+local nextSwingSpellActive = false;
+
+local function createSwingSpellBorder()
+    local borderFrame = CreateFrame("Frame", nil, frame);
+    borderFrame:SetFrameLevel(frame:GetFrameLevel() + 2);
+
+    local borderColor = colours.white;
+    for _, edge in ipairs({ "TOP", "BOTTOM", "LEFT", "RIGHT" }) do
+        local border = borderFrame:CreateTexture(nil, "OVERLAY");
+        border:SetColorTexture(borderColor.r, borderColor.g, borderColor.b, borderColor.a);
+        if edge == "TOP" or edge == "BOTTOM" then
+            core:SetPixelPoint(border, edge .. "LEFT", borderFrame, edge .. "LEFT", 0, 0);
+            core:SetPixelPoint(border, edge .. "RIGHT", borderFrame, edge .. "RIGHT", 0, 0);
+            border:SetHeight(core.pixel);
+        else
+            core:SetPixelPoint(border, "TOP" .. edge, borderFrame, "TOP" .. edge, 0, 0);
+            core:SetPixelPoint(border, "BOTTOM" .. edge, borderFrame, "BOTTOM" .. edge, 0, 0);
+            border:SetWidth(core.pixel);
+        end
+    end
+    borderFrame:Hide();
+    return borderFrame;
+end
+
+local function updateSwingSpellBorder()
+    if not mainHandSwingSpellBorder or not offHandSwingSpellBorder or not mainHandBg or not offHandBg then return end
+
+    local function updateBorder(borderFrame, bg)
+        if bg:IsShown() then
+            borderFrame:ClearAllPoints();
+            borderFrame:SetAllPoints(bg);
+        end
+        borderFrame:SetShown(nextSwingSpellActive and bg:IsShown());
+    end
+
+    updateBorder(mainHandSwingSpellBorder, mainHandBg);
+    updateBorder(offHandSwingSpellBorder, offHandBg);
+end
+
+local function setNextSwingSpellActive(active)
+    nextSwingSpellActive = active;
+    updateSwingSpellBorder();
+end
 
 local function createSwingBar(colorKey)
     local bg = frame:CreateTexture();
@@ -103,10 +148,13 @@ local function updateBars()
     else
         rangedBar:Hide(); rangedBg:Hide();
     end
+
+    updateSwingSpellBorder();
 end
 
 local function onMeleeSwingLanded()
     local now = GetTime();
+    setNextSwingSpellActive(false);
     mainHandSpeed, offHandSpeed = UnitAttackSpeed("player");
     if not mainHandSpeed then return end
 
@@ -156,11 +204,15 @@ end
 local function resetMelee()
     mainHandStart, mainHandExpiry = nil, nil;
     offHandStart, offHandExpiry = nil, nil;
+    setNextSwingSpellActive(false);
 end
 
 function core:CreateSwingTimer(parent)
     frame = CreateFrame("Frame", "SwingTimerContainer", parent);
     core:SetPixelSize(frame, core:EvenPixels(core.width * 2 / 3), core.barBgHeight);
+
+    mainHandSwingSpellBorder = createSwingSpellBorder();
+    offHandSwingSpellBorder = createSwingSpellBorder();
 
     local GAP = 2;
 
@@ -187,6 +239,7 @@ function core:CreateSwingTimer(parent)
     frame:RegisterEvent("PLAYER_REGEN_ENABLED");
     frame:RegisterEvent("START_AUTOREPEAT_SPELL");
     frame:RegisterEvent("STOP_AUTOREPEAT_SPELL");
+    frame:RegisterEvent("UNIT_SPELLCAST_SENT");
     frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 
     frame:SetScript("OnEvent", function(_, event, ...)
@@ -206,6 +259,11 @@ function core:CreateSwingTimer(parent)
             onRangedAimStarted();
         elseif event == "STOP_AUTOREPEAT_SPELL" then
             onRangedStopped();
+        elseif event == "UNIT_SPELLCAST_SENT" then
+            local unit, _, _, spellID = ...;
+            if unit == "player" and getSpellInfo and nextSwingSpellNames[getSpellInfo(spellID)] then
+                setNextSwingSpellActive(true);
+            end
         elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
             if not combatLogGetCurrentEventInfo then return end
 
@@ -217,6 +275,8 @@ function core:CreateSwingTimer(parent)
             elseif rangedSpellIDs[spellID]
                 and (subevent == "SPELL_CAST_SUCCESS" or subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
                 onRangedShotLanded();
+            elseif nextSwingSpellNames[spellName] and subevent == "SPELL_CAST_SUCCESS" then
+                setNextSwingSpellActive(true);
             elseif nextSwingSpellNames[spellName]
                 and (subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
                 onMeleeSwingLanded();
