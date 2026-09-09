@@ -112,7 +112,7 @@ SlashCmdList["BARSPX"] = function()
     core:ShowCopyableText(getPixelDebugText());
 end
 
-SLASH_BARSFLIGHTPATHTIMING1 = "/barsflightpathtiming";
+SLASH_BARSFLIGHTPATHTIMING1 = "/flightdata";
 SlashCmdList["BARSFLIGHTPATHTIMING"] = function()
     core:ShowCopyableText(getFlightPathTimingText());
 end
