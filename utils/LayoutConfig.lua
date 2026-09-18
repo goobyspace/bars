@@ -4,6 +4,10 @@ core.thickMode = true;
 core.healPredictionOverflow = 1.5;
 core.playerCastbarOffsetY = -48;
 
+core.resourceTickerConfig = {
+    fiveSecondRuleDuration = 5,
+};
+
 core.debugConfig = {
     copyWindowWidth = 620,
     copyWindowHeight = 320,

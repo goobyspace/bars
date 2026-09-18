@@ -8,8 +8,11 @@ local function UpdateBar()
     local isPlayer = UnitIsPlayer("target")
     local threat = UnitThreatSituation("player", "target")
     if isPlayer then
-        local _, _, id = UnitClass("target");
-        frame.bar:SetStatusBarColor(core.ClassColors[id].r, core.ClassColors[id].g, core.ClassColors[id].b)
+        local _, name, _ = UnitClass("target");
+        if name then
+            local color = C_ClassColor.GetClassColor(name)
+            frame.bar:SetStatusBarColor(color:GetRGB())
+        end
     elseif threat ~= nil or UnitIsEnemy("player", "target") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
             core.ClassColors["hostile"].b)

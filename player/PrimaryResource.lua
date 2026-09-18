@@ -6,7 +6,7 @@ local predictedCostPercent = 0;
 local predictedCostFlat = 0;
 -- Classic has no secret-value system at all, so it's safe to divide by current/max power there;
 -- retail must stick to costPercent (static spell data) since UnitPower/UnitPowerMax may be secret.
-local isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE;
+local usesSecretValues = core.usesSecretValues;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
@@ -34,7 +34,7 @@ local function getResourceValue(resource)
 
     local current = UnitPower("player", resource)
     local max = UnitPowerMax("player", resource)
-    if max <= 0 then return nil end
+    if max == nil or (not issecretvalue(max) and max <= 0) then return nil end
 
     return max, current
 end
@@ -86,7 +86,7 @@ local function updateBar()
     local widthFraction = 0;
     if predictedCostPercent > 0 then
         widthFraction = predictedCostPercent / 100;
-    elseif not isRetail and predictedCostFlat > 0 and max > 0 then
+    elseif not usesSecretValues and predictedCostFlat > 0 and max > 0 then
         widthFraction = math.min(predictedCostFlat, current) / max;
     end
 

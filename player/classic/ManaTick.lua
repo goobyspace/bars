@@ -6,7 +6,7 @@ if not core.isClassicEra then return end
 -- Classic mana regen lands on a fixed 2 second server clock
 local tickInterval = 2;
 -- spending mana pauses regen for 5 seconds (the "five second rule")
-local fsrDuration = 5;
+local fsrDuration = core.resourceTickerConfig.fiveSecondRuleDuration;
 
 local isSecret = issecretvalue or function() return false end;
 

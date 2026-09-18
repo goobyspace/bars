@@ -17,9 +17,9 @@ end
 
 function core:CreateHPBar(parent)
     frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
-    local _, _, classID = UnitClass("player")
-    local classColour = core.ClassColors[classID]
-    frame.bar:SetStatusBarColor(classColour.r, classColour.g, classColour.b)
+    local _, name, classID = UnitClass("player")
+    local color = C_ClassColor.GetClassColor(name)
+    frame.bar:SetStatusBarColor(color:GetRGB())
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);

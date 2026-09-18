@@ -25,6 +25,7 @@ core.colours = {
     },
 
     classes = {
+        -- the class part of this isnt used rn, only the neutral/hostile/friendly part
         [1] = { r = 0.78, g = 0.61, b = 0.43 },
         [2] = { r = 0.96, g = 0.55, b = 0.73 },
         [3] = { r = 0.67, g = 0.83, b = 0.45 },

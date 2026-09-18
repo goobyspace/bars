@@ -9,6 +9,7 @@ local kickedClock = nil
 local kickedWait = false
 local castSucceeded = false
 local currentNotInterruptible = false
+local hasActiveCast = false
 
 local function clearEmpowerStages()
     if not frame or not frame.empowerStages then return end
@@ -63,6 +64,9 @@ local function updateBar(kicked, empowerEvent)
         isEmpowered = empowerEvent or channelIsEmpowered
         isChanneled = true
         if not name and kicked == nil and not kickedWait then
+            -- authoritative "nothing is casting" point; catches CHANNEL_STOP and other events
+            -- that don't otherwise clear hasActiveCast, so it can't get stuck true
+            hasActiveCast = false
             clearEmpowerStages()
             return frame:Hide();
         end
@@ -159,22 +163,30 @@ function core:CreatePlayerCastbar(parent)
             kickedWait = false
             castSucceeded = false
             currentNotInterruptible = false
+            hasActiveCast = true
             frame.bar:SetValue(0)
         end
         if event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" then
             currentNotInterruptible = event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE";
             updateBar()
         elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
-            updateBar(kickedBy or false)
+            -- on-next-swing spells (e.g. Heroic Strike) fire this on cancel without ever starting a cast
+            if hasActiveCast then
+                hasActiveCast = false
+                updateBar(kickedBy or false)
+            end
         elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
             castSucceeded = true
         elseif event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_EMPOWER_UPDATE" then
             updateBar(nil, true)
         elseif event == "UNIT_SPELLCAST_EMPOWER_STOP" then
+            hasActiveCast = false
             clearEmpowerStages()
             frame:Hide()
         elseif event == "UNIT_SPELLCAST_STOP" then
-            if not castSucceeded then
+            local wasActive = hasActiveCast
+            hasActiveCast = false
+            if not castSucceeded and wasActive then
                 updateBar(false)
             else
                 updateBar()

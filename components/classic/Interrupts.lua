@@ -1,6 +1,6 @@
 local _, core = ...
 
-if not core.isClassicEra then return end
+if not core.isClassicRules then return end
 
 local classInterrupts = {
     ["ROGUE"]   = { 1769, 1766 },                                  -- Kick (rank 2, rank 1)

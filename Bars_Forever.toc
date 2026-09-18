@@ -1,4 +1,4 @@
-## Interface: 11509
+## Interface: 16001
 ## Title: Bars
 ## Notes: Party & target replacement with bars
 ## Version: @project-version@
@@ -29,7 +29,7 @@ components/Castbar.lua
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
 player/classic/ResourceOverrides.lua
-player/classic/ManaTick.lua
+player/forever/ManaTick.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
@@ -37,8 +37,8 @@ player/TertiaryResource.lua
 player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
-player/classic/AuraTracker.lua
-player/classic/SwingTimer.lua
+player/forever/AuraTracker.lua
+player/forever/SwingTimer.lua
 
 target/HPBar.lua
 target/Widgets.lua
@@ -50,6 +50,9 @@ components/classic/AuraLayout.lua
 target/classic/ImportantDebuffs.lua
 target/classic/MainBuffs.lua
 target/classic/NormalDebuffs.lua
+target/retail/ImportantDebuffs.lua
+target/retail/MainBuffs.lua
+target/retail/NormalDebuffs.lua
 
 BarFrames.lua
 Init.lua

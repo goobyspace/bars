@@ -41,6 +41,10 @@ local rangedSpeed = defaultRangedSpeed;
 local rangedStart, rangedExpiry;
 local lastRangedShotTime;
 
+local rangedStopGrace = 1.5; -- seconds past expiry with no new shot before we assume autoshot stopped silently
+local rangedCheckElapsed = 0;
+local rangedCheckInterval = 0.2;
+
 local mainHandBar, mainHandBg;
 local offHandBar, offHandBg;
 local rangedBar, rangedBg;
@@ -207,6 +211,18 @@ local function resetMelee()
     setNextSwingSpellActive(false);
 end
 
+-- Autorepeat can stop producing shots (e.g. target dies or moves out of range) without firing STOP_AUTOREPEAT_SPELL
+local function checkRangedTimedOut(elapsed)
+    if not rangedExpiry then return end
+    rangedCheckElapsed = rangedCheckElapsed + elapsed;
+    if rangedCheckElapsed < rangedCheckInterval then return end
+    rangedCheckElapsed = 0;
+
+    if GetTime() > rangedExpiry + rangedStopGrace then
+        onRangedStopped();
+    end
+end
+
 function core:CreateSwingTimer(parent)
     frame = CreateFrame("Frame", "SwingTimerContainer", parent);
     core:SetPixelSize(frame, core:EvenPixels(core.width * 2 / 3), core.barBgHeight);
@@ -241,6 +257,10 @@ function core:CreateSwingTimer(parent)
     frame:RegisterEvent("STOP_AUTOREPEAT_SPELL");
     frame:RegisterEvent("UNIT_SPELLCAST_SENT");
     frame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+
+    frame:SetScript("OnUpdate", function(_, elapsed)
+        checkRangedTimedOut(elapsed);
+    end);
 
     frame:SetScript("OnEvent", function(_, event, ...)
         if event == "PLAYER_ENTERING_WORLD" then

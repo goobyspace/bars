@@ -39,7 +39,8 @@ local outOfRangeColour = colours.outOfRange;
         showCastCount       text with how many casts the current resources allow
         rangeCheck          red when the target is out of range, desaturated when the spell
                             can't be used on the current target at all
-        resourceDesaturate  desaturate the icon when there aren't enough resources
+        resourceDesaturate  desaturate the icon when the spell can't be cast (missing resources,
+                            required weapon/shield, wrong stance, etc.)
         trackedAuraSpellID  optional aura to count; shows how many targets have it
         trackedAuraFilter   aura filter for the above (default "HARMFUL|PLAYER")
 
@@ -61,73 +62,6 @@ local outOfRangeColour = colours.outOfRange;
         powerCost           flat resource cost per cast
         powerType           Enum.PowerType.* the cost is paid from
 ]]
-
-core.auraTracker = {
-    ["DRUID"] = {
-        {
-            type = "aura",
-            slot = 1,
-            -- moonfire
-            rankSpellIDs = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
-            form = "!CAT",
-            showTargetDuration = true,
-            showTargetSwipe = true,
-            showCastCount = true,
-        },
-        {
-            type = "spell",
-            slot = 2,
-            -- wrath
-            rankSpellIDs = { 5176, 5177, 5178, 5179, 5180, 6780, 8905, 9912 },
-            form = "!CAT",
-            rangeCheck = true,
-            showCooldownText = false,
-            showCastCount = true,
-        },
-        {
-            type = "aura",
-            slot = 1,
-            -- rip
-            rankSpellIDs = { 1079, 9492, 9493, 9752, 9894, 9896 },
-            form = "CAT",
-            showTargetDuration = true,
-            showTargetSwipe = true,
-            showCastCount = true,
-        },
-        {
-            type = "aura",
-            slot = 2,
-            -- rake
-            rankSpellIDs = { 1822, 1823, 1824, 9904 },
-            form = "CAT",
-            showTargetDuration = true,
-            showTargetSwipe = true,
-            showCastCount = true,
-        },
-        {
-            type = "spell",
-            slot = 3,
-            -- healing touch
-            rankSpellIDs = { 5185, 5186, 5187, 5188, 5189, 6778, 8903, 9758, 9888, 9889, 25297 },
-            showCooldownText = false,
-            showCastCount = true,
-        },
-        {
-            type = "reminder",
-            slot = 7,
-            -- thorns
-            rankSpellIDs = { 467, 782, 1075, 8914, 9756, 9910 },
-            alwaysShow = true,
-        },
-        {
-            type = "reminder",
-            slot = 8,
-            -- motw
-            rankSpellIDs = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 },
-            alwaysShow = true,
-        },
-    },
-};
 
 local function GetSpellCooldownInfo(spellID)
     local info = C_Spell.GetSpellCooldown(spellID);
@@ -366,8 +300,10 @@ local function UpdateSpellIcon(button)
     end
 
     if entry.resourceDesaturate or entry.rangeCheck then
-        local _, noResource = C_Spell.IsSpellUsable(spellID);
-        button.icon:SetDesaturated(invalidTarget or (entry.resourceDesaturate and noResource) or false);
+        -- isUsable is false for any reason the spell can't be cast (missing shield/weapon,
+        -- wrong stance, insufficient resources, etc.), not just resource shortage
+        local isUsable = C_Spell.IsSpellUsable(spellID);
+        button.icon:SetDesaturated(invalidTarget or (entry.resourceDesaturate and not isUsable) or false);
     end
 end
 
