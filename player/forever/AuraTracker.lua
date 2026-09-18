@@ -35,17 +35,6 @@ local function EntryAllowedInCurrentForm(entry, currentForm)
     return form == currentForm;
 end
 
-local function FindAuraOnUnit(unit, entry)
-    for _, spellID in ipairs(entry.rankSpellIDs or { entry.spellID }) do
-        local auraData = C_UnitAuras.GetUnitAuraBySpellID(unit, spellID);
-        if auraData then return auraData end
-    end
-end
-
-local function ClearCooldown(cooldown)
-    CooldownFrame_Set(cooldown, 0, 0, 0);
-end
-
 local function CreateIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
     button:SetSize(iconWidth, iconHeight);
@@ -62,10 +51,16 @@ local function CreateIcon(parent, entry)
     button.icon:SetTexture(C_Spell.GetSpellTexture(button.spellID));
     button.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92);
 
-    button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
-    button.cooldown:SetAllPoints();
-    button.cooldown:SetHideCountdownNumbers(false);
-    button.cooldown:SetDrawEdge(false);
+    -- Cooldown:SetCooldown/SetCooldownDuration both refuse spell-cooldown data from addon code on
+    -- Forever (it's secret there), so this type has no real swipe/glow, just the usable/range
+    -- desaturation logic below; StatusBar timers accept secret duration objects directly, so this
+    -- gets a StatusBar overlay instead
+    button.cooldownBar = CreateFrame("StatusBar", nil, button);
+    button.cooldownBar:SetAllPoints();
+    button.cooldownBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
+    button.cooldownBar:SetStatusBarColor(colours.black.r, colours.black.g, colours.black.b, 0.7);
+    button.cooldownBar:SetReverseFill(true);
+    button.cooldownBar:Hide();
 
     return button;
 end
@@ -74,12 +69,18 @@ local function UpdateSpellIcon(button)
     local entry = button.entry;
     local spellID = button.spellID;
 
+    -- Cooldown:SetCooldown can't take Forever's secret spell-cooldown numbers from addon code, but
+    -- StatusBar timers accept secret duration objects directly, so drive the overlay through that
+    local onCooldown = false;
     if entry.showCooldownSwipe ~= false then
         local duration = C_Spell.GetSpellCooldownDuration(spellID);
-        if duration then
-            button.cooldown:SetCooldownDuration(duration);
+        onCooldown = duration ~= nil and not duration:IsZero();
+        if onCooldown then
+            button.cooldownBar:SetTimerDuration(duration, Enum.StatusBarInterpolation.Linear,
+                Enum.StatusBarTimerDirection.RemainingTime);
+            button.cooldownBar:Show();
         else
-            ClearCooldown(button.cooldown);
+            button.cooldownBar:Hide();
         end
     end
 
@@ -95,40 +96,67 @@ local function UpdateSpellIcon(button)
         end
     end
 
-    if entry.resourceDesaturate or entry.rangeCheck then
-        local isUsable = C_Spell.IsSpellUsable(spellID);
-        button.icon:SetDesaturated(invalidTarget or (entry.resourceDesaturate and not isUsable) or false);
-    end
+    local isUsable = not (entry.resourceDesaturate or entry.rangeCheck) or C_Spell.IsSpellUsable(spellID);
+    button.icon:SetDesaturated(onCooldown or invalidTarget or (entry.resourceDesaturate and not isUsable) or false);
 end
 
-local function UpdateAuraIcon(button)
-    local auraData = UnitExists("target") and FindAuraOnUnit("target", button.entry) or nil;
-    if auraData then
-        local duration = C_UnitAuras.GetAuraDuration("target", auraData.auraInstanceID);
-        if duration then
-            button.cooldown:SetCooldownDuration(duration);
-        else
-            ClearCooldown(button.cooldown);
-        end
-    else
-        ClearCooldown(button.cooldown);
+-- "aura"/"reminder" entries are backed by a native AuraContainer aura slot instead of a manually
+-- driven Cooldown, since C_UnitAuras duration/expirationTime for the player's own auras hit the
+-- same secret-value wall as spell cooldowns; the container reads them from untainted Blizzard code
+-- and drives the icon/cooldown/duration text itself, so addon Lua never has to touch them.
+-- The slot's frame is hidden by the container whenever its candidate aura is absent - overridden
+-- here to stay visible and simply desaturate, since these are meant to read as persistent reminders.
+local function CreateAuraIcon(parent, entry, unit, auraFilter)
+    local container = CreateFrame("AuraContainer", nil, parent, "CustomAuraContainerTemplate");
+    container:SetSize(iconWidth, iconHeight);
+    container:SetUnit(unit);
+    container.entry = entry;
+
+    local spellIDs = {};
+    for _, spellID in ipairs(entry.rankSpellIDs or { entry.spellID }) do
+        spellIDs[spellID] = true;
     end
-    button.icon:SetDesaturated(not auraData);
+
+    local function initializeFrame(button)
+        core:InitializeAuraButtonBase(button, iconWidth);
+        button.Hide = function() end;
+
+        function button:OnAuraInstanceAssigned()
+            self.icon:SetDesaturated(false);
+        end
+
+        function button:OnAuraInstanceCleared()
+            self.icon:SetDesaturated(true);
+        end
+
+        local spellID = GetKnownSpellID(entry) or GetFallbackSpellID(entry);
+        if spellID then
+            button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+        end
+        button.icon:SetDesaturated(true);
+        button:Show();
+    end
+
+    local button = container:AddAuraSlot("tracked", auraFilter, {
+        candidateFilters = { includeSpellIDs = spellIDs },
+        initializeFrame = initializeFrame,
+    });
+    button:SetAllPoints(container);
+    container.button = button;
+
+    return container;
 end
 
-local function UpdateReminderIcon(button)
-    local auraData = FindAuraOnUnit("player", button.entry);
-    if auraData then
-        local duration = C_UnitAuras.GetAuraDuration("player", auraData.auraInstanceID);
-        if duration then
-            button.cooldown:SetCooldownDuration(duration);
-        else
-            ClearCooldown(button.cooldown);
-        end
-    else
-        ClearCooldown(button.cooldown);
+local function UpdateAuraIconSpell(container)
+    local entry = container.entry;
+    local knownSpellID = GetKnownSpellID(entry);
+    local spellID = knownSpellID or GetFallbackSpellID(entry);
+    if spellID ~= container.spellID then
+        container.spellID = spellID;
+        container.button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+        container:SetAuraSlotCandidateFilters("tracked", { includeSpellIDs = { [spellID] = true } });
     end
-    button.icon:SetDesaturated(not auraData);
+    return knownSpellID;
 end
 
 function core:CreateAuraTracker(parent)
@@ -141,7 +169,14 @@ function core:CreateAuraTracker(parent)
 
     local icons = {};
     for index, entry in ipairs(entries) do
-        local button = CreateIcon(frame, entry);
+        local button;
+        if entry.type == "aura" then
+            button = CreateAuraIcon(frame, entry, "target", "HARMFUL");
+        elseif entry.type == "reminder" then
+            button = CreateAuraIcon(frame, entry, "player", "HELPFUL");
+        else
+            button = CreateIcon(frame, entry);
+        end
         button.slot = entry.slot or index;
         table.insert(icons, button);
     end
@@ -159,11 +194,16 @@ function core:CreateAuraTracker(parent)
         local changed = false;
         local currentForm = core:GetShapeshiftFormKey();
         for _, button in ipairs(icons) do
-            local knownSpellID = GetKnownSpellID(button.entry);
-            local spellID = knownSpellID or GetFallbackSpellID(button.entry);
-            if spellID ~= button.spellID then
-                button.spellID = spellID;
-                button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+            local knownSpellID;
+            if button.entry.type == "aura" or button.entry.type == "reminder" then
+                knownSpellID = UpdateAuraIconSpell(button);
+            else
+                knownSpellID = GetKnownSpellID(button.entry);
+                local spellID = knownSpellID or GetFallbackSpellID(button.entry);
+                if spellID ~= button.spellID then
+                    button.spellID = spellID;
+                    button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+                end
             end
 
             local visible = (button.entry.alwaysShow or knownSpellID ~= nil)
@@ -178,14 +218,8 @@ function core:CreateAuraTracker(parent)
 
     local function UpdateAll()
         for _, button in ipairs(icons) do
-            if button.visible then
-                if button.entry.type == "aura" then
-                    UpdateAuraIcon(button);
-                elseif button.entry.type == "reminder" then
-                    UpdateReminderIcon(button);
-                else
-                    UpdateSpellIcon(button);
-                end
+            if button.visible and button.entry.type ~= "aura" and button.entry.type ~= "reminder" then
+                UpdateSpellIcon(button);
             end
         end
     end
@@ -195,7 +229,6 @@ function core:CreateAuraTracker(parent)
     frame:RegisterEvent("SPELLS_CHANGED");
     frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM");
     frame:RegisterEvent("PLAYER_TARGET_CHANGED");
-    frame:RegisterEvent("UNIT_AURA");
     frame:RegisterEvent("SPELL_UPDATE_COOLDOWN");
     frame:RegisterEvent("SPELL_UPDATE_USABLE");
 

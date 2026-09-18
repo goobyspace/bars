@@ -33,6 +33,8 @@ end
 
 local function HideTimer(timer)
     timer.endTime = nil;
+    timer.duration = nil;
+    timer.bar:SetValue(0);
     timer.bar:Hide();
     timer.bg:Hide();
 end
@@ -40,11 +42,9 @@ end
 local function StartTimer(timer, duration)
     if not duration or duration <= 0 then return end
 
+    timer.duration = duration;
     timer.endTime = GetTime() + duration;
-    local durationObject = C_DurationUtil.CreateDuration();
-    durationObject:SetTimeFromStart(0, duration);
-    timer.bar:SetTimerDuration(durationObject, Enum.StatusBarInterpolation.ExponentialEaseOut,
-        Enum.StatusBarTimerDirection.ElapsedTime);
+    timer.bar:SetValue(0);
     timer.bg:Show();
     timer.bar:Show();
 end
@@ -98,10 +98,17 @@ function core:CreateSwingTimer(parent)
     end);
 
     frame:SetScript("OnUpdate", function()
+        -- StatusBar:SetTimerDuration never animated for an addon-created bar, so drive the fill
+        -- manually every frame instead, exactly like Blizzard's own SwingTimerMixin:OnUpdate
         local now = GetTime();
         for _, timer in pairs(timers) do
-            if timer.endTime and now >= timer.endTime then
-                HideTimer(timer);
+            if timer.endTime then
+                local remaining = timer.endTime - now;
+                if remaining <= 0 then
+                    HideTimer(timer);
+                else
+                    timer.bar:SetValue((timer.duration - remaining) / timer.duration);
+                end
             end
         end
     end);

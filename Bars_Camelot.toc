@@ -13,6 +13,7 @@
 utils/Utils.lua
 utils/LayoutConfig.lua
 utils/VersionCompat.lua
+utils/ForeverFlag.lua
 utils/SecretUtils.lua
 utils/ColourConfig.lua
 utils/ResourceData.lua
@@ -37,7 +38,6 @@ player/TertiaryResource.lua
 player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
-player/forever/AuraTracker.lua
 player/forever/SwingTimer.lua
 
 target/HPBar.lua

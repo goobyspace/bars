@@ -1,6 +1,6 @@
 local _, core = ...
 
-if core.isClassicEra then return end
+if core.isClassicEra or core.isForever then return end
 
 function core:GetPlayerInterruptSpellID()
     local specIndex = GetSpecialization()

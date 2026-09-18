@@ -1,10 +1,9 @@
 local _, core = ...
 
-local _, _, _, interface = GetBuildInfo();
-
 core.isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC;
 core.isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE;
-core.isForever = interface == 16001;
+-- overridden to true by utils/ForeverFlag.lua, which only Bars_Camelot.toc loads
+core.isForever = false;
 core.isClassicRules = core.isClassicEra or core.isForever;
 core.usesSecretValues = core.isRetail;
 core.hasAuraContainer = C_XMLUtil.GetTemplateInfo("CustomAuraContainerTemplate") ~= nil;
