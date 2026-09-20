@@ -4,9 +4,6 @@ local colours = core.colours
 local frame = nil;
 local predictedCostPercent = 0;
 local predictedCostFlat = 0;
--- Classic has no secret-value system at all, so it's safe to divide by current/max power there;
--- retail must stick to costPercent (static spell data) since UnitPower/UnitPowerMax may be secret.
-local usesSecretValues = core.usesSecretValues;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"))
@@ -43,8 +40,9 @@ end
 -- percentage (static spell data, never secret); Classic spells mostly only report a flat amount instead.
 local function updatePredictedCost(resource, isCasting)
     local costPercent, flatCost = 0, 0;
+    local spellID = nil;
     if isCasting and resource then
-        local spellID = select(9, UnitCastingInfo("player")) or select(9, UnitChannelInfo("player"));
+        spellID = select(9, UnitCastingInfo("player")) or select(9, UnitChannelInfo("player"));
         local costTable = spellID and C_Spell.GetSpellPowerCost(spellID) or {};
         for _, costInfo in pairs(costTable) do
             if costInfo.type == resource then
@@ -80,14 +78,13 @@ local function updateBar()
     frame.text:SetText(AbbreviateNumbers(current));
 
     -- darken exactly the resource the current cast/channel will consume, ending flush with frame.bar's
-    -- current fill. On retail, current/max power may be secret, so only the static costPercent (never
-    -- secret) is used. On Classic there's no secret-value system, so the flat cost can be safely divided
-    -- by current/max directly -- most Classic spells only report a flat cost, not a percentage.
+    -- current fill. Prefer static costPercent when present; Classic-like spell data often only reports a
+    -- flat cost, which can still be sized safely when max power is a plain number.
     local widthFraction = 0;
     if predictedCostPercent > 0 then
         widthFraction = predictedCostPercent / 100;
-    elseif not usesSecretValues and predictedCostFlat > 0 and max > 0 then
-        widthFraction = math.min(predictedCostFlat, current) / max;
+    elseif predictedCostFlat > 0 and core:IsSafePositiveNumber(max) then
+        widthFraction = predictedCostFlat / max;
     end
 
     if widthFraction > 0 then
@@ -122,7 +119,7 @@ function core:CreatePrimaryBar(parent)
     -- darkens exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.
     -- A plain texture sized directly from costPercent (static spell data, never secret) -- this never
     -- needs to touch the (possibly secret) current/max power values or rely on any StatusBar fill style.
-    frame.costPredictionBar = frame.bar:CreateTexture(nil, "ARTWORK", nil, 1);
+    frame.costPredictionBar = frame.bar:CreateTexture(nil, "OVERLAY", nil, 1);
     frame.costPredictionBar:SetColorTexture(colours.blackCostPrediction.r, colours.blackCostPrediction.g,
         colours.blackCostPrediction.b, colours.blackCostPrediction.a);
     frame.costPredictionBar:SetPoint("TOPRIGHT", frame.bar:GetStatusBarTexture(), "TOPRIGHT", 0, 0);

@@ -148,15 +148,20 @@ local function updateCountBar(resource)
         frame['bg' .. i]:Hide();
     end
 
-    -- combo points are stored per-target, not on the player, so they need their own read path
+    -- combo points are stored per-target, not on the player, so they need their own read path;
+    -- on Forever both of these can be secret numbers, so `current` must never be compared to or
+    -- combined via arithmetic with anything else - only passed through untouched to SetValue
     local current = resource == Enum.PowerType.ComboPoints
         and (GetComboPoints("player", "target") or 0)
         or (UnitPower("player", resource) or 0);
     local max = UnitPowerMax("player", resource);
     if not max or max <= 0 then return end;
 
+    local isRuneResource = resource == Enum.PowerType.Runes;
     local pendingRuneDurations;
-    if resource == Enum.PowerType.Runes then
+    if isRuneResource then
+        -- runes are counted here from addon-owned data, not read as a single secret value, so
+        -- `current` is a plain number for this resource and safe to compare/index directly below
         current = 0;
         pendingRuneDurations = {};
         for i = 1, max do
@@ -170,14 +175,6 @@ local function updateCountBar(resource)
         table.sort(pendingRuneDurations, function(a, b)
             return (a.start + a.duration) < (b.start + b.duration)
         end)
-    end
-
-    local fractionalSoulShardValue;
-    if resource == Enum.PowerType.SoulShards then
-        local shardProgress = current - math.floor(current);
-        if shardProgress > 0 then
-            fractionalSoulShardValue = shardProgress;
-        end
     end
 
     local gap = 4;
@@ -195,26 +192,19 @@ local function updateCountBar(resource)
         local bar = frame["bar" .. i];
         bar:Show();
         core:SetPixelSize(bar, barWidth - 2 * core.pixel, core.barHeight);
-        bar:SetMinMaxValues(0, 1);
 
-        if resource == Enum.PowerType.SoulShards then
-            local completedShards = math.floor(current);
-            if i <= completedShards then
-                bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            elseif i == completedShards + 1 and fractionalSoulShardValue then
-                bar:SetValue(fractionalSoulShardValue, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            else
-                bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            end
-        elseif i <= current then
-            bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
-        elseif pendingRuneDurations and pendingRuneDurations[i - current] then
+        if isRuneResource and pendingRuneDurations[i - current] then
             local pending = pendingRuneDurations[i - current];
+            bar:SetMinMaxValues(0, 1);
             local duration = C_DurationUtil.CreateDuration();
             duration:SetTimeSpan(pending.start, pending.start + pending.duration);
             bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
         else
-            bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            -- give this segment its own [i-1, i] slice of `current` so the StatusBar widget's own
+            -- clamping (not addon Lua) decides full/empty/partial fill - this also naturally
+            -- reproduces the old fractional soul shard behaviour with no special-casing needed
+            bar:SetMinMaxValues(i - 1, i);
+            bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
         end
     end
 end

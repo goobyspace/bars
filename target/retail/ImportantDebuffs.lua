@@ -45,12 +45,33 @@ function core:CreateImportantDebuffsFrame(parent)
             layout = { layoutIndex = 4 },
         })
 
+    local targetIsVisible
+
+    local function updateAuras()
+        targetIsVisible = UnitIsVisible("target")
+        frame:SetShown(targetIsVisible)
+        if targetIsVisible then
+            frame:UpdateAllAuras()
+        end
+    end
+
     local eventFrame = CreateFrame("Frame")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
     eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
-    eventFrame:SetScript("OnEvent", function()
-        frame:UpdateAllAuras()
+    eventFrame:SetScript("OnEvent", updateAuras)
+
+    local elapsedSinceVisibilityCheck = 0
+    eventFrame:SetScript("OnUpdate", function(_, elapsed)
+        elapsedSinceVisibilityCheck = elapsedSinceVisibilityCheck + elapsed
+        if elapsedSinceVisibilityCheck < 0.2 then return end
+        elapsedSinceVisibilityCheck = 0
+
+        if UnitIsVisible("target") ~= targetIsVisible then
+            updateAuras()
+        end
     end)
+
+    updateAuras()
 
     return frame
 end
