@@ -27,7 +27,7 @@ local function UpdateBar()
 
     local currentHP, maxHP = core:UpdateHPBarValues(frame, "targettarget");
     if not maxHP then
-        return frame:Hide();
+        return;
     end
 
     local percentHP = string.format("%.0f%%", UnitHealthPercent("targettarget", true, CurveConstants.ScaleTo100))

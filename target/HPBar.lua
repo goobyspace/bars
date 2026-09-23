@@ -30,7 +30,7 @@ local function UpdateBar(immediate)
     end
 
     frame.hpText:SetText(AbbreviateNumbers(currentHP));
-    frame.name:SetText(UnitName("target"))
+    frame.name:SetText(core.isForever and _G.GetUnitName("target", true) or UnitName("target"))
     local function LevelText()
         if UnitLevel("target") == -1 then return "??" else return tostring(UnitLevel("target")) end
     end
