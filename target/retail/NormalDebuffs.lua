@@ -9,9 +9,9 @@ local maxDebuffs = 10
 
 function core:CreateNormalDebuffsFrame(parent)
     local frame = CreateFrame("AuraContainer", "TargetNormalDebuffAuraContainer", parent, "CustomAuraContainerTemplate")
-    frame:SetSize(20, 20)
+    frame:SetSize(22, 22)
     frame:SetUnit("target")
-    frame:SetFlowLayoutMaximumLineSize(108)
+    frame:SetFlowLayoutMaximumLineSize(120)
     frame:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
     frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)
 
@@ -25,9 +25,16 @@ function core:CreateNormalDebuffsFrame(parent)
     end
 
     local function initializeFrame(button)
-        core:InitializeAuraButtonBase(button, 20)
+        core:InitializeAuraButtonBase(button, 22)
+
+        local blackBorder = button:CreateTexture(nil, "BORDER")
+        blackBorder:SetDrawLayer("BORDER", 1)
+        blackBorder:SetPoint("TOPLEFT", -1, 1)
+        blackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
+        blackBorder:SetColorTexture(0, 0, 0, 1)
 
         local border = button:CreateTexture(nil, "OVERLAY")
+        border:SetDrawLayer("OVERLAY", 6)
         border:SetPoint("TOPLEFT", -1, 1)
         border:SetPoint("BOTTOMRIGHT", 1, -1)
         button:AddDispelTypeTexture(border, {

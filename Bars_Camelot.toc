@@ -18,7 +18,7 @@ utils/SecretUtils.lua
 utils/ColourConfig.lua
 utils/ResourceData.lua
 utils/FlightPathData.lua
-utils/AuraTrackerConfig.lua
+utils/forever/AuraTrackerConfig.lua
 utils/Debug.lua
 
 player/ResourceUtils.lua
@@ -39,6 +39,7 @@ player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
 player/forever/SwingTimer.lua
+player/forever/AuraTracker.lua
 
 target/HPBar.lua
 target/Widgets.lua

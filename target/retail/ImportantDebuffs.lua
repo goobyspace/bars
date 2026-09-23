@@ -15,6 +15,11 @@ function core:CreateImportantDebuffsFrame(parent)
 
     local function initializeFrame(button)
         core:InitializeAuraButtonBase(button, 32)
+
+        local blackBorder = button:CreateTexture(nil, "BORDER")
+        blackBorder:SetPoint("TOPLEFT", -1, 1)
+        blackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
+        blackBorder:SetColorTexture(0, 0, 0, 1)
     end
 
     frame:AddAuraGroup("CrowdControl", AuraUtil.AuraFilters.Harmful .. "|" .. AuraUtil.AuraFilters.CrowdControl, {

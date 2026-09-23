@@ -17,7 +17,7 @@ utils/SecretUtils.lua
 utils/ColourConfig.lua
 utils/ResourceData.lua
 utils/FlightPathData.lua
-utils/AuraTrackerConfig.lua
+utils/classic/AuraTrackerConfig.lua
 utils/Debug.lua
 
 player/ResourceUtils.lua

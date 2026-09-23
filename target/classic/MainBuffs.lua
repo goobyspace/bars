@@ -9,7 +9,14 @@ local maxBuffs = 16
 local function InitializeButton(button)
     core:InitializeAuraButtonBase(button)
 
+    button.BlackBorder = button:CreateTexture(nil, "BORDER")
+    button.BlackBorder:SetDrawLayer("BORDER", 1)
+    button.BlackBorder:SetPoint("TOPLEFT", -1, 1)
+    button.BlackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
+    button.BlackBorder:SetColorTexture(0, 0, 0, 1)
+
     button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
+    button.PurgeBorder:SetDrawLayer("OVERLAY", 7)
     button.PurgeBorder:SetPoint("TOPLEFT")
     button.PurgeBorder:SetPoint("BOTTOMRIGHT")
     button.PurgeBorder:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a)
@@ -26,7 +33,7 @@ function core:CreateMainBuffsFrame(parent)
 
     local container = core:CreateAuraContainer(frame, {
         unit = "target",
-        iconSize = 14,
+        iconSize = 16,
         spacing = 2,
         maxLineSize = 126,
         anchorPoint = "TOPLEFT",

@@ -10,7 +10,7 @@ local classicDruidFormKeys = {
 };
 
 function core:GetShapeshiftFormKey()
-    if not core.isClassicEra then
+    if not core.isClassicRules then
         return GetShapeshiftFormID() or 0;
     end
 

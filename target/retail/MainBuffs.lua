@@ -39,14 +39,21 @@ function core:CreateMainBuffsFrame(parent)
     end
 
     local frame = CreateFrame("AuraContainer", "TargetMainBuffAuraContainer", parent, "CustomAuraContainerTemplate")
-    frame:SetSize(14, 14)
+    frame:SetSize(16, 16)
     frame:SetUnit("target")
     frame:SetFlowLayoutMaximumLineSize(126)
 
     local function initializeFrame(button)
-        core:InitializeAuraButtonBase(button, 14)
+        core:InitializeAuraButtonBase(button, 16)
+
+        button.BlackBorder = button:CreateTexture(nil, "BORDER")
+        button.BlackBorder:SetDrawLayer("BORDER", 1)
+        button.BlackBorder:SetPoint("TOPLEFT", -1, 1)
+        button.BlackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
+        button.BlackBorder:SetColorTexture(0, 0, 0, 1)
 
         button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
+        button.PurgeBorder:SetDrawLayer("OVERLAY", 7)
         button.PurgeBorder:SetPoint("TOPLEFT")
         button.PurgeBorder:SetPoint("BOTTOMRIGHT")
         button.PurgeBorder:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a)

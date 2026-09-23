@@ -69,6 +69,7 @@ core.colours = {
         WHIRLWIND = { r = 104, g = 172, b = 219 },
         ENRAGE = { r = 255, g = 202, b = 136 },
         TEACHINGS = { r = 255, g = 41, b = 135 },
+        ECLIPSE = { r = 199, g = 127, b = 221 },
         RENEWING_MIST = { r = 2, g = 255, b = 127 },
         STAGGER = {
             light = { r = 133, g = 255, b = 133 },

@@ -5,6 +5,8 @@ local frame;
 
 local teachingsOfTheMonastery = 202090;
 local teachingsMaxStacks = 4;
+local eclipse = 408248;
+local eclipseMaxStacks = 4;
 local enrage = 184362;
 local vengeanceSoulFragments = 203981;
 local devourerSoulFragments = 1225789;
@@ -52,6 +54,10 @@ local function getResource()
 
     if playerClass == "DRUID" then
         local formID = core:GetShapeshiftFormKey()
+        if core.isForever and (formID == 0 or formID == "MOONKIN")
+            and C_SpellBook.IsSpellKnown(eclipse) then
+            return "ECLIPSE";
+        end
         resource = resource and resource[formID or 0]
     end
 
@@ -385,6 +391,28 @@ local trackerBuilders = {
         end);
     end,
 
+    ["ECLIPSE"] = function(tracker)
+        local segmentWidth = (core.width - 2 * core.pixel) / eclipseMaxStacks;
+
+        for i = 1, eclipseMaxStacks do
+            local bars = frame:CreateTexture(nil, "OVERLAY");
+            bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
+            core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
+            core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
+            table.insert(tracker.visuals, bars);
+        end
+
+        tracker.container = createAuraTracker(eclipse, function(button)
+            local bar = createTrackerBar(button, "ECLIPSE",
+                "Interface/Addons/Bars/assets/transparent four segment bar.png");
+
+            button:SetApplicationBar(bar, {
+                maxApplications = eclipseMaxStacks,
+                interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
+            });
+        end);
+    end,
+
     ["ENRAGE"] = function(tracker)
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
@@ -526,6 +554,8 @@ function core:CreateSecondaryBar(parent)
         local unit = ...;
         if event == "PLAYER_ENTERING_WORLD"
             or event == "UPDATE_SHAPESHIFT_FORM"
+            or event == "PLAYER_TALENT_UPDATE"
+            or event == "TRAIT_CONFIG_UPDATED"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
             refreshTrackers();
 

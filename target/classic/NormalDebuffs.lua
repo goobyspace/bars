@@ -10,7 +10,14 @@ local maxDebuffs = 10
 local function InitializeButton(button)
     core:InitializeAuraButtonBase(button)
 
+    button.BlackBorder = button:CreateTexture(nil, "BORDER")
+    button.BlackBorder:SetDrawLayer("BORDER", 1)
+    button.BlackBorder:SetPoint("TOPLEFT", -1, 1)
+    button.BlackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
+    button.BlackBorder:SetColorTexture(0, 0, 0, 1)
+
     button.border = button:CreateTexture(nil, "OVERLAY")
+    button.border:SetDrawLayer("OVERLAY", 6)
     button.border:SetPoint("TOPLEFT", -1, 1)
     button.border:SetPoint("BOTTOMRIGHT", 1, -1)
 end
@@ -36,9 +43,9 @@ function core:CreateNormalDebuffsFrame(parent)
 
     local container = core:CreateAuraContainer(frame, {
         unit = "target",
-        iconSize = 20,
+        iconSize = 22,
         spacing = 2,
-        maxLineSize = 108,
+        maxLineSize = 120,
         anchorPoint = "BOTTOMLEFT",
         growX = 1,
         growY = 1,

@@ -8,6 +8,7 @@ core.flightPathData = {
     Horde = {
         ["Crossroads, The Barrens" .. "\031" .. "Thunder Bluff, Mulgore"] = 182.652,
         ["Orgrimmar, Durotar" .. "\031" .. "Crossroads, The Barrens"] = 110.620,
+        ["Ratchet, The Barrens" .. "\031" .. "Crossroads, The Barrens"] = 68.923,
         ["Thunder Bluff, Mulgore" .. "\031" .. "Orgrimmar, Durotar"] = 207.610,
     },
 };
