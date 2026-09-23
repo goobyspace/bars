@@ -45,8 +45,8 @@ end
 
 local function CreateGlow(parent)
     local glow = CreateFrame("Frame", nil, parent);
-    glow:SetSize(iconWidth * 1.4, iconHeight * 1.4);
-    glow:SetPoint("CENTER");
+    core:SetPixelSize(glow, iconWidth * 1.4, iconHeight * 1.4);
+    core:SetPixelPoint(glow, "CENTER", parent, "CENTER", 0, 0);
 
     local texture = glow:CreateTexture(nil, "OVERLAY", nil, 7);
     texture:SetAllPoints();
@@ -76,16 +76,17 @@ end
 
 local function CreateBaseIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
-    button:SetSize(iconWidth, iconHeight);
+    core:SetPixelSize(button, iconWidth, iconHeight);
     button.entry = entry;
 
     button.border = button:CreateTexture(nil, "BACKGROUND");
-    button.border:SetPoint("TOPLEFT", -1, 1);
-    button.border:SetPoint("BOTTOMRIGHT", 1, -1);
+    core:SetPixelPoint(button.border, "TOPLEFT", button, "TOPLEFT", 0, 0);
+    core:SetPixelPoint(button.border, "BOTTOMRIGHT", button, "BOTTOMRIGHT", 0, 0);
     button.border:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
 
     button.icon = button:CreateTexture(nil, "ARTWORK");
-    button.icon:SetAllPoints();
+    core:SetPixelPoint(button.icon, "TOPLEFT", button, "TOPLEFT", core.pixel, -core.pixel);
+    core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
     button.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
     button.icon:SetDesaturated(true);
 
@@ -122,10 +123,16 @@ local function CreateAuraLayer(button, entry)
     end
 
     local function InitializeAuraFrame(auraButton)
-        auraButton:SetSize(iconWidth, iconHeight);
+        core:SetPixelSize(auraButton, iconWidth, iconHeight);
+
+        auraButton.border = auraButton:CreateTexture(nil, "BACKGROUND");
+        core:SetPixelPoint(auraButton.border, "TOPLEFT", auraButton, "TOPLEFT", 0, 0);
+        core:SetPixelPoint(auraButton.border, "BOTTOMRIGHT", auraButton, "BOTTOMRIGHT", 0, 0);
+        auraButton.border:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
 
         auraButton.icon = auraButton:CreateTexture(nil, "OVERLAY");
-        auraButton.icon:SetAllPoints();
+        core:SetPixelPoint(auraButton.icon, "TOPLEFT", auraButton, "TOPLEFT", core.pixel, -core.pixel);
+        core:SetPixelPoint(auraButton.icon, "BOTTOMRIGHT", auraButton, "BOTTOMRIGHT", -core.pixel, core.pixel);
         auraButton.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
         auraButton:SetIcon(auraButton.icon);
 
@@ -206,7 +213,7 @@ end
 
 function core:CreateAuraTracker(parent)
     local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
-    frame:SetSize(core.width, iconHeight);
+    core:SetPixelSize(frame, core.width, iconHeight);
 
     local playerClass = select(2, UnitClass("player"));
     local entries = core.foreverAuraTracker and core.foreverAuraTracker[playerClass];
@@ -226,7 +233,7 @@ function core:CreateAuraTracker(parent)
         local step = math.max(iconWidth + minIconSpacing, (core.width - iconWidth) / (slotCount - 1));
         for _, button in ipairs(buttons) do
             button:ClearAllPoints();
-            button:SetPoint("LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
+            core:SetPixelPoint(button, "LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
         end
     end
 
