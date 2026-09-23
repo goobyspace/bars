@@ -2,8 +2,8 @@ local _, core = ...
 
 local frame = nil;
 
-local function UpdateBar()
-    if not frame or not frame:IsShown() then return end;
+local function UpdateBar(immediate)
+    if not frame then return end;
 
     local isPlayer = UnitIsPlayer("target")
     local threat = UnitThreatSituation("player", "target")
@@ -24,9 +24,9 @@ local function UpdateBar()
             core.ClassColors["neutral"].b)
     end
 
-    local currentHP, maxHP = core:UpdateHPBarValues(frame, "target");
+    local currentHP, maxHP = core:UpdateHPBarValues(frame, "target", immediate);
     if not maxHP then
-        return frame:Hide();
+        return;
     end
 
     frame.hpText:SetText(AbbreviateNumbers(currentHP));
@@ -75,8 +75,8 @@ function core:CreateTargetHPBar(parent)
         frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
     end
 
-    frame:SetScript("OnEvent", function()
-        UpdateBar();
+    frame:SetScript("OnEvent", function(_, event)
+        UpdateBar(event == "PLAYER_TARGET_CHANGED");
     end)
 
     return frame;

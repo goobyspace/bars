@@ -1,93 +1,32 @@
 ---@diagnostic disable: undefined-global
 
 local _, core = ...
-local colours = core.colours
 
 if not core.hasAuraContainer then return end
 
-local knowsPurge = false;
-local maxBuffs = 16
+local maxBuffs = 32
 
+-- Reuse Blizzard's own first-party TargetFrameAuraContainer instead of building
+-- a CustomAuraContainerTemplate: addon-created containers can't render auras
+-- that aren't the player's own casts on this client (secret aura data), but
+-- Blizzard's built-in container isn't subject to that restriction.
 function core:CreateMainBuffsFrame(parent)
-    local buffButtons = {};
+    local frame = TargetFrame.TargetFrameContent.TargetFrameContentContextual.Auras
 
-    local function ApplyPurgeBorder(button)
-        if knowsPurge then
-            if not button.purgeBorderIndex then
-                button.purgeBorderIndex = button:AddDispelTypeTexture(button.PurgeBorder, {
-                    style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
-                    showWhenHelpful = true,
-                    showWhenHarmful = false,
-                    showWithoutDispelType = true,
-                    stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
-                });
-            end
-        elseif button.purgeBorderIndex then
-            button:RemoveDispelTypeTexture(button.purgeBorderIndex);
-            button.purgeBorderIndex = nil;
-        end
-    end
-
-    local function UpdateKnowsPurge()
-        local updated = core:CheckKnowsPurge();
-        if updated ~= knowsPurge then
-            knowsPurge = updated;
-            for _, button in ipairs(buffButtons) do
-                ApplyPurgeBorder(button);
-            end
-        end
-    end
-
-    local frame = CreateFrame("AuraContainer", "TargetMainBuffAuraContainer", parent, "CustomAuraContainerTemplate")
-    frame:SetSize(16, 16)
+    frame:SetParent(parent)
+    frame:SetAuraContainerAnchorsChangedCallback(nil) -- stop Blizzard's TargetFrame layout from re-anchoring this
+    frame:ClearAllPoints()
+    frame:SetMaxBuffs(maxBuffs)
+    frame:SetMaxDebuffs(0) -- our own Normal/ImportantDebuffs frames already cover debuffs
+    frame:SetShowAuraCount(true)
     frame:SetUnit("target")
-    frame:SetFlowLayoutMaximumLineSize(126)
 
-    local function initializeFrame(button)
-        core:InitializeAuraButtonBase(button, 16)
-
-        button.BlackBorder = button:CreateTexture(nil, "BORDER")
-        button.BlackBorder:SetDrawLayer("BORDER", 1)
-        button.BlackBorder:SetPoint("TOPLEFT", -1, 1)
-        button.BlackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
-        button.BlackBorder:SetColorTexture(0, 0, 0, 1)
-
-        button.PurgeBorder = button:CreateTexture(nil, "OVERLAY")
-        button.PurgeBorder:SetDrawLayer("OVERLAY", 7)
-        button.PurgeBorder:SetPoint("TOPLEFT")
-        button.PurgeBorder:SetPoint("BOTTOMRIGHT")
-        button.PurgeBorder:SetColorTexture(colours.white.r, colours.white.g, colours.white.b, colours.white.a)
-
-        table.insert(buffButtons, button)
-        ApplyPurgeBorder(button)
-    end
-
-    local auraProcessingPolicy = 1
-    local defaultSortMethod = 1
-
-    frame:SetAuraProcessingPolicy(auraProcessingPolicy, { ignoreDebuffs = true })
-
-    frame:AddAuraGroup("Buffs", AuraUtil.AuraFilters.Helpful, {
-        initializeFrame = initializeFrame,
-        sortMethod = defaultSortMethod,
-        maxFrameCount = maxBuffs,
-        layout = { elementSpacing = 2 },
-    })
-
-    knowsPurge = core:CheckKnowsPurge();
-
+    -- TargetFrame's own OnEvent (which normally triggers this) is disabled elsewhere,
+    -- so refresh explicitly whenever the target itself changes, not just its auras.
     local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
-    eventFrame:RegisterEvent("TRAIT_CONFIG_UPDATED")
-    eventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
-    eventFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_TALENT_UPDATE" or event == "TRAIT_CONFIG_UPDATED" then
-            UpdateKnowsPurge()
-        else
-            frame:UpdateAllAuras()
-        end
+    eventFrame:SetScript("OnEvent", function()
+        frame:UpdateAllAuras()
     end)
 
     return frame
