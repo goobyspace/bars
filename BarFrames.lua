@@ -288,7 +288,7 @@ function core:InitializeBarFrames()
         core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, core.targetHpRowOffset)
         core:SnapToPixelGrid(hpBar)
 
-        local widgets = core:CreateTargetWidgets(targetFrame);
+        local widgets = core:CreateTargetWidgets(targetFrame, hpBar);
         widgets:SetPoint("TOP")
 
         local primaryResourceBar = core:CreateTargetResourceBar(targetFrame)

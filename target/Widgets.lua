@@ -32,9 +32,11 @@ local function checkRareElite()
     end
 end
 
-function core:CreateTargetWidgets(parent)
+function core:CreateTargetWidgets(parent, hpBar)
     frame = CreateFrame("Frame", nil, parent);
     frame:SetSize(core.width, 1);
+
+    local levelAnchor = hpBar and hpBar.level or parent;
 
     frame.afk = frame:CreateTexture();
     frame.afk:SetPoint("CENTER", -180, -10);
@@ -47,19 +49,19 @@ function core:CreateTargetWidgets(parent)
     frame.pvp:SetSize(16, 16);
 
     frame.elite = frame:CreateTexture();
-    frame.elite:SetPoint("CENTER", 160, -7);
+    frame.elite:SetPoint("CENTER", levelAnchor, "CENTER", 4, 0);
     frame.elite:SetTexture("Interface/Addons/Bars/assets/elite.png");
-    frame.elite:SetSize(20, 16);
+    frame.elite:SetSize(33, 27);
 
     frame.rare = frame:CreateTexture();
-    frame.rare:SetPoint("CENTER", 180, -10);
+    frame.rare:SetPoint("CENTER", levelAnchor, "CENTER", 4, 0);
     frame.rare:SetTexture("Interface/Addons/Bars/assets/rare.png");
-    frame.rare:SetSize(20, 16);
+    frame.rare:SetSize(33, 27);
 
     frame.rareelite = frame:CreateTexture();
-    frame.rareelite:SetPoint("CENTER", 180, -10);
+    frame.rareelite:SetPoint("CENTER", levelAnchor, "CENTER", 4, 0);
     frame.rareelite:SetTexture("Interface/Addons/Bars/assets/rare elite.png");
-    frame.rareelite:SetSize(20, 16);
+    frame.rareelite:SetSize(33, 27);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")
