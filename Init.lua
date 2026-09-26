@@ -26,7 +26,7 @@ function core:InitEventHandler(event, name)
         return
     end
 
-    core.Debug = true;
+    core.Debug = false;
 
     core:InitializeBarFrames()
 end

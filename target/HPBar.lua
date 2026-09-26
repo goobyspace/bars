@@ -2,6 +2,22 @@ local _, core = ...
 
 local frame = nil;
 
+local difficultyKeys = { "trivial", "standard", "difficult", "verydifficult", "impossible" }
+
+local function GetLevelDifficultyColour(level)
+    local colours = core.colours.levelDifficulty
+    if level == -1 then return colours.impossible end
+
+    -- we want to use a custom colour for this :3
+    local blizzColour = GetQuestDifficultyColor(level)
+    for _, key in ipairs(difficultyKeys) do
+        if QuestDifficultyColors[key] == blizzColour then
+            return colours[key]
+        end
+    end
+    return colours.difficult
+end
+
 local function UpdateBar(immediate)
     if not frame then return end;
 
@@ -35,6 +51,8 @@ local function UpdateBar(immediate)
         if UnitLevel("target") == -1 then return "??" else return tostring(UnitLevel("target")) end
     end
     frame.level:SetText(LevelText())
+    local levelColour = GetLevelDifficultyColour(UnitLevel("target"))
+    frame.level:SetTextColor(levelColour.r, levelColour.g, levelColour.b)
 end
 
 function core:CreateTargetHPBar(parent)
@@ -67,6 +85,8 @@ function core:CreateTargetHPBar(parent)
     frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", "target")
     frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", "target")
     frame:RegisterUnitEvent("PLAYER_TARGET_DIED")
+    frame:RegisterUnitEvent("UNIT_LEVEL", "target")
+    frame:RegisterEvent("PLAYER_LEVEL_UP")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
 

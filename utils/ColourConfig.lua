@@ -18,6 +18,15 @@ core.colours = {
     auraCountText = { r = 0.6, g = 0.9, b = 1 },
     flightPath = { r = 0.1, g = 1, b = 0.1 },
 
+    -- dont change these names blizzard decided
+    levelDifficulty = {
+        trivial = { r = 128 / 255, g = 128 / 255, b = 128 / 255 },
+        standard = { r = 64 / 255, g = 191 / 255, b = 64 / 255 },
+        difficult = { r = 255 / 255, g = 209 / 255, b = 0 / 255 },
+        verydifficult = { r = 255 / 255, g = 128 / 255, b = 64 / 255 },
+        impossible = { r = 255 / 255, g = 26 / 255, b = 26 / 255 },
+    },
+
     mirrorTimers = {
         BREATH = { r = 0.1, g = 0.55, b = 1 },
         EXHAUSTION = { r = 1, g = 0.9, b = 0 },
