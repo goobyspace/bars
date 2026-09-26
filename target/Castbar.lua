@@ -9,8 +9,10 @@ local kickedName = nil
 local kickedClock = nil
 local kickedWait = false
 local currentNotInterruptible = false
+local castSucceeded = false
+local hasActiveCast = false
 
-local function updateBar(target, kicked)
+local function updateBar(kicked)
     if not frame then return end;
     local name, text, texture, _, _, _, _, notInterruptible = UnitCastingInfo("target")
     local isChanneled = false
@@ -18,10 +20,10 @@ local function updateBar(target, kicked)
     if not name then
         name, text, texture, _, _, _, notInterruptible = UnitChannelInfo("target")
         isChanneled = true
-        if not name then
-            if not kickedWait then
-                return frame:Hide();
-            end
+        -- cancelling via esc/stopcasting clears cast info before interrupted event
+        if not name and kicked == nil and not kickedWait then
+            hasActiveCast = false
+            return frame:Hide();
         end
     end
 
@@ -44,9 +46,7 @@ local function updateBar(target, kicked)
 
     frame.name:SetText(text)
     frame.icon:SetTexture(texture)
-    if target then
-        frame.target:SetText(UnitName(target));
-    end
+    frame.target:SetText(UnitName("targettarget"))
 
     savedIcon = texture;
     savedName = text;
@@ -64,8 +64,7 @@ local function updateBar(target, kicked)
     local colorKickReady = CreateColor(colours.castKickReady.r, colours.castKickReady.g, colours.castKickReady.b)
     local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
-    -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
-    -- Era); UNIT_SPELLCAST_(NOT_)INTERRUPTIBLE below keeps currentNotInterruptible in sync instead
+    -- notInterruptible is nil on era
     if notInterruptible ~= nil then
         currentNotInterruptible = notInterruptible;
     end
@@ -97,30 +96,46 @@ function core:CreateTargetCastbar(parent)
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
-    frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterUnitEvent("UNIT_TARGET", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_START", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "target")
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_DELAYED", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTED", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_INTERRUPTIBLE", "target")
     frame:RegisterUnitEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "target")
 
-    frame:HookScript("OnEvent", function(self, event, target, _, _, kickedBy)
-        if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_START" then
+    frame:HookScript("OnEvent", function(_, event, _, _, _, kickedBy)
+        if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_START" or event == "PLAYER_TARGET_CHANGED" then
             if kickedClock then kickedClock:Cancel() end
             kickedWait = false
+            castSucceeded = false
             currentNotInterruptible = false
+            hasActiveCast = event ~= "PLAYER_TARGET_CHANGED" or
+                (UnitCastingInfo("target") or UnitChannelInfo("target")) ~= nil
         end
         if event == "UNIT_SPELLCAST_INTERRUPTIBLE" or event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE" then
             currentNotInterruptible = event == "UNIT_SPELLCAST_NOT_INTERRUPTIBLE";
             updateBar()
         elseif event == "UNIT_SPELLCAST_INTERRUPTED" then
-            updateBar(target, kickedBy or false)
-        elseif event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" or event == "UNIT_SPELLCAST_CHANNEL_UPDATE" or event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_DELAYED" then
-            updateBar(target, nil)
+            if hasActiveCast then
+                hasActiveCast = false
+                updateBar(kickedBy or false)
+            end
+        elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
+            castSucceeded = true
+        elseif event == "UNIT_SPELLCAST_STOP" then
+            local wasActive = hasActiveCast
+            hasActiveCast = false
+            if wasActive and not castSucceeded then
+                updateBar(false)
+            else
+                updateBar()
+            end
         else
             updateBar()
         end
