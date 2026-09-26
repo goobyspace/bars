@@ -59,8 +59,8 @@ local function updateBar(target, kicked)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(colours.castKickNotReady.r, colours.castKickNotReady.g,
-        colours.castKickNotReady.b)
+    local baseColour = isChanneled and colours.castChannel or colours.castNormal
+    local colorKickNotReady = CreateColor(baseColour.r, baseColour.g, baseColour.b)
     local colorKickReady = CreateColor(colours.castKickReady.r, colours.castKickReady.g, colours.castKickReady.b)
     local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
@@ -79,12 +79,12 @@ local function updateBar(target, kicked)
         local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, baseColor)
         local friendlyCheck = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedCheck,
             colorKickNotReady)
-        frame.bar:SetStatusBarColor(friendlyCheck:GetRGB())
+        core:SetCastbarColor(frame, friendlyCheck:GetRGB())
     else
         local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, colorKickReady)
         local friendlyCheck = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedCheck,
             colorKickNotReady)
-        frame.bar:SetStatusBarColor(friendlyCheck:GetRGB())
+        core:SetCastbarColor(frame, friendlyCheck:GetRGB())
     end
 end
 

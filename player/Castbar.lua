@@ -120,8 +120,9 @@ local function updateBar(kicked, empowerEvent)
             Enum.StatusBarTimerDirection.ElapsedTime)
     end
 
-    local colorKickNotReady = CreateColor(colours.castKickNotReady.r, colours.castKickNotReady.g,
-        colours.castKickNotReady.b)
+    local baseColour = (isEmpowered and colours.castEmpower) or (isChanneled and colours.castChannel) or
+    colours.castNormal
+    local colorBase = CreateColor(baseColour.r, baseColour.g, baseColour.b)
     local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
     -- notInterruptible isn't reliably populated on every call (seen consistently nil on Classic
@@ -130,8 +131,8 @@ local function updateBar(kicked, empowerEvent)
         currentNotInterruptible = notInterruptible;
     end
 
-    local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, colorKickNotReady)
-    frame.bar:SetStatusBarColor(blockedCheck:GetRGB())
+    local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, colorBase)
+    core:SetCastbarColor(frame, blockedCheck:GetRGB())
 end
 
 function core:CreatePlayerCastbar(parent)
