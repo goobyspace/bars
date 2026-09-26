@@ -25,7 +25,7 @@ local function UpdateBar()
             core.ClassColors["neutral"].b)
     end
 
-    local currentHP, maxHP = core:UpdateHPBarValues(frame, "targettarget");
+    local currentHP, maxHP = core:UpdateHPBarValues(frame.hp, "targettarget");
     if not maxHP then
         return;
     end
@@ -36,8 +36,11 @@ local function UpdateBar()
 end
 
 function core:CreateTargetTargetHPBar(parent)
-    frame = core:CreateHPBarBase("TargetTargetHPBarContainer", parent, core.width / 3 - 2, core.barBgHeight,
-        "SecureHandlerStateTemplate");
+    frame = CreateFrame("Frame", "TargetTargetHPBarContainer", parent, "SecureHandlerStateTemplate")
+    frame:SetSize(core.width / 3 - 2, 28)
+    frame.hp = core:CreateHPBarBase(nil, frame, core.width / 3 - 2, core.barBgHeight)
+    frame.hp:SetPoint("TOP")
+    frame.bar = frame.hp.bar
 
     frame.hpText = frame.bar:CreateFontString("PrimaryText");
     frame.hpText:SetDrawLayer("OVERLAY", 1);
@@ -52,11 +55,22 @@ function core:CreateTargetTargetHPBar(parent)
 
     frame.click = CreateFrame("Button", "TargetFrameClick", frame, "SecureActionButtonTemplate")
     frame.click:SetPoint("CENTER");
-    frame.click:SetSize(core.width / 4, 12);
+    frame.click:SetSize(core.width / 3 - 2, 28);
+    frame.click:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
+
+    if core.Debug then
+        frame.bg = frame:CreateTexture();
+        frame.bg:SetPoint("CENTER");
+        frame.bg:SetColorTexture(1, 0, 0, 0.5);
+        frame.bg:SetSize(core.width / 3 - 2, 28);
+    end
+
     frame.click:SetAttribute("unit", "targettarget")
     frame.click:SetAttribute("type1", "target")
     frame.click:SetAttribute("type2", "togglemenu")
     frame.click:RegisterForClicks("AnyUp", "AnyDown")
+    core:AddMouseoverBorder(frame.hp, frame.click, "targettarget", parent.click)
+    core:AddUnitTooltip(frame.click, "targettarget")
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")

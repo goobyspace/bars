@@ -21,6 +21,7 @@ end
 
 function core:CreateTargetResourceBar(parent)
     frame = core:CreateSimpleStatusBar("TargetResourceContainer", parent, core.width / 3 * 2, core.barBgHeight);
+    core:AddMouseoverBorder(frame, parent.click, "target")
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD")

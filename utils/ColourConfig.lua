@@ -6,6 +6,7 @@ core.colours = {
     blackCostPrediction = { r = 0, g = 0, b = 0, a = 0.6 },
     transparentBlack = { r = 0, g = 0, b = 0, a = 0 },
     white = { r = 1, g = 1, b = 1, a = 1 },
+    mouseoverBorder = { r = 115 / 255, g = 147 / 255, b = 235 / 255, a = 1 },
     castKicked = { r = 1, g = 0.1, b = 0.2 },
     castKickNotReady = { r = 1, g = 0.8, b = 0.2 },
     castKickReady = { r = 0.1, g = 1, b = 0.1 },

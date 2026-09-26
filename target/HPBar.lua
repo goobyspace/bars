@@ -39,6 +39,7 @@ end
 
 function core:CreateTargetHPBar(parent)
     frame = core:CreateHPBarBase("TargetHPBarContainer", parent, core.width, core.barBgHeight);
+    core:AddMouseoverBorder(frame, parent.click, "target")
 
     frame.hpText = frame.bar:CreateFontString("PrimaryText");
     frame.hpText:SetDrawLayer("OVERLAY", 1);

@@ -84,6 +84,18 @@ function core:InsetBarInBackground(bar, bg)
     core:SetPixelPoint(bar, "BOTTOMRIGHT", bg, "BOTTOMRIGHT", -core.pixel, core.pixel);
 end
 
+function core:AddUnitTooltip(button, unit)
+    button:HookScript("OnEnter", function(self)
+        if not UnitExists(unit) then return end
+        GameTooltip_SetDefaultAnchor(GameTooltip, self);
+        GameTooltip:SetUnit(unit);
+        GameTooltip:Show();
+    end);
+    button:HookScript("OnLeave", function()
+        GameTooltip:Hide();
+    end);
+end
+
 function core:SetBarFont(fontString, size)
     fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor(size * core.fontScale + 0.5), "OUTLINE");
 end
@@ -103,6 +115,9 @@ function core:InitializeBarFrames()
     core.primaryBarOffset = core.rowGap;
     core.hpRowOffset = core.primaryBarOffset + 2 * core.rowStep;
     core.targetHpRowOffset = -16;
+    local targetTextTop = core.targetHpRowOffset - core.barBgHeight / 2 + core.labelAboveBar
+        + math.floor(12 * core.fontScale + 0.5) / 2;
+    core.targetHpRowOffset = core.targetHpRowOffset - core:EvenPixels(targetTextTop + 2 * core.pixel);
     core.targetResourceRowOffset = core.targetHpRowOffset - core.barBgHeight - core.rowGap;
 
     core.width = core:EvenPixels(340);
@@ -113,6 +128,7 @@ function core:InitializeBarFrames()
     core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
         - core.targetResourceRowOffset;
 
+    -- playerframe
     do
         PlayerFrame:SetScript("OnEvent", nil);
         PlayerFrame:Hide();
@@ -138,11 +154,20 @@ function core:InitializeBarFrames()
         playerFrame.click = CreateFrame("Button", "PlayerFrameClick", playerFrame, "SecureActionButtonTemplate")
         playerFrame.click:SetPoint("CENTER");
         playerFrame.click:SetSize(core.width, core.playerHeight);
+
+        if core.Debug then
+            playerFrame.bg = playerFrame:CreateTexture();
+            playerFrame.bg:SetPoint("CENTER");
+            playerFrame.bg:SetColorTexture(0, 1, 0, 0.5);
+            playerFrame.bg:SetSize(core.width, core.playerHeight);
+        end
+
         playerFrame.click:SetAttribute("unit", "player")
         playerFrame.click:SetAttribute("type1", "target")
         playerFrame.click:SetAttribute("type2", "togglemenu")
         playerFrame.click:RegisterForClicks("AnyUp", "AnyDown")
         configurePingableUnitFrame(playerFrame.click, "player", true);
+        core:AddUnitTooltip(playerFrame.click, "player");
 
         local widgets = core:CreateWidgets(playerFrame);
         widgets:SetPoint("BOTTOM")
@@ -265,6 +290,7 @@ function core:InitializeBarFrames()
         updateLayout();
     end
 
+    --targetframe
     do
         TargetFrame:SetScript("OnEvent", nil);
         TargetFrame:Hide();
@@ -278,11 +304,20 @@ function core:InitializeBarFrames()
         targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
         targetFrame.click:SetPoint("CENTER");
         targetFrame.click:SetSize(core.width, core.targetHeight);
+
+        if core.Debug then
+            targetFrame.bg = targetFrame:CreateTexture();
+            targetFrame.bg:SetPoint("CENTER");
+            targetFrame.bg:SetColorTexture(0, 0, 1, 0.5);
+            targetFrame.bg:SetSize(core.width, core.targetHeight);
+        end
+
         targetFrame.click:SetAttribute("unit", "target")
         targetFrame.click:SetAttribute("type1", "target")
         targetFrame.click:SetAttribute("type2", "togglemenu")
         targetFrame.click:RegisterForClicks("AnyUp", "AnyDown")
         configurePingableUnitFrame(targetFrame.click, "target");
+        core:AddUnitTooltip(targetFrame.click, "target");
 
         local hpBar = core:CreateTargetHPBar(targetFrame)
         core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, core.targetHpRowOffset)

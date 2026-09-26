@@ -2,7 +2,7 @@
 This addon is a replacement for player/target frames, entirely using statusbars
 Everything loads from BarFrames.lua, which calls and builds all the frames
 
-Folders to note:
+Important folders:
 Utils: Folders and general helpers, important files are LayoutConfig.lua & ColourConfig.lua, most simple
 edits (including new buffs) will start in this folder.
 Components: What it says on the tin, HPbars, statusbars, secret handling, everything that we used in more
@@ -25,6 +25,8 @@ function core:InitEventHandler(event, name)
         if BarsGlobalVariables == nil then BarsGlobalVariables = {} end
         return
     end
+
+    core.Debug = true;
 
     core:InitializeBarFrames()
 end

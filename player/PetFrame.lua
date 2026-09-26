@@ -85,6 +85,7 @@ function core:CreatePetFrame(parent)
     frame.click:SetAttribute("type1", "target")
     frame.click:SetAttribute("type2", "togglemenu")
     frame.click:RegisterForClicks("AnyUp", "AnyDown")
+    core:AddUnitTooltip(frame.click, "pet")
 
     local barWidth = core.width / 3 - 40;
     local FOCUS_GAP = 2;
