@@ -62,6 +62,8 @@ local function updateBar(kicked)
     local baseColour = isChanneled and colours.castChannel or colours.castNormal
     local colorKickNotReady = CreateColor(baseColour.r, baseColour.g, baseColour.b)
     local colorKickReady = CreateColor(colours.castKickReady.r, colours.castKickReady.g, colours.castKickReady.b)
+    local colorKickUnavailable = CreateColor(colours.castKickUnavailable.r, colours.castKickUnavailable.g,
+        colours.castKickUnavailable.b)
     local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b)
 
     -- notInterruptible is nil on era
@@ -80,7 +82,8 @@ local function updateBar(kicked)
             colorKickNotReady)
         core:SetCastbarColor(frame, friendlyCheck:GetRGB())
     else
-        local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked, colorKickReady)
+        local blockedCheck = C_CurveUtil.EvaluateColorFromBoolean(currentNotInterruptible, colorBlocked,
+            colorKickUnavailable)
         local friendlyCheck = C_CurveUtil.EvaluateColorFromBoolean(UnitCanAttack("player", "target"), blockedCheck,
             colorKickNotReady)
         core:SetCastbarColor(frame, friendlyCheck:GetRGB())
@@ -89,6 +92,12 @@ end
 
 local function CachePlayerInterrupt()
     interruptSpellID = core:GetPlayerInterruptSpellID()
+    if interruptSpellID then
+        print("Bars: detected interrupt:", C_Spell.GetSpellName(interruptSpellID) or "unknown", "spell ID:",
+            interruptSpellID)
+    else
+        print("Bars: no interrupt detected")
+    end
 end
 
 function core:CreateTargetCastbar(parent)

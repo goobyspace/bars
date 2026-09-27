@@ -11,6 +11,14 @@ local function checkPvP()
     frame.pvp:SetAlphaFromBoolean(UnitIsPVP("target"))
 end
 
+local function checkQuest()
+    local isQuestTarget = UnitIsQuestBoss("target")
+    if not isQuestTarget and C_QuestLog and C_QuestLog.UnitIsRelatedToActiveQuest then
+        isQuestTarget = C_QuestLog.UnitIsRelatedToActiveQuest("target")
+    end
+    frame.questIcon:SetShown(isQuestTarget and true or false)
+end
+
 local function checkRareElite()
     local classification = UnitClassification("target");
     if classification == "elite" or classification == "worldboss" then
@@ -48,6 +56,12 @@ function core:CreateTargetWidgets(parent, hpBar)
     frame.pvp:SetTexture("Interface/Addons/Bars/assets/pvp.png");
     frame.pvp:SetSize(16, 16);
 
+    frame.questIcon = frame:CreateTexture(nil, "OVERLAY")
+    frame.questIcon:SetTexture("Interface/Addons/Bars/assets/quest.png")
+    frame.questIcon:SetSize(10, 17)
+    frame.questIcon:SetPoint("TOPLEFT", levelAnchor, "TOPRIGHT", -4, 0)
+    frame.questIcon:Hide()
+
     frame.elite = frame:CreateTexture();
     frame.elite:SetPoint("CENTER", levelAnchor, "CENTER", 4, 0);
     frame.elite:SetTexture("Interface/Addons/Bars/assets/elite.png");
@@ -68,6 +82,7 @@ function core:CreateTargetWidgets(parent, hpBar)
     frame:RegisterUnitEvent("PLAYER_FLAGS_CHANGED", "target")
     frame:RegisterUnitEvent("PVP_TIMER_UPDATE", "target")
     frame:RegisterUnitEvent("PLAYER_TARGET_DIED")
+    frame:RegisterEvent("QUEST_LOG_UPDATE")
     frame:RegisterEvent("PET_BATTLE_OPENING_START")
     frame:RegisterEvent("PET_BATTLE_CLOSE")
 
@@ -75,6 +90,7 @@ function core:CreateTargetWidgets(parent, hpBar)
         checkRareElite();
         checkAfk();
         checkPvP();
+        checkQuest();
     end)
     return frame;
 end

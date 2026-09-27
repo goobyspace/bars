@@ -12,6 +12,7 @@ core.colours = {
     castEmpower = { r = 5 / 255, g = 198 / 255, b = 102 / 255 },
     castKicked = { r = 252 / 255, g = 54 / 255, b = 224 / 255 },
     castKickReady = { r = 0.1, g = 1, b = 0.1 },
+    castKickUnavailable = { r = 252 / 255, g = 140 / 255, b = 0 / 255 },
     castBlocked = { r = 131 / 255, g = 192 / 255, b = 195 / 255 },
     castBackground = { r = 75 / 255, g = 75 / 255, b = 75 / 255 },
     healPrediction = { r = 0, g = 1, b = 0.59, a = 0.8 },
