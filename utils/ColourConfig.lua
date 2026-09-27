@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 core.colours = {
     black = { r = 0, g = 0, b = 0, a = 1 },
@@ -93,4 +93,4 @@ core.colours = {
         SWING_MELEE = { r = 255, g = 140, b = 0 },
         SWING_RANGED = { r = 192, g = 192, b = 192 },
     },
-}
+};

@@ -1,6 +1,6 @@
-local _, core = ...
+local _, core = ...;
 
-if not core.isClassicRules then return end
+if not core.isClassicRules then return; end;
 
 core.resources.primary["DEATHKNIGHT"] = nil;
 core.resources.primary["DEMONHUNTER"] = nil;

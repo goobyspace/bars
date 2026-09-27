@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 core.auraTracker = {
     ["DRUID"] = {

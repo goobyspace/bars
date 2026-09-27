@@ -4,50 +4,50 @@ local frame;
 
 local function checkAfk()
     frame.afk:SetAlphaFromBoolean(UnitIsAFK("player"));
-end
+end;
 
 local function checkCombat()
     frame.combat:SetAlphaFromBoolean(PlayerIsInCombat());
-end
+end;
 
 local function checkRested()
     frame.rested:SetAlphaFromBoolean(IsResting());
-end
+end;
 
 local function checkPvP()
-    frame.pvp:SetAlphaFromBoolean(UnitIsPVP("player"))
-end
+    frame.pvp:SetAlphaFromBoolean(UnitIsPVP("player"));
+end;
 
 function core:CreateWidgets(parent)
     frame = CreateFrame("Frame", nil, parent);
-    frame:SetSize(core.width, 1);
+    core:SetPixelSize(frame, core.width, core.pixel);
 
     frame.afk = frame:CreateTexture();
-    frame.afk:SetPoint("CENTER", -180, -6);
+    core:SetPixelPoint(frame.afk, "CENTER", frame, "CENTER", -180, -6);
     frame.afk:SetTexture("Interface/Addons/Bars/assets/afk.png");
-    frame.afk:SetSize(16, 16);
+    core:SetPixelSize(frame.afk, 16, 16);
 
     frame.combat = frame:CreateTexture();
-    frame.combat:SetPoint("CENTER", 180, 10);
+    core:SetPixelPoint(frame.combat, "CENTER", frame, "CENTER", 180, 10);
     frame.combat:SetTexture("Interface/Addons/Bars/assets/combat.png");
-    frame.combat:SetSize(16, 16);
+    core:SetPixelSize(frame.combat, 16, 16);
 
     frame.rested = frame:CreateTexture();
-    frame.rested:SetPoint("CENTER", -180, 10);
+    core:SetPixelPoint(frame.rested, "CENTER", frame, "CENTER", -180, 10);
     frame.rested:SetTexture("Interface/Addons/Bars/assets/rested.png");
-    frame.rested:SetSize(16, 16);
+    core:SetPixelSize(frame.rested, 16, 16);
 
     frame.pvp = frame:CreateTexture();
-    frame.pvp:SetPoint("CENTER", 180, -6);
+    core:SetPixelPoint(frame.pvp, "CENTER", frame, "CENTER", 180, -6);
     frame.pvp:SetTexture("Interface/Addons/Bars/assets/pvp.png");
-    frame.pvp:SetSize(16, 16);
+    core:SetPixelSize(frame.pvp, 16, 16);
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED");
     frame:RegisterEvent("ZONE_CHANGED");
     frame:RegisterEvent("ZONE_CHANGED_INDOORS");
     frame:RegisterEvent("PLAYER_FLAGS_CHANGED");
@@ -69,7 +69,7 @@ function core:CreateWidgets(parent)
             checkAfk();
             checkPvP();
             checkCombat();
-        end
-    end)
+        end;
+    end);
     return frame;
-end
+end;

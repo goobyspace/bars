@@ -20,6 +20,7 @@ utils/ResourceData.lua
 utils/FlightPathData.lua
 utils/forever/AuraTrackerConfig.lua
 utils/Debug.lua
+utils/classic/ResourceOverrides.lua
 
 player/ResourceUtils.lua
 components/PixelUtils.lua
@@ -29,7 +30,6 @@ components/HPBar.lua
 components/Castbar.lua
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
-player/classic/ResourceOverrides.lua
 player/forever/ManaTick.lua
 player/HPBar.lua
 player/PrimaryResource.lua

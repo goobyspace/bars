@@ -1,43 +1,42 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
 local frame = nil;
 local predictedCostPercent = 0;
 local predictedCostFlat = 0;
 
 local function getResource()
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
 
-    local spec = C_SpecializationInfo.GetSpecialization()
-    local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
+    local spec = C_SpecializationInfo.GetSpecialization();
+    local specID = C_SpecializationInfo.GetSpecializationInfo(spec);
 
-    local resource = core.resources.primary[playerClass]
+    local resource = core.resources.primary[playerClass];
 
     if playerClass == "DRUID" then
-        local formID = core:GetShapeshiftFormKey()
-        resource = resource and resource[formID or 0]
-    end
+        local formID = core:GetShapeshiftFormKey();
+        resource = resource and resource[formID or 0];
+    end;
 
     if type(resource) == "table" then
-        return resource[specID]
+        return resource[specID];
     else
-        return resource
-    end
-end
+        return resource;
+    end;
+end;
 
 local function getResourceValue(resource)
-    if not resource then return nil, nil end
+    if not resource then return nil, nil; end;
 
-    local current = UnitPower("player", resource)
-    local max = UnitPowerMax("player", resource)
-    if max == nil or (not issecretvalue(max) and max <= 0) then return nil end
+    local current = UnitPower("player", resource);
+    local max = UnitPowerMax("player", resource);
+    if max == nil or (not issecretvalue(max) and max <= 0) then return nil; end;
 
-    return max, current
-end
+    return max, current;
+end;
 
--- tracks how much of the resource the current cast/channel will consume. Retail spells mostly report a
--- percentage (static spell data, never secret); Classic spells mostly only report a flat amount instead.
+-- Retail usually gives us a percentage but classic gives us a flat cost
 local function updatePredictedCost(resource, isCasting)
     local costPercent, flatCost = 0, 0;
     local spellID = nil;
@@ -49,62 +48,61 @@ local function updatePredictedCost(resource, isCasting)
                 costPercent = costInfo.costPercent or 0;
                 flatCost = costInfo.cost or 0;
                 break;
-            end
-        end
-    end
+            end;
+        end;
+    end;
     predictedCostPercent = costPercent;
     predictedCostFlat = flatCost;
-end
+end;
 
 local function updateBar()
-    if not frame or not frame:IsShown() then return end;
+    if not frame or not frame:IsShown() then return; end;
 
     local resource = getResource();
-    if not resource then return end;
+    if not resource then return; end;
 
     if frame.resourceTicker then
         local tickResource = resource == Enum.PowerType.Mana or resource == Enum.PowerType.Energy;
         frame.resourceTicker:SetActive(tickResource and resource or nil);
-    end
+    end;
 
     local max, current = getResourceValue(resource);
     if not max then
         return frame:Hide();
-    end
-    if not current then current = 0; end
+    end;
+    if not current then current = 0; end;
 
     frame.bar:SetMinMaxValues(0, max, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.text:SetText(AbbreviateNumbers(current));
 
-    -- darken exactly the resource the current cast/channel will consume, ending flush with frame.bar's
-    -- current fill. Prefer static costPercent when present; Classic-like spell data often only reports a
-    -- flat cost, which can still be sized safely when max power is a plain number.
+    -- prefer percentage if it exists but in classic we have to do math
+    -- luckily its allowed there :D
     local widthFraction = 0;
     if predictedCostPercent > 0 then
         widthFraction = predictedCostPercent / 100;
     elseif predictedCostFlat > 0 and core:IsSafePositiveNumber(max) then
         widthFraction = predictedCostFlat / max;
-    end
+    end;
 
     if widthFraction > 0 then
-        frame.costPredictionBar:SetWidth(core.width * widthFraction);
+        frame.costPredictionBar:SetWidth(core:EvenPixels(core.width * widthFraction));
         frame.costPredictionBar:Show();
     else
         frame.costPredictionBar:Hide();
-    end
-end
+    end;
+end;
 
 local function updateColour()
-    if not frame or not frame:IsShown() then return end;
+    if not frame or not frame:IsShown() then return; end;
 
     local resource = getResource();
-    if not resource then return end;
+    if not resource then return; end;
 
     local color = core.resources.resourceColours[resource];
 
-    frame.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
-end
+    frame.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+end;
 
 function core:CreatePrimaryBar(parent)
     frame = core:CreateSimpleStatusBar("PrimaryResourceContainer", parent, core.width, core.barBgHeight, {
@@ -114,11 +112,8 @@ function core:CreatePrimaryBar(parent)
 
     if core.CreateResourceTicker then
         frame.resourceTicker = core:CreateResourceTicker(frame.bar);
-    end
+    end;
 
-    -- darkens exactly predictedCostPercent of the resource, ending flush with frame.bar's current fill.
-    -- A plain texture sized directly from costPercent (static spell data, never secret) -- this never
-    -- needs to touch the (possibly secret) current/max power values or rely on any StatusBar fill style.
     frame.costPredictionBar = frame.bar:CreateTexture(nil, "OVERLAY", nil, 1);
     frame.costPredictionBar:SetColorTexture(colours.blackCostPrediction.r, colours.blackCostPrediction.g,
         colours.blackCostPrediction.b, colours.blackCostPrediction.a);
@@ -126,40 +121,40 @@ function core:CreatePrimaryBar(parent)
     frame.costPredictionBar:SetPoint("BOTTOMRIGHT", frame.bar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
     frame.costPredictionBar:Hide();
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player")
-    frame:RegisterUnitEvent("UNIT_MAXPOWER", "player")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_START", "player")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player")
-    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player");
+    frame:RegisterUnitEvent("UNIT_MAXPOWER", "player");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_START", "player");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_STOP", "player");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_FAILED", "player");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player");
+    frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player");
 
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
     if playerClass == "DRUID" then
-        frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
-    end
+        frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM");
+    end;
 
     frame:SetScript("OnEvent", function(_, event, unit)
         if event == "PLAYER_ENTERING_WORLD"
             or event == "UPDATE_SHAPESHIFT_FORM"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
             updateColour();
-        end
+        end;
         if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_FAILED"
             or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
             updatePredictedCost(getResource(), event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START");
-        end
+        end;
         updateBar();
-    end)
+    end);
 
     return frame;
-end
+end;

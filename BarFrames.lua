@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 local function configurePingableUnitFrame(frame, unit, isPlayer)
     frame.unit = unit;
@@ -7,19 +7,18 @@ local function configurePingableUnitFrame(frame, unit, isPlayer)
 
     function frame:GetIsPingable()
         return true;
-    end
+    end;
 
     function frame:GetAllowRadialWheel()
         return true;
-    end
+    end;
 
     function frame:GetTargetInfo()
         local guid = UnitGUID(self.unit);
-        -- retail can return a secret (opaque) guid for non-player units in combat; the ping
-        -- system's securecopy() errors if we hand that back, so drop it and fall back to a generic ping
+        -- if guid is secret in combat we do a generic ping instead
         if issecretvalue and issecretvalue(guid) then
             guid = nil;
-        end
+        end;
 
         local targetInfo = {
             guid = guid,
@@ -27,66 +26,15 @@ local function configurePingableUnitFrame(frame, unit, isPlayer)
 
         if isPlayer then
             targetInfo.isPlayerResource = true;
-        end
+        end;
 
         return targetInfo;
-    end
-end
-
--- UI units are not physical pixels (UIParent is scaled), so every size and offset that has to land
--- on an exact pixel is rounded to a whole number of pixels; otherwise a 1px border ends up straddling
--- two pixel rows and renders as 2px on one side and nothing on the other
-local function snap(units)
-    if not units or units == 0 then return 0 end;
-    local pixels = math.floor(math.abs(units) / core.pixel + 0.5);
-    return (units < 0 and -1 or 1) * pixels * core.pixel;
-end
-
-function core:SetPixelPoint(region, point, relativeTo, relativePoint, x, y)
-    region:SetPoint(point, relativeTo, relativePoint, snap(x), snap(y));
-end
-
-function core:SetPixelSize(region, width, height)
-    region:SetSize(snap(width), snap(height));
-end
-
-local function getPixelUnit()
-    local _, screenHeight = GetPhysicalScreenSize();
-    return UIParent:GetHeight() / screenHeight;
-end
-
-function core:EvenPixels(units)
-    local pixels = math.max(2, math.floor(units / core.pixel + 0.5));
-    if pixels % 2 == 1 then
-        pixels = pixels + 1;
-    end
-    return pixels * core.pixel;
-end
-
-function core:SnapToPixelGrid(frame)
-    if not frame then return end;
-
-    local left, bottom = frame:GetLeft(), frame:GetBottom();
-    if not left or not bottom then return end;
-
-    local point, relativeTo, relativePoint, x, y = frame:GetPoint(1);
-    if not point then return end;
-
-    local dx, dy = left - snap(left), bottom - snap(bottom);
-    if dx == 0 and dy == 0 then return end;
-
-    frame:SetPoint(point, relativeTo, relativePoint, (x or 0) - dx, (y or 0) - dy);
-end
-
-function core:InsetBarInBackground(bar, bg)
-    bar:ClearAllPoints();
-    core:SetPixelPoint(bar, "TOPLEFT", bg, "TOPLEFT", core.pixel, -core.pixel);
-    core:SetPixelPoint(bar, "BOTTOMRIGHT", bg, "BOTTOMRIGHT", -core.pixel, core.pixel);
-end
+    end;
+end;
 
 function core:AddUnitTooltip(button, unit)
     button:HookScript("OnEnter", function(self)
-        if not UnitExists(unit) then return end
+        if not UnitExists(unit) then return; end;
         GameTooltip_SetDefaultAnchor(GameTooltip, self);
         GameTooltip:SetUnit(unit);
         GameTooltip:Show();
@@ -94,14 +42,14 @@ function core:AddUnitTooltip(button, unit)
     button:HookScript("OnLeave", function()
         GameTooltip:Hide();
     end);
-end
+end;
 
 function core:SetBarFont(fontString, size)
     fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor(size * core.fontScale + 0.5), "OUTLINE");
-end
+end;
 
 function core:InitializeBarFrames()
-    core.pixel = getPixelUnit();
+    core.pixel = core:GetPixelUnit();
     core.barHeight = (core.thickMode and 10 or 3) * core.pixel;
     core.barBgHeight = core.barHeight + 2 * core.pixel;
     core.fontScale = core.thickMode and 1.5 or 1;
@@ -134,65 +82,65 @@ function core:InitializeBarFrames()
         PlayerFrame:Hide();
 
         local function disableBlizzardResourceFrame(resourceFrame)
-            if not resourceFrame then return end
+            if not resourceFrame then return; end;
             resourceFrame:SetScript("OnEvent", nil);
             resourceFrame:Hide();
             resourceFrame:HookScript("OnShow", function(self)
                 self:Hide();
             end);
-        end
+        end;
 
         disableBlizzardResourceFrame(ComboFrame);
         disableBlizzardResourceFrame(PlayerFrame.classPowerBar);
 
-        local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent, "SecureHandlerStateTemplate")
+        local playerFrame = CreateFrame("Frame", "PlayerFrameContainer", UIParent, "SecureHandlerStateTemplate");
         core:SetPixelSize(playerFrame, core.width, core.playerHeight);
         core:SetPixelPoint(playerFrame, "BOTTOM", UIParent, "CENTER", 0, core.playerFrameY);
         core:SnapToPixelGrid(playerFrame);
         configurePingableUnitFrame(playerFrame, "player", true);
 
-        playerFrame.click = CreateFrame("Button", "PlayerFrameClick", playerFrame, "SecureActionButtonTemplate")
+        playerFrame.click = CreateFrame("Button", "PlayerFrameClick", playerFrame, "SecureActionButtonTemplate");
         playerFrame.click:SetPoint("CENTER");
-        playerFrame.click:SetSize(core.width, core.playerHeight);
+        core:SetPixelSize(playerFrame.click, core.width, core.playerHeight);
 
         if core.Debug then
             playerFrame.bg = playerFrame:CreateTexture();
             playerFrame.bg:SetPoint("CENTER");
             playerFrame.bg:SetColorTexture(0, 1, 0, 0.5);
-            playerFrame.bg:SetSize(core.width, core.playerHeight);
-        end
+            core:SetPixelSize(playerFrame.bg, core.width, core.playerHeight);
+        end;
 
-        playerFrame.click:SetAttribute("unit", "player")
-        playerFrame.click:SetAttribute("type1", "target")
-        playerFrame.click:SetAttribute("type2", "togglemenu")
-        playerFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+        playerFrame.click:SetAttribute("unit", "player");
+        playerFrame.click:SetAttribute("type1", "target");
+        playerFrame.click:SetAttribute("type2", "togglemenu");
+        playerFrame.click:RegisterForClicks("AnyUp", "AnyDown");
         configurePingableUnitFrame(playerFrame.click, "player", true);
         core:AddUnitTooltip(playerFrame.click, "player");
 
         local widgets = core:CreateWidgets(playerFrame);
-        widgets:SetPoint("BOTTOM")
+        widgets:SetPoint("BOTTOM");
 
-        local primaryResourceBar = core:CreatePrimaryBar(playerFrame)
-        core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, core.primaryBarOffset)
-        core:SnapToPixelGrid(primaryResourceBar)
+        local primaryResourceBar = core:CreatePrimaryBar(playerFrame);
+        core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, core.primaryBarOffset);
+        core:SnapToPixelGrid(primaryResourceBar);
 
         local secondaryResourceBar = core:CreateSecondaryBar(playerFrame);
         local tertiaryResourceBar = core:CreateTertiaryBar(playerFrame);
 
         local swingTimer = core.CreateSwingTimer and core:CreateSwingTimer(playerFrame);
 
-        local castbar = core:CreatePlayerCastbar(playerFrame)
-        castbar:SetPoint("TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY)
+        local castbar = core:CreatePlayerCastbar(playerFrame);
+        core:SetPixelPoint(castbar, "TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY);
 
-        local flightPathTimer = core:CreateFlightPathTimer(playerFrame)
-        flightPathTimer:SetPoint("TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY)
+        local flightPathTimer = core:CreateFlightPathTimer(playerFrame);
+        core:SetPixelPoint(flightPathTimer, "TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY);
 
-        core:CreateBreathBar(UIParent)
+        core:CreateBreathBar(UIParent);
 
         if core.CreateAuraTracker then
-            local auraTracker = core:CreateAuraTracker(playerFrame)
-            auraTracker:SetPoint("TOP", playerFrame, "BOTTOM", 0, -2)
-        end
+            local auraTracker = core:CreateAuraTracker(playerFrame);
+            core:SetPixelPoint(auraTracker, "TOP", playerFrame, "BOTTOM", 0, -2);
+        end;
 
         local hpBar = core:CreateHPBar(playerFrame);
         local petFrame = core:CreatePetFrame(playerFrame);
@@ -206,7 +154,7 @@ function core:InitializeBarFrames()
             local canMovePet = not InCombatLockdown();
             if not canMovePet then
                 layoutPending = true;
-            end
+            end;
 
             local offset = core.primaryBarOffset + core.rowStep;
 
@@ -214,7 +162,7 @@ function core:InitializeBarFrames()
                 core:SetPixelPoint(secondaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0,
                     core.primaryBarOffset + core.rowStep);
                 offset = offset + core.rowStep;
-            end
+            end;
 
             core:SetPixelPoint(hpBar, "BOTTOM", playerFrame, "BOTTOM",
                 (core.width - hpBar:GetWidth()) / 2, offset);
@@ -226,40 +174,40 @@ function core:InitializeBarFrames()
 
             if canMovePet then
                 core:SetPixelPoint(petFrame, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6, petOffset);
-            end
+            end;
 
             if swingTimer then
                 core:SetPixelPoint(swingTimer, "BOTTOM", playerFrame, "BOTTOM", -core.width / 6,
                     petShown and (petOffset + core.rowStep) or petOffset);
-            end
+            end;
 
             core:SnapToPixelGrid(secondaryResourceBar);
             core:SnapToPixelGrid(hpBar);
             core:SnapToPixelGrid(tertiaryResourceBar);
             if canMovePet then
                 core:SnapToPixelGrid(petFrame);
-            end
+            end;
             core:SnapToPixelGrid(swingTimer);
-        end
+        end;
 
-        local layoutRetryFrame = CreateFrame("Frame")
-        layoutRetryFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+        local layoutRetryFrame = CreateFrame("Frame");
+        layoutRetryFrame:RegisterEvent("PLAYER_REGEN_ENABLED");
         layoutRetryFrame:SetScript("OnEvent", function()
             if layoutPending then
                 layoutPending = false;
                 updateLayout();
-            end
-        end)
+            end;
+        end);
 
         petShown = petFrame:IsShown();
         petFrame:HookScript("OnShow", function()
             petShown = true;
             updateLayout();
-        end)
+        end);
         petFrame:HookScript("OnHide", function()
             petShown = false;
             updateLayout();
-        end)
+        end);
 
         if secondaryResourceBar then
             function secondaryResourceBar:SetHidden(hidden)
@@ -269,10 +217,10 @@ function core:InitializeBarFrames()
                 else
                     secondaryResourceBar:Show();
                     secondaryShown = true;
-                end
+                end;
                 updateLayout();
-            end
-        end
+            end;
+        end;
 
         if tertiaryResourceBar then
             function tertiaryResourceBar:SetHidden(hidden)
@@ -282,72 +230,73 @@ function core:InitializeBarFrames()
                 else
                     tertiaryResourceBar:Show();
                     tertiaryShown = true;
-                end
+                end;
                 updateLayout();
-            end
-        end
+            end;
+        end;
 
         updateLayout();
-    end
+    end;
 
     --targetframe
     do
         TargetFrame:SetScript("OnEvent", nil);
         TargetFrame:Hide();
 
-        local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate")
+        local targetFrame = CreateFrame("Frame", "TargetFrameContainer", UIParent, "SecureHandlerStateTemplate");
         core:SetPixelSize(targetFrame, core.width, core.targetHeight);
         core:SetPixelPoint(targetFrame, "TOP", UIParent, "CENTER", 0, core.targetFrameY);
         core:SnapToPixelGrid(targetFrame);
         configurePingableUnitFrame(targetFrame, "target");
 
-        targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate")
+        targetFrame.click = CreateFrame("Button", "TargetFrameClick", targetFrame, "SecureActionButtonTemplate");
         targetFrame.click:SetPoint("CENTER");
-        targetFrame.click:SetSize(core.width, core.targetHeight);
+        core:SetPixelSize(targetFrame.click, core.width, core.targetHeight);
 
         if core.Debug then
             targetFrame.bg = targetFrame:CreateTexture();
             targetFrame.bg:SetPoint("CENTER");
             targetFrame.bg:SetColorTexture(0, 0, 1, 0.5);
-            targetFrame.bg:SetSize(core.width, core.targetHeight);
-        end
+            core:SetPixelSize(targetFrame.bg, core.width, core.targetHeight);
+        end;
 
-        targetFrame.click:SetAttribute("unit", "target")
-        targetFrame.click:SetAttribute("type1", "target")
-        targetFrame.click:SetAttribute("type2", "togglemenu")
-        targetFrame.click:RegisterForClicks("AnyUp", "AnyDown")
+        targetFrame.click:SetAttribute("unit", "target");
+        targetFrame.click:SetAttribute("type1", "target");
+        targetFrame.click:SetAttribute("type2", "togglemenu");
+        targetFrame.click:RegisterForClicks("AnyUp", "AnyDown");
         configurePingableUnitFrame(targetFrame.click, "target");
         core:AddUnitTooltip(targetFrame.click, "target");
 
-        local hpBar = core:CreateTargetHPBar(targetFrame)
-        core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, core.targetHpRowOffset)
-        core:SnapToPixelGrid(hpBar)
+        local hpBar = core:CreateTargetHPBar(targetFrame);
+        core:SetPixelPoint(hpBar, "TOP", targetFrame, "TOP", 0, core.targetHpRowOffset);
+        core:SnapToPixelGrid(hpBar);
 
         local widgets = core:CreateTargetWidgets(targetFrame, hpBar);
-        widgets:SetPoint("TOP")
+        widgets:SetPoint("TOP");
 
-        local primaryResourceBar = core:CreateTargetResourceBar(targetFrame)
-        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, core.targetResourceRowOffset)
-        core:SnapToPixelGrid(primaryResourceBar)
+        local primaryResourceBar = core:CreateTargetResourceBar(targetFrame);
+        core:SetPixelPoint(primaryResourceBar, "TOPLEFT", targetFrame, "TOPLEFT", 0, core.targetResourceRowOffset);
+        core:SnapToPixelGrid(primaryResourceBar);
 
-        local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame)
-        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, core.targetResourceRowOffset)
-        core:SnapToPixelGrid(targetOfTargetBar)
+        local targetOfTargetBar = core:CreateTargetTargetHPBar(targetFrame);
+        core:SetPixelPoint(targetOfTargetBar, "TOPRIGHT", targetFrame, "TOPRIGHT", 0, core.targetResourceRowOffset);
+        core:SnapToPixelGrid(targetOfTargetBar);
 
-        local castbar = core:CreateTargetCastbar(targetFrame)
-        castbar:SetPoint("BOTTOM", targetFrame, "TOP", 0, 4 * core.fontScale + core.barGrowth)
+        local castbar = core:CreateTargetCastbar(targetFrame);
+        core:SetPixelPoint(castbar, "BOTTOM", targetFrame, "TOP", 0,
+            4 * core.fontScale + core.barGrowth);
 
-        local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame)
-        BigDebuffs:SetPoint("TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0)
+        local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame);
+        core:SetPixelPoint(BigDebuffs, "TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0);
 
-        local mainBuffs = core:CreateMainBuffsFrame(targetFrame)
-        mainBuffs:SetPoint("TOPLEFT", hpBar, "TOPRIGHT", 4, -7)
+        local mainBuffs = core:CreateMainBuffsFrame(targetFrame);
+        core:SetPixelPoint(mainBuffs, "TOPLEFT", hpBar, "TOPRIGHT", 4, -7);
 
-        local normalDebuffs = core:CreateNormalDebuffsFrame(targetFrame)
-        normalDebuffs:SetPoint("BOTTOMLEFT", mainBuffs, "TOPLEFT", 0, 8)
+        local normalDebuffs = core:CreateNormalDebuffsFrame(targetFrame);
+        core:SetPixelPoint(normalDebuffs, "BOTTOMLEFT", mainBuffs, "TOPLEFT", 0, 8);
 
         -- taint safe way to hide/show this depending on target
-        targetFrame:SetAttribute("unit", "target")
-        RegisterUnitWatch(targetFrame, false)
-    end
-end
+        targetFrame:SetAttribute("unit", "target");
+        RegisterUnitWatch(targetFrame, false);
+    end;
+end;

@@ -1,15 +1,17 @@
 ---@diagnostic disable: undefined-global
 
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isForever then return end
+if not core.isForever then return; end;
 
-local frame;
+local frame = nil;
 local timers = {};
 local swingTimerAPI = rawget(_G, "C_SwingTimer");
 
-local function CreateSwingBar(colorKey)
+local function createSwingBar(colorKey)
+    if not frame then return; end;
+
     local timer = {};
 
     timer.bg = frame:CreateTexture();
@@ -29,25 +31,25 @@ local function CreateSwingBar(colorKey)
     local color = core.resources.resourceColours[colorKey];
     timer.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
     return timer;
-end
+end;
 
-local function HideTimer(timer)
+local function hideTimer(timer)
     timer.endTime = nil;
     timer.duration = nil;
     timer.bar:SetValue(0);
     timer.bar:Hide();
     timer.bg:Hide();
-end
+end;
 
-local function StartTimer(timer, duration)
-    if not duration or duration <= 0 then return end
+local function startTimer(timer, duration)
+    if not duration or duration <= 0 then return; end;
 
     timer.duration = duration;
     timer.endTime = GetTime() + duration;
     timer.bar:SetValue(0);
     timer.bg:Show();
     timer.bar:Show();
-end
+end;
 
 function core:CreateSwingTimer(parent)
     frame = CreateFrame("Frame", "SwingTimerContainer", parent);
@@ -55,17 +57,17 @@ function core:CreateSwingTimer(parent)
 
     local gap = 2 * core.pixel;
 
-    timers[Enum.PlayerSwingType.MainHand] = CreateSwingBar("SWING_MELEE");
+    timers[Enum.PlayerSwingType.MainHand] = createSwingBar("SWING_MELEE");
     timers[Enum.PlayerSwingType.MainHand].bg:SetPoint("LEFT", frame, "LEFT");
     timers[Enum.PlayerSwingType.MainHand].bg:SetPoint("RIGHT", frame, "CENTER", -gap / 2, 0);
     timers[Enum.PlayerSwingType.MainHand].bg:SetPoint("BOTTOM", frame, "BOTTOM");
 
-    timers[Enum.PlayerSwingType.OffHand] = CreateSwingBar("SWING_MELEE");
+    timers[Enum.PlayerSwingType.OffHand] = createSwingBar("SWING_MELEE");
     timers[Enum.PlayerSwingType.OffHand].bg:SetPoint("LEFT", frame, "CENTER", gap / 2, 0);
     timers[Enum.PlayerSwingType.OffHand].bg:SetPoint("RIGHT", frame, "RIGHT");
     timers[Enum.PlayerSwingType.OffHand].bg:SetPoint("BOTTOM", frame, "BOTTOM");
 
-    timers[Enum.PlayerSwingType.Ranged] = CreateSwingBar("SWING_RANGED");
+    timers[Enum.PlayerSwingType.Ranged] = createSwingBar("SWING_RANGED");
     timers[Enum.PlayerSwingType.Ranged].bg:SetPoint("LEFT", frame, "LEFT");
     timers[Enum.PlayerSwingType.Ranged].bg:SetPoint("RIGHT", frame, "CENTER", -gap / 2, 0);
     timers[Enum.PlayerSwingType.Ranged].bg:SetPoint("BOTTOM", frame, "BOTTOM", 0, core.rowStep);
@@ -77,47 +79,46 @@ function core:CreateSwingTimer(parent)
     frame:SetScript("OnEvent", function(_, event, ...)
         if event == "PLAYER_ENTERING_WORLD" then
             for _, timer in pairs(timers) do
-                HideTimer(timer);
-            end
+                hideTimer(timer);
+            end;
             return;
-        end
+        end;
 
         if event == "PLAYER_SWING" then
             local duration, swingType = ...;
             local timer = timers[swingType];
-            if timer then StartTimer(timer, duration) end
+            if timer then startTimer(timer, duration); end;
             return;
-        end
+        end;
 
         local swingType, isInRange, checksRange = ...;
         local timer = timers[swingType];
         if timer then
             timer.bg:SetAlpha(checksRange and not isInRange and 0.4 or 1);
             timer.bar:SetAlpha(checksRange and not isInRange and 0.4 or 1);
-        end
+        end;
     end);
 
     frame:SetScript("OnUpdate", function()
-        -- StatusBar:SetTimerDuration never animated for an addon-created bar, so drive the fill
-        -- manually every frame instead, exactly like Blizzard's own SwingTimerMixin:OnUpdate
+        -- SetTimerDuration didn't animate this bar, so update it like Blizzard's swing timer does.
         local now = GetTime();
         for _, timer in pairs(timers) do
             if timer.endTime then
                 local remaining = timer.endTime - now;
                 if remaining <= 0 then
-                    HideTimer(timer);
+                    hideTimer(timer);
                 else
                     timer.bar:SetValue((timer.duration - remaining) / timer.duration);
-                end
-            end
-        end
+                end;
+            end;
+        end;
     end);
 
     if swingTimerAPI then
         for swingType in pairs(timers) do
             swingTimerAPI.EnableRangeCheck(swingType, true);
-        end
-    end
+        end;
+    end;
 
     return frame;
-end
+end;

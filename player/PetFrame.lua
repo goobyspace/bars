@@ -1,19 +1,19 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
 local frame = nil;
 local getPetHappiness = rawget(_G, "GetPetHappiness");
 local hasPetHappiness = type(getPetHappiness) == "function";
 
 local function updateHappiness()
-    if not frame or not frame.happiness then return end;
+    if not frame or not frame.happiness then return; end;
 
     local hasPetUI, isHunterPet = HasPetUI();
     local happiness = hasPetUI and isHunterPet and getPetHappiness and getPetHappiness();
     if not happiness then
         frame.happiness:Hide();
         return;
-    end
+    end;
 
     frame.happiness:Show();
     if happiness == 1 then
@@ -22,15 +22,15 @@ local function updateHappiness()
         frame.happinessTexture:SetTexCoord(0.1875, 0.375, 0, 0.359375); -- content
     else
         frame.happinessTexture:SetTexCoord(0, 0.1875, 0, 0.359375);     -- happy
-    end
-end
+    end;
+end;
 
 local function updateBar()
-    if not frame then return end;
+    if not frame then return; end;
 
     if not UnitExists("pet") then
         return;
-    end
+    end;
 
     frame.name:SetText(UnitName("pet"));
     updateHappiness();
@@ -39,7 +39,7 @@ local function updateBar()
     local currentHP = UnitHealth("pet", true);
     if not maxHP or not core:IsSafePositiveNumber(maxHP) then
         return;
-    end
+    end;
 
     frame.hpBar:SetMinMaxValues(0, maxHP, Enum.StatusBarInterpolation.ExponentialEaseOut);
     frame.hpBar:SetValue(currentHP, Enum.StatusBarInterpolation.ExponentialEaseOut);
@@ -51,7 +51,7 @@ local function updateBar()
         frame.powerBg:Hide();
         frame.powerText:SetText("");
         return;
-    end
+    end;
 
     local maxPower = UnitPowerMax("pet", powerType);
     if not maxPower or not core:IsSafePositiveNumber(maxPower) then
@@ -59,7 +59,7 @@ local function updateBar()
         frame.powerBg:Hide();
         frame.powerText:SetText("");
         return;
-    end
+    end;
 
     frame.powerBar:Show();
     frame.powerBg:Show();
@@ -72,20 +72,20 @@ local function updateBar()
     local color = core.resources.resourceColours[powerType];
     if color then
         frame.powerBar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
-    end
-end
+    end;
+end;
 
 function core:CreatePetFrame(parent)
-    frame = CreateFrame("Frame", "PetFrameContainer", parent, "SecureHandlerStateTemplate")
+    frame = CreateFrame("Frame", "PetFrameContainer", parent, "SecureHandlerStateTemplate");
     core:SetPixelSize(frame, core:EvenPixels(core.width * 2 / 3), core.barBgHeight);
 
-    frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate")
+    frame.click = CreateFrame("Button", "PetFrameClick", frame, "SecureActionButtonTemplate");
     frame.click:SetAllPoints();
-    frame.click:SetAttribute("unit", "pet")
-    frame.click:SetAttribute("type1", "target")
-    frame.click:SetAttribute("type2", "togglemenu")
-    frame.click:RegisterForClicks("AnyUp", "AnyDown")
-    core:AddUnitTooltip(frame.click, "pet")
+    frame.click:SetAttribute("unit", "pet");
+    frame.click:SetAttribute("type1", "target");
+    frame.click:SetAttribute("type2", "togglemenu");
+    frame.click:RegisterForClicks("AnyUp", "AnyDown");
+    core:AddUnitTooltip(frame.click, "pet");
 
     local barWidth = core.width / 3 - 40;
     local FOCUS_GAP = 2;
@@ -101,9 +101,9 @@ function core:CreatePetFrame(parent)
     frame.powerBg = powerFrame.bg;
     frame.powerBar = powerFrame.bar;
 
-    frame.name = frame:CreateFontString("PetNameText")
+    frame.name = frame:CreateFontString("PetNameText");
     frame.name:SetDrawLayer("OVERLAY", 1);
-    frame.name:SetSize(barWidth * 0.6, core.barBgHeight)
+    frame.name:SetSize(barWidth * 0.6, core.barBgHeight);
     frame.name:SetPoint("BOTTOMRIGHT", frame.powerBg, "TOPRIGHT", 0, 0);
     frame.name:SetJustifyH("RIGHT");
     core:SetBarFont(frame.name, 8);
@@ -122,34 +122,34 @@ function core:CreatePetFrame(parent)
 
     if hasPetHappiness then
         frame.happiness = CreateFrame("Frame", nil, frame);
-        frame.happiness:SetSize(20, 19);
-        frame.happiness:SetPoint("RIGHT", frame.hpBg, "LEFT", -2, core.labelAboveBar);
+        core:SetPixelSize(frame.happiness, 20, 19);
+        core:SetPixelPoint(frame.happiness, "RIGHT", frame.hpBg, "LEFT", -2, core.labelAboveBar);
 
         frame.happinessTexture = frame.happiness:CreateTexture(nil, "BACKGROUND");
         frame.happinessTexture:SetAllPoints();
         frame.happinessTexture:SetTexture("Interface\\PetPaperDollFrame\\UI-PetHappiness");
 
-        frame:RegisterEvent("UNIT_HAPPINESS")
-    end
+        frame:RegisterEvent("UNIT_HAPPINESS");
+    end;
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterEvent("UNIT_PET")
-    frame:RegisterUnitEvent("UNIT_HEALTH", "pet")
-    frame:RegisterUnitEvent("UNIT_MAXHEALTH", "pet")
-    frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "pet")
-    frame:RegisterUnitEvent("UNIT_MAXPOWER", "pet")
-    frame:RegisterUnitEvent("UNIT_DISPLAYPOWER", "pet")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterEvent("UNIT_PET");
+    frame:RegisterUnitEvent("UNIT_HEALTH", "pet");
+    frame:RegisterUnitEvent("UNIT_MAXHEALTH", "pet");
+    frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "pet");
+    frame:RegisterUnitEvent("UNIT_MAXPOWER", "pet");
+    frame:RegisterUnitEvent("UNIT_DISPLAYPOWER", "pet");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
 
     frame:SetScript("OnEvent", function()
         updateBar();
-    end)
+    end);
 
-    frame:SetAttribute("unit", "pet")
-    RegisterUnitWatch(frame, false)
+    frame:SetAttribute("unit", "pet");
+    RegisterUnitWatch(frame, false);
 
     return frame;
-end
+end;

@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 core.flightPathData = {
     Alliance = {

@@ -1,7 +1,7 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isClassicEra then return end
+if not core.isClassicEra then return; end;
 
 local frame;
 local combatLogGetCurrentEventInfo = rawget(_G, "CombatLogGetCurrentEventInfo");
@@ -67,35 +67,35 @@ local function createSwingSpellBorder()
             core:SetPixelPoint(border, "TOP" .. edge, borderFrame, "TOP" .. edge, 0, 0);
             core:SetPixelPoint(border, "BOTTOM" .. edge, borderFrame, "BOTTOM" .. edge, 0, 0);
             border:SetWidth(core.pixel);
-        end
-    end
+        end;
+    end;
     borderFrame:Hide();
     return borderFrame;
-end
+end;
 
 local function updateSwingSpellBorder()
-    if not mainHandSwingSpellBorder or not offHandSwingSpellBorder or not mainHandBg or not offHandBg then return end
+    if not mainHandSwingSpellBorder or not offHandSwingSpellBorder or not mainHandBg or not offHandBg then return; end;
 
     local function updateBorder(borderFrame, bg)
         if bg:IsShown() then
             borderFrame:ClearAllPoints();
             borderFrame:SetAllPoints(bg);
-        end
+        end;
         borderFrame:SetShown(nextSwingSpellActive and bg:IsShown());
-    end
+    end;
 
     updateBorder(mainHandSwingSpellBorder, mainHandBg);
     updateBorder(offHandSwingSpellBorder, offHandBg);
-end
+end;
 
 local function setNextSwingSpellActive(active)
     nextSwingSpellActive = active;
     updateSwingSpellBorder();
-end
+end;
 
 local function createSwingBar(colorKey)
     local bg = frame:CreateTexture();
-    bg:SetTexture(134532)
+    bg:SetTexture(134532);
     bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
     bg:SetHeight(core.barBgHeight);
     bg:SetDrawLayer("OVERLAY", -1);
@@ -112,7 +112,7 @@ local function createSwingBar(colorKey)
     bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
 
     return bar, bg;
-end
+end;
 
 local function showTimerBar(bar, startTime, expiry)
     local duration = C_DurationUtil.CreateDuration();
@@ -120,7 +120,7 @@ local function showTimerBar(bar, startTime, expiry)
     bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut,
         Enum.StatusBarTimerDirection.ElapsedTime);
     bar:Show();
-end
+end;
 
 local function updateBars()
     local haveMainHand = inCombat and mainHandExpiry ~= nil;
@@ -131,14 +131,14 @@ local function updateBars()
         mainHandBg:Show();
     else
         mainHandBar:Hide(); mainHandBg:Hide();
-    end
+    end;
 
     if haveOffHand then
         showTimerBar(offHandBar, offHandStart, offHandExpiry);
         offHandBg:Show();
     else
         offHandBar:Hide(); offHandBg:Hide();
-    end
+    end;
 
     if rangedExpiry ~= nil then
         showTimerBar(rangedBar, rangedStart, rangedExpiry);
@@ -148,19 +148,19 @@ local function updateBars()
             rangedBg:SetPoint("BOTTOM", frame, "BOTTOM", 0, core.rowStep);
         else
             rangedBg:SetPoint("BOTTOM", frame, "BOTTOM", 0, 0);
-        end
+        end;
     else
         rangedBar:Hide(); rangedBg:Hide();
-    end
+    end;
 
     updateSwingSpellBorder();
-end
+end;
 
 local function onMeleeSwingLanded()
     local now = GetTime();
     setNextSwingSpellActive(false);
     mainHandSpeed, offHandSpeed = UnitAttackSpeed("player");
-    if not mainHandSpeed then return end
+    if not mainHandSpeed then return; end;
 
     if offHandSpeed then
         local mainRemaining = mainHandExpiry and (mainHandExpiry - now) or -math.huge;
@@ -169,14 +169,14 @@ local function onMeleeSwingLanded()
             offHandStart, offHandExpiry = now, now + offHandSpeed;
         else
             mainHandStart, mainHandExpiry = now, now + mainHandSpeed;
-        end
+        end;
     else
         offHandStart, offHandExpiry = nil, nil;
         mainHandStart, mainHandExpiry = now, now + mainHandSpeed;
-    end
+    end;
 
     updateBars();
-end
+end;
 
 local function onRangedShotLanded()
     local now = GetTime();
@@ -184,44 +184,44 @@ local function onRangedShotLanded()
         local measured = now - lastRangedShotTime;
         if measured > 0.2 and measured < maxMeasuredRangedInterval then
             rangedSpeed = measured;
-        end
-    end
+        end;
+    end;
     lastRangedShotTime = now;
     rangedStart, rangedExpiry = now, now + rangedSpeed;
 
     updateBars();
-end
+end;
 
 local function onRangedAimStarted()
-    if rangedExpiry then return end
+    if rangedExpiry then return; end;
     local now = GetTime();
     rangedStart, rangedExpiry = now, now + rangedSpeed;
     updateBars();
-end
+end;
 
 local function onRangedStopped()
     lastRangedShotTime = nil;
     rangedStart, rangedExpiry = nil, nil;
     updateBars();
-end
+end;
 
 local function resetMelee()
     mainHandStart, mainHandExpiry = nil, nil;
     offHandStart, offHandExpiry = nil, nil;
     setNextSwingSpellActive(false);
-end
+end;
 
 -- Autorepeat can stop producing shots (e.g. target dies or moves out of range) without firing STOP_AUTOREPEAT_SPELL
 local function checkRangedTimedOut(elapsed)
-    if not rangedExpiry then return end
+    if not rangedExpiry then return; end;
     rangedCheckElapsed = rangedCheckElapsed + elapsed;
-    if rangedCheckElapsed < rangedCheckInterval then return end
+    if rangedCheckElapsed < rangedCheckInterval then return; end;
     rangedCheckElapsed = 0;
 
     if GetTime() > rangedExpiry + rangedStopGrace then
         onRangedStopped();
-    end
-end
+    end;
+end;
 
 function core:CreateSwingTimer(parent)
     frame = CreateFrame("Frame", "SwingTimerContainer", parent);
@@ -230,7 +230,7 @@ function core:CreateSwingTimer(parent)
     mainHandSwingSpellBorder = createSwingSpellBorder();
     offHandSwingSpellBorder = createSwingSpellBorder();
 
-    local GAP = 2;
+    local GAP = 2 * core.pixel;
 
     mainHandBar, mainHandBg = createSwingBar("SWING_MELEE");
     mainHandBg:SetPoint("LEFT", frame, "LEFT");
@@ -283,12 +283,12 @@ function core:CreateSwingTimer(parent)
             local unit, _, _, spellID = ...;
             if unit == "player" and getSpellInfo and nextSwingSpellNames[getSpellInfo(spellID)] then
                 setNextSwingSpellActive(true);
-            end
+            end;
         elseif event == "COMBAT_LOG_EVENT_UNFILTERED" then
-            if not combatLogGetCurrentEventInfo then return end
+            if not combatLogGetCurrentEventInfo then return; end;
 
             local _, subevent, _, sourceGUID, _, _, _, _, _, _, _, spellID, spellName = combatLogGetCurrentEventInfo();
-            if sourceGUID ~= playerGUID then return end
+            if sourceGUID ~= playerGUID then return; end;
 
             if subevent == "SWING_DAMAGE" or subevent == "SWING_MISSED" then
                 onMeleeSwingLanded();
@@ -300,9 +300,9 @@ function core:CreateSwingTimer(parent)
             elseif nextSwingSpellNames[spellName]
                 and (subevent == "SPELL_DAMAGE" or subevent == "SPELL_MISSED") then
                 onMeleeSwingLanded();
-            end
-        end
-    end)
+            end;
+        end;
+    end);
 
     return frame;
-end
+end;

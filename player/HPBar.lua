@@ -1,51 +1,51 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
 local frame = nil;
 
-local function UpdateBar()
-    if not frame or not frame:IsShown() then return end;
+local function updateBar()
+    if not frame or not frame:IsShown() then return; end;
 
     local currentHP, maxHP = core:UpdateHPBarValues(frame, "player");
     if not maxHP then
         frame:Hide();
         return;
-    end
+    end;
 
     frame.text:SetText(AbbreviateNumbers(currentHP));
-end
+end;
 
 function core:CreateHPBar(parent)
     frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
-    local _, name, classID = UnitClass("player")
-    local color = C_ClassColor.GetClassColor(name)
-    frame.bar:SetStatusBarColor(color:GetRGB())
+    local _, name, classID = UnitClass("player");
+    local color = C_ClassColor.GetClassColor(name);
+    frame.bar:SetStatusBarColor(color:GetRGB());
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
     frame.text:SetPoint("RIGHT", 0, core.labelAboveBar);
-    core:SetBarFont(frame.text, 12)
+    core:SetBarFont(frame.text, 12);
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_HEALTH", "player")
-    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "player")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_HEALTH", "player");
+    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "player");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
 
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
     if playerClass == "DRUID" then
-        frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
-    end
+        frame:RegisterEvent("UPDATE_SHAPESHIFT_FORM");
+    end;
 
     frame:SetScript("OnEvent", function()
-        UpdateBar();
-    end)
+        updateBar();
+    end);
 
     return frame;
-end
+end;

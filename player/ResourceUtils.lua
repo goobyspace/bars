@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 local classicDruidFormKeys = {
     [5487]  = "BEAR",    -- Bear Form
@@ -12,13 +12,13 @@ local classicDruidFormKeys = {
 function core:GetShapeshiftFormKey()
     if not core.isClassicRules then
         return GetShapeshiftFormID() or 0;
-    end
+    end;
 
     for i = 1, GetNumShapeshiftForms() do
-        local _, isActive, _, spellID = GetShapeshiftFormInfo(i)
+        local _, isActive, _, spellID = GetShapeshiftFormInfo(i);
         if isActive then
             return classicDruidFormKeys[spellID] or 0;
-        end
-    end
+        end;
+    end;
     return 0;
-end
+end;

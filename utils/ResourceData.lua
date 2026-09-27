@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 local druidBearForm = DRUID_BEAR_FORM or -1;
 local druidTreeForm = DRUID_TREE_FORM or -2;
@@ -9,8 +9,8 @@ local druidFlightForm = DRUID_FLIGHT_FORM or -6;
 local druidMoonkinForm1 = DRUID_MOONKIN_FORM_1 or -7;
 local druidMoonkinForm2 = DRUID_MOONKIN_FORM_2 or -8;
 
-core.resources = {}
-core.resources.resourceColours = core.colours.resources
+core.resources = {};
+core.resources.resourceColours = core.colours.resources;
 
 core.resources.primary = {
     ["DEATHKNIGHT"] = Enum.PowerType.RunicPower,
@@ -54,7 +54,7 @@ core.resources.primary = {
     },
     ["WARLOCK"]     = Enum.PowerType.Mana,
     ["WARRIOR"]     = Enum.PowerType.Rage,
-}
+};
 
 core.resources.secondary = {
     ["DEATHKNIGHT"] = Enum.PowerType.Runes,
@@ -83,7 +83,7 @@ core.resources.secondary = {
     ["WARRIOR"]     = {
         [72] = "ENRAGE", -- Fury
     },
-}
+};
 
 core.resources.tertiary = {
     ["DEATHKNIGHT"] = nil,
@@ -115,4 +115,4 @@ core.resources.tertiary = {
     ["WARRIOR"]     = {
         [72] = "WHIRLWIND", -- Fury
     },
-}
+};

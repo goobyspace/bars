@@ -1,7 +1,7 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isClassicEra then return end
+if not core.isClassicEra then return; end;
 
 local iconWidth = 36;
 local iconHeight = 30;
@@ -63,70 +63,70 @@ local outOfRangeColour = colours.outOfRange;
         powerType           Enum.PowerType.* the cost is paid from
 ]]
 
-local function GetSpellCooldownInfo(spellID)
+local function getSpellCooldownInfo(spellID)
     local info = C_Spell.GetSpellCooldown(spellID);
-    if not info then return 0, 0, false end
+    if not info then return 0, 0, false; end;
     return info.startTime, info.duration, info.isEnabled;
-end
+end;
 
-local function GetSpellPowerCost(spellID)
+local function getSpellPowerCost(spellID)
     local costs = C_Spell.GetSpellPowerCost(spellID);
-    if not costs then return nil end
+    if not costs then return nil; end;
     for _, cost in ipairs(costs) do
         if cost.cost and cost.cost > 0 then
             return cost.cost, cost.type;
-        end
-    end
+        end;
+    end;
     return nil;
-end
+end;
 
-local function IsSpellKnown(spellID)
+local function isSpellKnown(spellID)
     return C_SpellBook.IsSpellKnown(spellID) or C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet);
-end
+end;
 
-local function GetKnownSpellID(entry)
+local function getKnownSpellID(entry)
     if entry.rankSpellIDs then
         local known = nil;
         for _, spellID in ipairs(entry.rankSpellIDs) do
-            if IsSpellKnown(spellID) then known = spellID end
-        end
+            if isSpellKnown(spellID) then known = spellID; end;
+        end;
         return known;
-    end
-    return IsSpellKnown(entry.spellID) and entry.spellID or nil;
-end
+    end;
+    return isSpellKnown(entry.spellID) and entry.spellID or nil;
+end;
 
-local function GetEntryAuraIDs(entry)
+local function getEntryAuraIDs(entry)
     if not entry.auraIDs then
         local ids = {};
         for _, spellID in ipairs(entry.rankSpellIDs or { entry.spellID }) do
             ids[spellID] = true;
-        end
+        end;
         entry.auraIDs = ids;
-    end
+    end;
     return entry.auraIDs;
-end
+end;
 
-local function GetFallbackSpellID(entry)
+local function getFallbackSpellID(entry)
     return entry.spellID or (entry.rankSpellIDs and entry.rankSpellIDs[#entry.rankSpellIDs]);
-end
+end;
 
-local function EntryAllowedInCurrentForm(entry, currentForm)
+local function entryAllowedInCurrentForm(entry, currentForm)
     local form = entry.form;
-    if not form then return true end
-    if form:sub(1, 1) == "!" then return form:sub(2) ~= currentForm end
+    if not form then return true; end;
+    if form:sub(1, 1) == "!" then return form:sub(2) ~= currentForm; end;
     return form == currentForm;
-end
+end;
 
-local function FormatRemaining(seconds)
+local function formatRemaining(seconds)
     if seconds >= 60 then
         return string.format("%dm", math.ceil(seconds / 60));
     elseif seconds >= 10 then
         return string.format("%d", math.floor(seconds));
-    end
+    end;
     return string.format("%.1f", seconds);
-end
+end;
 
-local function GetCroppedTexCoords(width, height)
+local function getCroppedTexCoords(width, height)
     local trim = 0.08;
     local span = 1 - (trim * 2);
     local horizontal, vertical = span, span;
@@ -134,60 +134,60 @@ local function GetCroppedTexCoords(width, height)
         vertical = span * (height / width);
     else
         horizontal = span * (width / height);
-    end
+    end;
     return 0.5 - horizontal / 2, 0.5 + horizontal / 2, 0.5 - vertical / 2, 0.5 + vertical / 2;
-end
+end;
 
 -- units we can read auras from in Classic Era: whatever has a nameplate, plus the target
 local nameplateUnits = {};
 
-local function ForEachTrackedUnit(func)
+local function forEachTrackedUnit(func)
     local seen = {};
     local function visit(unit)
-        if not unit or not UnitExists(unit) then return end
+        if not unit or not UnitExists(unit) then return; end;
         local guid = UnitGUID(unit);
-        if not guid or seen[guid] then return end
+        if not guid or seen[guid] then return; end;
         seen[guid] = true;
         func(unit);
-    end
-    for unit in pairs(nameplateUnits) do visit(unit) end
+    end;
+    for unit in pairs(nameplateUnits) do visit(unit); end;
     visit("target");
-end
+end;
 
-local function FindAuraOnUnit(unit, auraIDs, filter)
+local function findAuraOnUnit(unit, auraIDs, filter)
     local found = nil;
     AuraUtil.ForEachAura(unit, filter, nil, function(auraData)
         if auraIDs[auraData.spellId] then
             found = auraData;
             return true;
-        end
+        end;
         return false;
     end, true);
     return found;
-end
+end;
 
-local function CountUnitsWithAura(auraIDs, filter)
+local function countUnitsWithAura(auraIDs, filter)
     local count = 0;
-    ForEachTrackedUnit(function(unit)
-        if FindAuraOnUnit(unit, auraIDs, filter) then
+    forEachTrackedUnit(function(unit)
+        if findAuraOnUnit(unit, auraIDs, filter) then
             count = count + 1;
-        end
-    end)
+        end;
+    end);
     return count;
-end
+end;
 
-local function GetCastsRemaining(entry, spellID)
+local function getCastsRemaining(entry, spellID)
     local cost, powerType = entry.powerCost, entry.powerType;
     if not cost then
-        cost, powerType = GetSpellPowerCost(spellID);
-    end
-    if not cost or cost <= 0 or not powerType then return nil end
+        cost, powerType = getSpellPowerCost(spellID);
+    end;
+    if not cost or cost <= 0 or not powerType then return nil; end;
 
     local current = UnitPower("player", powerType);
-    if issecretvalue and issecretvalue(current) then return nil end
+    if issecretvalue and issecretvalue(current) then return nil; end;
 
     return math.floor(current / cost);
-end
+end;
 
 local textAnchors = {
     [1] = { "CENTER" },
@@ -195,27 +195,27 @@ local textAnchors = {
     [3] = { "TOP", "CENTER", "BOTTOM" },
 };
 
-local function GetEntryTexts(entry)
+local function getEntryTexts(entry)
     local texts = {};
     if entry.showTargetCount or entry.trackedAuraSpellID then
         table.insert(texts, "auraCountText");
-    end
+    end;
     if entry.showCastCount then
         table.insert(texts, "castCountText");
-    end
+    end;
     if entry.type == "reminder"
         or (entry.type == "aura" and entry.showTargetDuration)
         or (entry.type ~= "aura" and entry.type ~= "reminder" and entry.showCooldownText ~= false) then
         table.insert(texts, "centreText");
-    end
+    end;
     return texts;
-end
+end;
 
-local function CreateIcon(parent, entry)
+local function createIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
     core:SetPixelSize(button, iconWidth, iconHeight);
     button.entry = entry;
-    button.spellID = GetKnownSpellID(entry) or GetFallbackSpellID(entry);
+    button.spellID = getKnownSpellID(entry) or getFallbackSpellID(entry);
 
     button.border = button:CreateTexture(nil, "BACKGROUND");
     core:SetPixelPoint(button.border, "TOPLEFT", button, "TOPLEFT", 0, 0);
@@ -226,7 +226,7 @@ local function CreateIcon(parent, entry)
     core:SetPixelPoint(button.icon, "TOPLEFT", button, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
     button.icon:SetTexture(C_Spell.GetSpellTexture(button.spellID));
-    button.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
+    button.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
 
     button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
     button.cooldown:SetAllPoints();
@@ -243,9 +243,9 @@ local function CreateIcon(parent, entry)
     for _, key in ipairs({ "centreText", "castCountText", "auraCountText" }) do
         button[key]:SetPoint("CENTER", 0, 0);
         core:SetBarFont(button[key], 11);
-    end
+    end;
 
-    local texts = GetEntryTexts(entry);
+    local texts = getEntryTexts(entry);
     local anchors = textAnchors[#texts];
     for index, key in ipairs(texts) do
         local anchor = anchors[index];
@@ -253,39 +253,39 @@ local function CreateIcon(parent, entry)
         button[key]:ClearAllPoints();
         button[key]:SetPoint(anchor, 0, offset);
         core:SetBarFont(button[key], anchor == "CENTER" and 13 or 11);
-    end
+    end;
 
     return button;
-end
+end;
 
-local function UpdateSpellIcon(button)
+local function updateSpellIcon(button)
     local entry = button.entry;
     local spellID = button.spellID;
 
-    local start, duration, enabled = GetSpellCooldownInfo(spellID);
+    local start, duration, enabled = getSpellCooldownInfo(spellID);
     local onCooldown = enabled and duration and duration > gcdThreshold;
 
     if entry.showCooldownSwipe ~= false then
         CooldownFrame_Set(button.cooldown, start, duration, onCooldown and 1 or 0);
-    end
+    end;
 
     if entry.showCooldownText ~= false and onCooldown then
         local remaining = (start + duration) - GetTime();
-        button.centreText:SetText(remaining > 0 and FormatRemaining(remaining) or "");
+        button.centreText:SetText(remaining > 0 and formatRemaining(remaining) or "");
     else
         button.centreText:SetText("");
-    end
+    end;
 
     if entry.showCastCount then
-        local casts = GetCastsRemaining(entry, spellID);
+        local casts = getCastsRemaining(entry, spellID);
         button.castCountText:SetText(casts and tostring(casts) or "");
-    end
+    end;
 
     if entry.trackedAuraSpellID then
         entry.trackedAuraIDs = entry.trackedAuraIDs or { [entry.trackedAuraSpellID] = true };
-        local count = CountUnitsWithAura(entry.trackedAuraIDs, entry.trackedAuraFilter or "HARMFUL|PLAYER");
+        local count = countUnitsWithAura(entry.trackedAuraIDs, entry.trackedAuraFilter or "HARMFUL|PLAYER");
         button.auraCountText:SetText(count > 0 and tostring(count) or "");
-    end
+    end;
 
     local invalidTarget = false;
     if entry.rangeCheck then
@@ -297,30 +297,30 @@ local function UpdateSpellIcon(button)
             button.icon:SetVertexColor(outOfRangeColour.r, outOfRangeColour.g, outOfRangeColour.b);
         else
             button.icon:SetVertexColor(colours.white.r, colours.white.g, colours.white.b);
-        end
-    end
+        end;
+    end;
 
     if entry.resourceDesaturate or entry.rangeCheck then
         -- isUsable is false for any reason the spell can't be cast (missing shield/weapon,
         -- wrong stance, insufficient resources, etc.), not just resource shortage
         local isUsable = C_Spell.IsSpellUsable(spellID);
         button.icon:SetDesaturated(invalidTarget or (entry.resourceDesaturate and not isUsable) or false);
-    end
-end
+    end;
+end;
 
-local function UpdateAuraIcon(button)
+local function updateAuraIcon(button)
     local entry = button.entry;
     local filter = entry.auraFilter or "HARMFUL|PLAYER";
-    local auraIDs = GetEntryAuraIDs(entry);
+    local auraIDs = getEntryAuraIDs(entry);
 
     if entry.showTargetDuration or entry.showTargetSwipe then
-        local auraData = UnitExists("target") and FindAuraOnUnit("target", auraIDs, filter) or nil;
+        local auraData = UnitExists("target") and findAuraOnUnit("target", auraIDs, filter) or nil;
         local expiration = auraData and auraData.expirationTime;
         local remaining = expiration and expiration > 0 and (expiration - GetTime()) or 0;
 
         if entry.showTargetDuration then
-            button.centreText:SetText(remaining > 0 and FormatRemaining(remaining) or "");
-        end
+            button.centreText:SetText(remaining > 0 and formatRemaining(remaining) or "");
+        end;
 
         if entry.showTargetSwipe then
             local total = auraData and auraData.duration or 0;
@@ -328,38 +328,38 @@ local function UpdateAuraIcon(button)
                 CooldownFrame_Set(button.cooldown, expiration - total, total, 1);
             else
                 CooldownFrame_Set(button.cooldown, 0, 0, 0);
-            end
-        end
+            end;
+        end;
 
         button.icon:SetDesaturated(auraData == nil);
-    end
+    end;
 
     if entry.showTargetCount then
-        local count = CountUnitsWithAura(auraIDs, filter);
+        local count = countUnitsWithAura(auraIDs, filter);
         button.auraCountText:SetText(count > 0 and tostring(count) or "");
-    end
+    end;
 
     local castCountSpellID = entry.showCastCount and (entry.castCountSpellID or button.spellID);
     if castCountSpellID then
-        local casts = GetCastsRemaining(entry, castCountSpellID);
+        local casts = getCastsRemaining(entry, castCountSpellID);
         button.castCountText:SetText(casts and tostring(casts) or "");
-    end
-end
+    end;
+end;
 
-local function UpdateReminderIcon(button)
+local function updateReminderIcon(button)
     local entry = button.entry;
     local filter = entry.auraFilter or "HELPFUL|PLAYER";
 
-    local auraData = FindAuraOnUnit("player", GetEntryAuraIDs(entry), filter);
+    local auraData = findAuraOnUnit("player", getEntryAuraIDs(entry), filter);
     local expiration = auraData and auraData.expirationTime;
     if expiration and expiration > 0 then
         local remaining = expiration - GetTime();
-        button.centreText:SetText(remaining > 0 and FormatRemaining(remaining) or "");
+        button.centreText:SetText(remaining > 0 and formatRemaining(remaining) or "");
     else
         button.centreText:SetText("");
-    end
+    end;
     button.icon:SetDesaturated(auraData == nil);
-end
+end;
 
 function core:CreateAuraTracker(parent)
     local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
@@ -367,14 +367,14 @@ function core:CreateAuraTracker(parent)
 
     local playerClass = select(2, UnitClass("player"));
     local entries = core.auraTracker[playerClass];
-    if not entries or #entries == 0 then return frame end
+    if not entries or #entries == 0 then return frame; end;
 
     local icons = {};
     for index, entry in ipairs(entries) do
-        local button = CreateIcon(frame, entry);
+        local button = createIcon(frame, entry);
         button.slot = entry.slot or index;
         table.insert(icons, button);
-    end
+    end;
 
     local function layout()
         local step = math.max(iconWidth + minIconSpacing, (core.width - iconWidth) / (slotCount - 1));
@@ -382,45 +382,45 @@ function core:CreateAuraTracker(parent)
             button:ClearAllPoints();
             core:SetPixelPoint(button, "LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
             button:SetShown(button.visible);
-        end
+        end;
 
         core:SetPixelSize(frame, core.width, iconHeight);
-    end
+    end;
 
     local function updateVisibility()
         local changed = false;
         local currentForm = core:GetShapeshiftFormKey();
         for _, button in ipairs(icons) do
             local entry = button.entry;
-            local knownSpellID = GetKnownSpellID(entry);
-            local spellID = knownSpellID or GetFallbackSpellID(entry);
+            local knownSpellID = getKnownSpellID(entry);
+            local spellID = knownSpellID or getFallbackSpellID(entry);
             if spellID ~= button.spellID then
                 button.spellID = spellID;
                 button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
-            end
+            end;
 
-            local visible = (entry.alwaysShow or knownSpellID ~= nil) and EntryAllowedInCurrentForm(entry, currentForm);
+            local visible = (entry.alwaysShow or knownSpellID ~= nil) and entryAllowedInCurrentForm(entry, currentForm);
             if visible ~= button.visible then
                 button.visible = visible;
                 changed = true;
-            end
-        end
-        if changed then layout() end
-    end
+            end;
+        end;
+        if changed then layout(); end;
+    end;
 
     local function updateAll()
         for _, button in ipairs(icons) do
             if button.visible then
                 if button.entry.type == "aura" then
-                    UpdateAuraIcon(button);
+                    updateAuraIcon(button);
                 elseif button.entry.type == "reminder" then
-                    UpdateReminderIcon(button);
+                    updateReminderIcon(button);
                 else
-                    UpdateSpellIcon(button);
-                end
-            end
-        end
-    end
+                    updateSpellIcon(button);
+                end;
+            end;
+        end;
+    end;
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE");
@@ -445,21 +445,21 @@ function core:CreateAuraTracker(parent)
             or event == "SPELLS_CHANGED"
             or event == "UPDATE_SHAPESHIFT_FORM" then
             updateVisibility();
-        end
+        end;
         updateAll();
-    end)
+    end);
 
     local elapsedSinceUpdate = 0;
     frame:SetScript("OnUpdate", function(_, elapsed)
         elapsedSinceUpdate = elapsedSinceUpdate + elapsed;
-        if elapsedSinceUpdate < updateInterval then return end
+        if elapsedSinceUpdate < updateInterval then return; end;
         elapsedSinceUpdate = 0;
         updateAll();
-    end)
+    end);
 
     updateVisibility();
     layout();
     updateAll();
 
     return frame;
-end
+end;

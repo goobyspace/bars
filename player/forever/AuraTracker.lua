@@ -1,14 +1,14 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isForever then return end
+if not core.isForever then return; end;
 
 local iconWidth = 36;
 local iconHeight = 30;
 local slotCount = 8;
 local minIconSpacing = 2;
 
-local function GetCroppedTexCoords(width, height)
+local function getCroppedTexCoords(width, height)
     local trim = 0.08;
     local span = 1 - (trim * 2);
     local horizontal, vertical = span, span;
@@ -16,34 +16,34 @@ local function GetCroppedTexCoords(width, height)
         vertical = span * (height / width);
     else
         horizontal = span * (width / height);
-    end
+    end;
     return 0.5 - horizontal / 2, 0.5 + horizontal / 2, 0.5 - vertical / 2, 0.5 + vertical / 2;
-end
+end;
 
-local function IsSpellKnown(spellID)
+local function isSpellKnown(spellID)
     return C_SpellBook.IsSpellKnown(spellID)
         or C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet);
-end
+end;
 
-local function GetKnownSpellID(entry)
+local function getKnownSpellID(entry)
     local known;
     for _, spellID in ipairs(entry.knownSpellIDs or entry.spellIDs or {}) do
-        if IsSpellKnown(spellID) then
+        if isSpellKnown(spellID) then
             known = spellID;
-        end
-    end
+        end;
+    end;
     return known;
-end
+end;
 
-local function GetIconSpellID(entry, knownSpellID)
+local function getIconSpellID(entry, knownSpellID)
     return entry.iconSpellID or knownSpellID or entry.spellIDs and entry.spellIDs[#entry.spellIDs];
-end
+end;
 
-local function IsAllowedInCurrentForm(entry, currentForm)
+local function isAllowedInCurrentForm(entry, currentForm)
     return not entry.forms or entry.forms[currentForm] == true;
-end
+end;
 
-local function CreateGlow(parent)
+local function createGlow(parent)
     local glow = CreateFrame("Frame", nil, parent);
     core:SetPixelSize(glow, iconWidth * 1.4, iconHeight * 1.4);
     core:SetPixelPoint(glow, "CENTER", parent, "CENTER", 0, 0);
@@ -68,13 +68,13 @@ local function CreateGlow(parent)
 
     glow:Hide();
     return glow;
-end
+end;
 
-local function SetGlowShown(frame, shown)
+local function setGlowShown(frame, shown)
     frame.glow:SetShown(shown);
-end
+end;
 
-local function CreateBaseIcon(parent, entry)
+local function createBaseIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
     core:SetPixelSize(button, iconWidth, iconHeight);
     button.entry = entry;
@@ -87,10 +87,10 @@ local function CreateBaseIcon(parent, entry)
     button.icon = button:CreateTexture(nil, "ARTWORK");
     core:SetPixelPoint(button.icon, "TOPLEFT", button, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
-    button.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
+    button.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
     button.icon:SetDesaturated(true);
 
-    button.glow = CreateGlow(button);
+    button.glow = createGlow(button);
 
     if entry.spellCooldown then
         button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
@@ -105,13 +105,13 @@ local function CreateBaseIcon(parent, entry)
         button.cooldownFallback:SetStatusBarColor(colours.black.r, colours.black.g, colours.black.b, 0.7);
         button.cooldownFallback:SetReverseFill(true);
         button.cooldownFallback:Hide();
-    end
+    end;
 
     return button;
-end
+end;
 
-local function CreateAuraLayer(button, entry)
-    if not entry.auraSpellIDs then return end
+local function createAuraLayer(button, entry)
+    if not entry.auraSpellIDs then return; end;
 
     local container = CreateFrame("AuraContainer", nil, button, "CustomAuraContainerTemplate");
     container:SetAllPoints();
@@ -120,9 +120,9 @@ local function CreateAuraLayer(button, entry)
     local includeSpellIDs = {};
     for _, spellID in ipairs(entry.auraSpellIDs) do
         includeSpellIDs[spellID] = true;
-    end
+    end;
 
-    local function InitializeAuraFrame(auraButton)
+    local function initializeAuraFrame(auraButton)
         core:SetPixelSize(auraButton, iconWidth, iconHeight);
 
         auraButton.border = auraButton:CreateTexture(nil, "BACKGROUND");
@@ -133,7 +133,7 @@ local function CreateAuraLayer(button, entry)
         auraButton.icon = auraButton:CreateTexture(nil, "OVERLAY");
         core:SetPixelPoint(auraButton.icon, "TOPLEFT", auraButton, "TOPLEFT", core.pixel, -core.pixel);
         core:SetPixelPoint(auraButton.icon, "BOTTOMRIGHT", auraButton, "BOTTOMRIGHT", -core.pixel, core.pixel);
-        auraButton.icon:SetTexCoord(GetCroppedTexCoords(iconWidth, iconHeight));
+        auraButton.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
         auraButton:SetIcon(auraButton.icon);
 
         auraButton.cooldown = CreateFrame("Cooldown", nil, auraButton, "CooldownFrameTemplate");
@@ -143,21 +143,21 @@ local function CreateAuraLayer(button, entry)
         auraButton:SetDurationCooldown(auraButton.cooldown);
 
         if entry.auraGlow then
-            auraButton.glow = CreateGlow(auraButton);
-            SetGlowShown(auraButton, true);
-        end
-    end
+            auraButton.glow = createGlow(auraButton);
+            setGlowShown(auraButton, true);
+        end;
+    end;
 
     local auraButton = container:AddAuraSlot("active", entry.auraFilter, {
         candidateFilters = { includeSpellIDs = includeSpellIDs },
-        initializeFrame = InitializeAuraFrame,
+        initializeFrame = initializeAuraFrame,
     });
     auraButton:SetAllPoints(container);
     button.auraContainer = container;
-end
+end;
 
-local function UpdateSpellCooldown(button)
-    if not button.cooldown then return end
+local function updateSpellCooldown(button)
+    if not button.cooldown then return; end;
 
     local info = C_Spell.GetSpellCooldown(button.spellID);
     if not info or not info["isActive"] or info["isOnGCD"] then
@@ -165,10 +165,10 @@ local function UpdateSpellCooldown(button)
         button.cooldown:Hide();
         button.cooldownFallback:Hide();
         return;
-    end
+    end;
 
     local duration = C_Spell.GetSpellCooldownDuration(button.spellID);
-    if not duration then return end
+    if not duration then return; end;
 
     if not duration:HasSecretValues() then
         button.cooldown:SetCooldownFromDurationObject(duration, true);
@@ -180,10 +180,10 @@ local function UpdateSpellCooldown(button)
         button.cooldownFallback:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut,
             Enum.StatusBarTimerDirection.RemainingTime);
         button.cooldownFallback:Show();
-    end
-end
+    end;
+end;
 
-local function UpdateBaseState(button, activeOverlays)
+local function updateBaseState(button, activeOverlays)
     local entry = button.entry;
     local spellID = button.spellID;
     local outOfRange = entry.rangeCheck and UnitExists("target")
@@ -196,7 +196,7 @@ local function UpdateBaseState(button, activeOverlays)
     else
         button.icon:SetVertexColor(colours.white.r, colours.white.g, colours.white.b);
         button.icon:SetDesaturated(not (entry.usability and usable));
-    end
+    end;
 
     local activationGlow = false;
     if entry.activationGlow then
@@ -204,12 +204,12 @@ local function UpdateBaseState(button, activeOverlays)
             if activeOverlays[candidate] or C_Spell.IsCurrentSpell(candidate) then
                 activationGlow = true;
                 break;
-            end
-        end
-    end
-    SetGlowShown(button, activationGlow or entry.usableGlow and usable or false);
-    UpdateSpellCooldown(button);
-end
+            end;
+        end;
+    end;
+    setGlowShown(button, activationGlow or entry.usableGlow and usable or false);
+    updateSpellCooldown(button);
+end;
 
 function core:CreateAuraTracker(parent)
     local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
@@ -217,49 +217,49 @@ function core:CreateAuraTracker(parent)
 
     local playerClass = select(2, UnitClass("player"));
     local entries = core.foreverAuraTracker and core.foreverAuraTracker[playerClass];
-    if not entries then return frame end
+    if not entries then return frame; end;
 
     local buttons = {};
     local activeOverlays = {};
 
     for index, entry in ipairs(entries) do
-        local button = CreateBaseIcon(frame, entry);
+        local button = createBaseIcon(frame, entry);
         button.slot = entry.slot or index;
-        CreateAuraLayer(button, entry);
+        createAuraLayer(button, entry);
         table.insert(buttons, button);
-    end
+    end;
 
-    local function Layout()
+    local function layout()
         local step = math.max(iconWidth + minIconSpacing, (core.width - iconWidth) / (slotCount - 1));
         for _, button in ipairs(buttons) do
             button:ClearAllPoints();
             core:SetPixelPoint(button, "LEFT", frame, "LEFT", (button.slot - 1) * step, 0);
-        end
-    end
+        end;
+    end;
 
-    local function UpdateVisibility()
+    local function updateVisibility()
         local currentForm = core:GetShapeshiftFormKey();
         for _, button in ipairs(buttons) do
-            local knownSpellID = GetKnownSpellID(button.entry);
-            local spellID = GetIconSpellID(button.entry, knownSpellID);
+            local knownSpellID = getKnownSpellID(button.entry);
+            local spellID = getIconSpellID(button.entry, knownSpellID);
             button.spellID = spellID;
             button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
-            button:SetShown(knownSpellID ~= nil and IsAllowedInCurrentForm(button.entry, currentForm));
+            button:SetShown(knownSpellID ~= nil and isAllowedInCurrentForm(button.entry, currentForm));
 
             if knownSpellID and button.entry.activationGlow then
                 local succeeded, overlayed = pcall(C_SpellActivationOverlay.IsSpellOverlayed, knownSpellID);
                 activeOverlays[knownSpellID] = succeeded and overlayed or nil;
-            end
-        end
-    end
+            end;
+        end;
+    end;
 
-    local function UpdateAll()
+    local function updateAll()
         for _, button in ipairs(buttons) do
             if button:IsShown() then
-                UpdateBaseState(button, activeOverlays);
-            end
-        end
-    end
+                updateBaseState(button, activeOverlays);
+            end;
+        end;
+    end;
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterEvent("LEARNED_SPELL_IN_SKILL_LINE");
@@ -280,13 +280,13 @@ function core:CreateAuraTracker(parent)
             activeOverlays[spellID] = nil;
         elseif event == "PLAYER_ENTERING_WORLD" or event == "LEARNED_SPELL_IN_SKILL_LINE"
             or event == "SPELLS_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" then
-            UpdateVisibility();
-        end
-        UpdateAll();
+            updateVisibility();
+        end;
+        updateAll();
     end);
 
-    Layout();
-    UpdateVisibility();
-    UpdateAll();
+    layout();
+    updateVisibility();
+    updateAll();
     return frame;
-end
+end;

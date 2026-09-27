@@ -1,27 +1,27 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isForever then return end
+if not core.isForever then return; end;
 
 local fsrDuration = core.resourceTickerConfig.fiveSecondRuleDuration;
 local activeTickers = {};
 local fsrEndTime = nil;
 
-local function SpellCostsMana(spellID)
+local function spellCostsMana(spellID)
     for _, costInfo in ipairs(C_Spell.GetSpellPowerCost(spellID) or {}) do
         if costInfo.type == Enum.PowerType.Mana
             and ((costInfo.cost or 0) > 0 or (costInfo.costPercent or 0) > 0) then
             return true;
-        end
-    end
+        end;
+    end;
     return false;
-end
+end;
 
-local function RefreshTickers()
+local function refreshTickers()
     for ticker in pairs(activeTickers) do
         ticker:Refresh();
-    end
-end
+    end;
+end;
 
 local manaEvents = CreateFrame("Frame");
 manaEvents:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -29,10 +29,10 @@ manaEvents:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player");
 manaEvents:SetScript("OnEvent", function(_, event, _, _, spellID)
     if event == "PLAYER_ENTERING_WORLD" then
         fsrEndTime = nil;
-    elseif spellID and SpellCostsMana(spellID) then
+    elseif spellID and spellCostsMana(spellID) then
         fsrEndTime = GetTime() + fsrDuration;
-    end
-    RefreshTickers();
+    end;
+    refreshTickers();
 end);
 
 function core:CreateResourceTicker(bar, fixedResource)
@@ -52,18 +52,18 @@ function core:CreateResourceTicker(bar, fixedResource)
             ticker:Show();
         else
             ticker:Hide();
-        end
-    end
+        end;
+    end;
 
     ticker:SetScript("OnUpdate", function()
-        if resource ~= Enum.PowerType.Mana or not fsrEndTime then return end
+        if resource ~= Enum.PowerType.Mana or not fsrEndTime then return; end;
 
         local remaining = fsrEndTime - GetTime();
         if remaining <= 0 then
             fsrEndTime = nil;
             ticker:Refresh();
             return;
-        end
+        end;
 
         local progress = 1 - remaining / fsrDuration;
         local travel = ticker:GetWidth() - line:GetWidth();
@@ -73,12 +73,12 @@ function core:CreateResourceTicker(bar, fixedResource)
     function ticker:SetActive(activeResource)
         resource = fixedResource and activeResource and fixedResource or activeResource;
         ticker:Refresh();
-    end
+    end;
 
     activeTickers[ticker] = true;
     return ticker;
-end
+end;
 
 function core:CreateManaTicker(bar)
     return core:CreateResourceTicker(bar, Enum.PowerType.Mana);
-end
+end;

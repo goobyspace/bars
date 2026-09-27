@@ -1,6 +1,6 @@
-local _, core = ...
+local _, core = ...;
 
-if not core.isClassicRules then return end
+if not core.isClassicRules then return; end;
 
 local classInterrupts = {
     ["ROGUE"]   = { 1769, 1766 },                                  -- Kick (rank 2, rank 1)
@@ -15,19 +15,19 @@ local classPetInterrupts = {
 };
 
 function core:GetPlayerInterruptSpellID()
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
     for _, spellID in ipairs(classInterrupts[playerClass] or {}) do
         if C_SpellBook.IsSpellKnown(spellID) then
-            return spellID
-        end
-    end
+            return spellID;
+        end;
+    end;
 
     for _, spellID in ipairs(classPetInterrupts[playerClass] or {}) do
         if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
-            return spellID
-        end
-    end
+            return spellID;
+        end;
+    end;
 
-    return nil
-end
+    return nil;
+end;

@@ -1,4 +1,4 @@
-local _, core = ...
+local _, core = ...;
 
 core.isClassicEra = WOW_PROJECT_ID == WOW_PROJECT_CLASSIC;
 core.isRetail = WOW_PROJECT_ID == WOW_PROJECT_MAINLINE;
@@ -33,27 +33,27 @@ function core:CheckKnowsPurge()
         for _, spellID in ipairs(classicPurgeSpellIDs) do
             if C_SpellBook.IsSpellKnown(spellID) then
                 return true;
-            end
-        end
+            end;
+        end;
         for _, spellID in ipairs(classicPetPurgeSpellIDs) do
             if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
                 return true;
-            end
-        end
+            end;
+        end;
         return false;
     else
         for _, spellID in ipairs(retailPurgeSpellIDs) do
             if C_SpellBook.IsSpellKnown(spellID) then
                 return true;
-            end
-        end
+            end;
+        end;
         return false;
-    end
-end
+    end;
+end;
 
 function core:SafeRegisterEvent(frame, event, unit)
     if unit then
         return pcall(frame.RegisterUnitEvent, frame, event, unit);
-    end
+    end;
     return pcall(frame.RegisterEvent, frame, event);
-end
+end;

@@ -1,17 +1,17 @@
-local _, core = ...
+local _, core = ...;
 
-local colours = core.colours
-core.ClassColors = colours.classes
+local colours = core.colours;
+core.ClassColors = colours.classes;
 
-local function SetBarRangeAndValue(bar, minimum, maximum, value, immediate)
+local function setBarRangeAndValue(bar, minimum, maximum, value, immediate)
     if immediate then
-        bar:SetMinMaxValues(minimum, maximum)
-        bar:SetValue(value)
+        bar:SetMinMaxValues(minimum, maximum);
+        bar:SetValue(value);
     else
-        bar:SetMinMaxValues(minimum, maximum, Enum.StatusBarInterpolation.ExponentialEaseOut)
-        bar:SetValue(value, Enum.StatusBarInterpolation.ExponentialEaseOut)
-    end
-end
+        bar:SetMinMaxValues(minimum, maximum, Enum.StatusBarInterpolation.ExponentialEaseOut);
+        bar:SetValue(value, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    end;
+end;
 
 function core:CreateHPBarBase(name, parent, width, height, template)
     local frame = core:CreateSimpleStatusBar(name, parent, width, height, { template = template });
@@ -19,105 +19,85 @@ function core:CreateHPBarBase(name, parent, width, height, template)
 
     frame.healCalc = CreateUnitHealPredictionCalculator();
     frame.healCalc:SetIncomingHealOverflowPercent(core.healPredictionOverflow);
-    -- lets GetHealAbsorbs()/GetIncomingHeals() net the two against each other internally, since retail
-    -- disallows Lua arithmetic (healAbsorb - incomingHeal) on these secret values ourselves
+    -- we let blizzard handle this because were not allowed to do heal calcs in combat
     frame.healCalc:SetHealAbsorbMode(Enum.UnitHealAbsorbMode.ReducedByIncomingHeals);
 
-    -- represents ONLY the incoming heal amount -- never combined with current health via Lua
-    -- arithmetic, which retail disallows on secret health values. Anchored natively to frame.bar's own
-    -- fill texture's right edge (a zero-offset anchor, resolved by the engine, not computed by us) so it
-    -- always starts exactly where current health ends and never needs per-update anchor math.
-    frame.healPredictionBar = CreateFrame("StatusBar", nil, frame)
+    -- this was a pain in the ass to keep working but tldr using the using the setpoint we can make it start at the edge anyway
+    frame.healPredictionBar = CreateFrame("StatusBar", nil, frame);
     core:SetPixelSize(frame.healPredictionBar, width, height);
     frame.healPredictionBar:SetPoint("LEFT", frame.bar:GetStatusBarTexture(), "RIGHT", 0, 0);
-    frame.healPredictionBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar")
-    frame.healPredictionBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
+    frame.healPredictionBar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
+    frame.healPredictionBar:SetFrameLevel(frame.bar:GetFrameLevel() + 1);
     frame.healPredictionBar:SetStatusBarColor(colours.healPrediction.r, colours.healPrediction.g,
-        colours.healPrediction.b, colours.healPrediction.a)
+        colours.healPrediction.b, colours.healPrediction.a);
 
-    -- shield/absorb amount: like CompactUnitFrame's totalAbsorb bar, drawn as an extension past
-    -- wherever current health + predicted healing ends, via the same zero-offset anchor trick as
-    -- frame.healPredictionBar above so it never needs per-update anchor math
-    frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar)
+    -- same edge fix, just starting after health plus predicted heals
+    frame.absorbBar = CreateFrame("StatusBar", nil, frame.bar);
     core:SetPixelSize(frame.absorbBar, width, height);
     frame.absorbBar:SetPoint("LEFT", frame.healPredictionBar:GetStatusBarTexture(), "RIGHT", 0, 0);
-    frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
-    frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 2)
-    frame.absorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
+    frame.absorbBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png");
+    frame.absorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 2);
+    frame.absorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a);
 
-    -- shield overflow: retail won't let Lua subtract two secret numbers, so instead of computing the
-    -- overflow amount ourselves this bar is clamped to (missingHealthBoundary, maxHP) and fed the raw
-    -- absorb value -- the StatusBar engine does the equivalent subtraction internally and simply shows
-    -- a zero-width fill whenever nothing overflows. Sized to the full bar width (like the other overlay
-    -- bars) so the fill fraction maps onto the same pixel scale as the rest of the bar.
-    frame.absorbOverflowBar = CreateFrame("StatusBar", nil, frame)
+    -- put the absorb value in and set the bar's minimum to the overflow
+    frame.absorbOverflowBar = CreateFrame("StatusBar", nil, frame);
     core:SetPixelPoint(frame.absorbOverflowBar, "TOPLEFT", frame.bar, "TOPLEFT", 0, 0);
     core:SetPixelPoint(frame.absorbOverflowBar, "BOTTOMLEFT", frame.bar, "BOTTOMLEFT", 0, 0);
     core:SetPixelSize(frame.absorbOverflowBar, width, height);
-    frame.absorbOverflowBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png")
-    frame.absorbOverflowBar:SetFrameLevel(frame.bar:GetFrameLevel() + 4)
-    frame.absorbOverflowBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
+    frame.absorbOverflowBar:SetStatusBarTexture("Interface/Addons/Bars/assets/absorb.png");
+    frame.absorbOverflowBar:SetFrameLevel(frame.bar:GetFrameLevel() + 4);
+    frame.absorbOverflowBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a);
 
-    -- heal-absorb debuff: like CompactUnitFrame's myHealAbsorb bar, eats into current health from its
-    -- right edge inward, so it's reverse-filled and anchored to that same edge instead of overlaid
-    frame.healAbsorbBar = CreateFrame("StatusBar", nil, frame.bar)
+    -- fill backwards from the health edge like the way blizz heal absorbs work
+    frame.healAbsorbBar = CreateFrame("StatusBar", nil, frame.bar);
     core:SetPixelSize(frame.healAbsorbBar, width, height);
     frame.healAbsorbBar:SetPoint("RIGHT", frame.bar:GetStatusBarTexture(), "RIGHT", 0, 0);
     frame.healAbsorbBar:SetReverseFill(true);
-    frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay")
-    frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 3)
-    frame.healAbsorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a)
+    frame.healAbsorbBar:SetStatusBarTexture("interface/RAIDFRAME/RaidFrameAbsorbOverlay");
+    frame.healAbsorbBar:SetFrameLevel(frame.bar:GetFrameLevel() + 3);
+    frame.healAbsorbBar:SetStatusBarColor(colours.absorb.r, colours.absorb.g, colours.absorb.b, colours.absorb.a);
 
-    SetBarRangeAndValue(frame.bar, 0, 1, 0, true)
-    SetBarRangeAndValue(frame.healPredictionBar, 0, 1, 0, true)
-    SetBarRangeAndValue(frame.absorbBar, 0, 1, 0, true)
-    SetBarRangeAndValue(frame.absorbOverflowBar, 0, 1, 0, true)
-    SetBarRangeAndValue(frame.healAbsorbBar, 0, 1, 0, true)
+    setBarRangeAndValue(frame.bar, 0, 1, 0, true);
+    setBarRangeAndValue(frame.healPredictionBar, 0, 1, 0, true);
+    setBarRangeAndValue(frame.absorbBar, 0, 1, 0, true);
+    setBarRangeAndValue(frame.absorbOverflowBar, 0, 1, 0, true);
+    setBarRangeAndValue(frame.healAbsorbBar, 0, 1, 0, true);
 
     return frame;
-end
+end;
 
 function core:UpdateHPBarValues(frame, unit, immediate)
     if not UnitExists(unit) then
         return nil, nil;
-    end
+    end;
 
     local maxHP = UnitHealthMax(unit);
     local currentHP = UnitHealth(unit, true);
-    if not core.usesSecretValues and (not maxHP or maxHP <= 0) then
+    if not maxHP or (not issecretvalue(maxHP) and maxHP <= 0) then
         return nil, nil;
-    end
+    end;
 
-    SetBarRangeAndValue(frame.bar, 0, maxHP, currentHP, immediate);
+    setBarRangeAndValue(frame.bar, 0, maxHP, currentHP, immediate);
 
-    -- incoming heal prediction: represents ONLY incomingHeal (never currentHP+incomingHeal -- retail
-    -- disallows Lua arithmetic on secret health values). Anchored once at creation to frame.bar's own
-    -- fill texture edge (see CreateHPBarBase), so it always starts exactly where current health ends
-    -- with zero per-update anchor math; both values below are passed through unmodified.
     UnitGetDetailedHealPrediction(unit, nil, frame.healCalc);
-    -- UnitGetDetailedHealPrediction resets the calculator's options, so overflow/mode must be re-applied every update
+    -- UnitGetDetailedHealPrediction resets the calc so we have to re-set it
     frame.healCalc:SetIncomingHealOverflowPercent(core.healPredictionOverflow);
     frame.healCalc:SetHealAbsorbMode(Enum.UnitHealAbsorbMode.ReducedByIncomingHeals);
     local incomingHeal = frame.healCalc:GetIncomingHeals() or 0;
-    SetBarRangeAndValue(frame.healPredictionBar, 0, maxHP, incomingHeal, true)
+    setBarRangeAndValue(frame.healPredictionBar, 0, maxHP, incomingHeal, true);
 
-    -- shield absorb: drawn past current health + predicted healing via the anchor set up in
-    -- CreateHPBarBase, same as CompactUnitFrame's totalAbsorb bar. Clamped to the room actually left
-    -- before maxHP so it never spills out past the bar's background.
     frame.healCalc:SetDamageAbsorbClampMode(Enum.UnitDamageAbsorbClampMode.MissingHealth);
     local absorb = frame.healCalc:GetDamageAbsorbs() or 0;
-    SetBarRangeAndValue(frame.absorbBar, 0, maxHP, absorb, true)
+    setBarRangeAndValue(frame.absorbBar, 0, maxHP, absorb, true);
 
-    -- shield overflow: fed the SAME raw, unclamped absorb value but with min set to the clamp
-    -- boundary above, so whatever exceeds that boundary is the only part that fills this bar
+    -- starting at the boundary leaves only overflow visible
     local overflowBoundary = frame.healCalc:GetMaximumDamageAbsorbs();
     local rawAbsorb = UnitGetTotalAbsorbs(unit) or 0;
-    SetBarRangeAndValue(frame.absorbOverflowBar, overflowBoundary, maxHP, rawAbsorb, true)
+    setBarRangeAndValue(frame.absorbOverflowBar, overflowBoundary, maxHP, rawAbsorb, true);
 
-    -- heal absorb debuff: GetHealAbsorbs() already nets out the portion covered by incoming heals
-    -- (see SetHealAbsorbMode above), since incoming heals would otherwise fill straight over it
+    -- heal absorbs here are already reduced by incoming heals (see SetHealAbsorbMode above).
     local shownHealAbsorb = frame.healCalc:GetHealAbsorbs() or 0;
-    SetBarRangeAndValue(frame.healAbsorbBar, 0, maxHP, shownHealAbsorb, true)
+    setBarRangeAndValue(frame.healAbsorbBar, 0, maxHP, shownHealAbsorb, true);
 
     return currentHP, maxHP;
-end
+end;

@@ -1,22 +1,22 @@
-local _, core = ...
-local colours = core.colours
-local config = core.widgetConfig.breath
+local _, core = ...;
+local colours = core.colours;
+local config = core.widgetConfig.breath;
 
 local timerCount = rawget(_G, "MIRRORTIMER_NUMTIMERS") or config.fallbackTimerCount;
 
 local function hideBlizzardTimer(timer)
     if MirrorTimerContainer and MirrorTimerContainer.ClearTimer then
         MirrorTimerContainer:ClearTimer(timer);
-        return
-    end
+        return;
+    end;
 
     for index = 1, timerCount do
         local blizzardTimer = _G["MirrorTimer" .. index];
         if blizzardTimer and blizzardTimer.timer == timer then
             blizzardTimer:Hide();
-        end
-    end
-end
+        end;
+    end;
+end;
 
 function core:CreateBreathBar(parent)
     local frame = CreateFrame("Frame", "BarsBreathBar", parent);
@@ -29,7 +29,7 @@ function core:CreateBreathBar(parent)
 
     local function getBar(timer)
         local timerBar = bars[timer];
-        if timerBar then return timerBar end
+        if timerBar then return timerBar; end;
 
         timerBar = core:CreateSimpleStatusBar(nil, frame, width, core.barBgHeight, {
             includeText = true,
@@ -40,7 +40,7 @@ function core:CreateBreathBar(parent)
         timerBar.timer = timer;
         bars[timer] = timerBar;
         return timerBar;
-    end
+    end;
 
     local function layoutBars()
         local activeCount = 0;
@@ -52,14 +52,14 @@ function core:CreateBreathBar(parent)
                 timerBar:Show();
             else
                 timerBar:Hide();
-            end
-        end
+            end;
+        end;
 
         frame:SetShown(activeCount > 0);
-    end
+    end;
 
     local function setTimer(timer, value, maximum, scale, paused, label)
-        if not timer or timer == "UNKNOWN" or not value or not maximum or maximum <= 0 then return end
+        if not timer or timer == "UNKNOWN" or not value or not maximum or maximum <= 0 then return; end;
 
         local timerBar = getBar(timer);
         timerBar.value = value;
@@ -71,18 +71,18 @@ function core:CreateBreathBar(parent)
         timerBar.bar:SetMinMaxValues(0, maximum);
         timerBar.bar:SetValue(value);
         hideBlizzardTimer(timer);
-    end
+    end;
 
     local function refresh()
         for _, timerBar in pairs(bars) do
             timerBar.active = false;
-        end
+        end;
 
         for index = 1, timerCount do
             setTimer(GetMirrorTimerInfo(index));
-        end
+        end;
         layoutBars();
-    end
+    end;
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterEvent("MIRROR_TIMER_START");
@@ -94,16 +94,16 @@ function core:CreateBreathBar(parent)
         elseif event == "MIRROR_TIMER_STOP" then
             if bars[timer] then
                 bars[timer].active = false;
-            end
+            end;
         elseif event == "MIRROR_TIMER_PAUSE" then
             local paused = ...;
             if bars[timer] then
                 bars[timer].scale = paused == 1 and 0 or bars[timer].baseScale;
-            end
+            end;
         else
             refresh();
-            return
-        end
+            return;
+        end;
         layoutBars();
     end);
     frame:SetScript("OnUpdate", function(_, elapsed)
@@ -114,10 +114,10 @@ function core:CreateBreathBar(parent)
                     math.min(timerBar.maximum, timerBar.value + elapsed * 1000 * timerBar.scale));
                 timerBar.bar:SetValue(timerBar.value);
                 timerBar.text:SetFormattedText("%s  %d", timerBar.label, math.ceil(timerBar.value / 1000));
-            end
-        end
+            end;
+        end;
     end);
 
     refresh();
     return frame;
-end
+end;

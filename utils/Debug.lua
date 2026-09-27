@@ -1,6 +1,6 @@
-local _, core = ...
-local colours = core.colours
-local config = core.debugConfig
+local _, core = ...;
+local colours = core.colours;
+local config = core.debugConfig;
 
 local copyFrame;
 
@@ -39,13 +39,13 @@ function core:ShowCopyableText(text)
         scroll:SetScrollChild(copyFrame.edit);
 
         table.insert(UISpecialFrames, "BarsCopyFrame");
-    end
+    end;
 
     copyFrame.edit:SetText(text);
     copyFrame:Show();
     copyFrame.edit:SetFocus();
     copyFrame.edit:HighlightText();
-end
+end;
 
 local function getPixelDebugText()
     local screenWidth, screenHeight = GetPhysicalScreenSize();
@@ -63,16 +63,16 @@ local function getPixelDebugText()
             table.insert(lines, format("%s: left %.2f bottom %.2f width %.2f height %.2f", name,
                 frame:GetLeft() / core.pixel, frame:GetBottom() / core.pixel,
                 frame:GetWidth() / core.pixel, frame:GetHeight() / core.pixel));
-        end
-    end
+        end;
+    end;
 
     return table.concat(lines, "\n");
-end
+end;
 
 local function formatFlightPathKey(route)
     local source, destination = route:match("^(.-)\031(.*)$");
     return source and format("%q .. \"\\031\" .. %q", source, destination) or format("%q", route);
-end
+end;
 
 local function getFlightPathTimingText()
     local lines = {
@@ -86,33 +86,33 @@ local function getFlightPathTimingText()
         local knownDurations = {};
         for route, duration in pairs(allDurations[faction] or {}) do
             knownDurations[route] = duration;
-        end
+        end;
         for route, duration in pairs(core.flightPathData[faction] or {}) do
             knownDurations[route] = duration;
-        end
+        end;
 
         local routes = {};
         for route in pairs(knownDurations) do
             table.insert(routes, route);
-        end
+        end;
         table.sort(routes);
 
         table.insert(lines, format("    %s = {", faction));
         for _, route in ipairs(routes) do
             table.insert(lines, format("        [%s] = %.3f,", formatFlightPathKey(route), knownDurations[route]));
-        end
+        end;
         table.insert(lines, "    },");
-    end
+    end;
     table.insert(lines, "};");
     return table.concat(lines, "\n");
-end
+end;
 
 SLASH_BARSPX1 = "/barspx";
 SlashCmdList["BARSPX"] = function()
     core:ShowCopyableText(getPixelDebugText());
-end
+end;
 
 SLASH_BARSFLIGHTPATHTIMING1 = "/flightdata";
 SlashCmdList["BARSFLIGHTPATHTIMING"] = function()
     core:ShowCopyableText(getFlightPathTimingText());
-end
+end;

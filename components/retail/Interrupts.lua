@@ -1,13 +1,13 @@
-local _, core = ...
+local _, core = ...;
 
-if core.isClassicEra or core.isForever then return end
+if core.isClassicEra or core.isForever then return; end;
 
 function core:GetPlayerInterruptSpellID()
-    local specIndex = GetSpecialization()
-    if not specIndex then return nil end
+    local specIndex = GetSpecialization();
+    if not specIndex then return nil; end;
 
-    local specID = GetSpecializationInfo(specIndex)
-    if not specID then return nil end
+    local specID = GetSpecializationInfo(specIndex);
+    if not specID then return nil; end;
 
     local specInterrupts = {
         [250]  = 47528,  -- Blood (Mind Freeze)
@@ -61,7 +61,7 @@ function core:GetPlayerInterruptSpellID()
         [71]   = 6552,   -- Arms (Pummel)
         [72]   = 6552,   -- Fury (Pummel)
         [73]   = 6552,   -- Protection (Pummel)
-    }
+    };
 
-    return specInterrupts[specID]
-end
+    return specInterrupts[specID];
+end;

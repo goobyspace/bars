@@ -1,7 +1,7 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-local frame;
+local frame = nil;
 
 local teachingsOfTheMonastery = 202090;
 local teachingsMaxStacks = 4;
@@ -28,7 +28,7 @@ local countResources = {
     [Enum.PowerType.HolyPower] = true,
     [Enum.PowerType.Chi] = true,
     [Enum.PowerType.SoulShards] = true,
-}
+};
 
 local classEvents = {
     ["DEATHKNIGHT"] = { { "RUNE_POWER_UPDATE" }, { "UNIT_POWER_UPDATE", "player" }, { "UNIT_MAXPOWER", "player" } },
@@ -41,47 +41,50 @@ local classEvents = {
     ["SHAMAN"]      = { { "UNIT_AURA", "player" } },
     ["WARLOCK"]     = { { "UNIT_POWER_UPDATE", "player" }, { "UNIT_POWER_POINT_CHARGE", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["WARRIOR"]     = { { "PLAYER_REGEN_ENABLED" }, { "PLAYER_REGEN_DISABLED" }, { "UNIT_AURA", "player" } },
-}
+};
 
 local function getResource()
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
     local resourceTable = core.resources.secondary;
 
-    local spec = C_SpecializationInfo.GetSpecialization()
-    local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
+    local spec = C_SpecializationInfo.GetSpecialization();
+    local specID = C_SpecializationInfo.GetSpecializationInfo(spec);
 
     local resource = resourceTable[playerClass];
 
     if playerClass == "DRUID" then
-        local formID = core:GetShapeshiftFormKey()
+        local formID = core:GetShapeshiftFormKey();
         if core.isForever and (formID == 0 or formID == "MOONKIN")
             and C_SpellBook.IsSpellKnown(eclipse) then
             return "ECLIPSE";
-        end
-        resource = resource and resource[formID or 0]
-    end
+        end;
+        resource = resource and resource[formID or 0];
+    end;
 
     if type(resource) == "table" then
-        return resource[specID]
+        return resource[specID];
     else
-        return resource
-    end
-end
+        return resource;
+    end;
+end;
 
 local nextEssenceTick = nil;
 local lastEssence = nil;
 local startTime = nil;
 
 local function updateEssenceBar(resource)
+    if not frame then return; end;
+
     for i = 1, 6 do
         frame['bar' .. i]:Hide();
         frame['bg' .. i]:Hide();
-    end
+    end;
 
     do
         local current = UnitPower("player", resource);
         local max = UnitPowerMax("player", resource);
         local regenRate = GetPowerRegenForPowerType(resource);
+        if not current or not core:IsSafePositiveNumber(max) then return; end;
 
         local gap = 4;
         local barWidth = core.width / max - gap;
@@ -89,40 +92,46 @@ local function updateEssenceBar(resource)
 
         if issecretvalue(regenRate) then
             regenRate = 0.2;
-        end
+        end;
 
-        lastEssence = lastEssence or current;
+        if not issecretvalue(current) then
+            lastEssence = lastEssence or current;
+            if not issecretvalue(lastEssence) then
+                local tickDuration = 5 / (5 / (1 / regenRate));
+                local now = GetTime();
 
-        local tickDuration = 5 / (5 / (1 / regenRate))
-        local now = GetTime()
+                if current > lastEssence then
+                    if current < max then
+                        startTime = now;
+                        nextEssenceTick = now + tickDuration;
+                    else
+                        startTime = nil;
+                        nextEssenceTick = nil;
+                    end;
+                end;
 
-        if current > lastEssence then
-            if current < max then
-                startTime = now;
-                nextEssenceTick = now + tickDuration
-            else
-                startTime = nil;
-                nextEssenceTick = nil
-            end
-        end
+                if current < max and not nextEssenceTick then
+                    startTime = now;
+                    nextEssenceTick = now + tickDuration;
+                end;
 
-        if current < max and not nextEssenceTick then
-            startTime = now;
-            nextEssenceTick = now + tickDuration
-        end
-
-        if current >= max then
+                if current >= max then
+                    startTime = nil;
+                    nextEssenceTick = nil;
+                end;
+            end;
+            lastEssence = current;
+        else
+            lastEssence = nil;
             startTime = nil;
-            nextEssenceTick = nil
-        end
-
-        lastEssence = current
+            nextEssenceTick = nil;
+        end;
 
         local duration;
-        if nextEssenceTick and startTime then
+        if not issecretvalue(current) and nextEssenceTick and startTime then
             duration = C_DurationUtil.CreateDuration();
             duration:SetTimeSpan(startTime, nextEssenceTick);
-        end
+        end;
 
         for i = 1, max do
             frame['container' .. i]:ClearAllPoints();
@@ -136,52 +145,56 @@ local function updateEssenceBar(resource)
             bar:Show();
             core:SetPixelSize(bar, barWidth - 2 * core.pixel, core.barHeight);
 
-            bar:SetMinMaxValues(0, 1)
-            if i <= current then
-                bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            elseif i == current + 1 then
-                bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
+            if issecretvalue(current) then
+                bar:SetMinMaxValues(i - 1, i);
+                bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
             else
-                bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
-            end
-        end
-    end
-end
+                bar:SetMinMaxValues(0, 1);
+                if i <= current then
+                    bar:SetValue(1, Enum.StatusBarInterpolation.ExponentialEaseOut);
+                elseif i == current + 1 then
+                    bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
+                else
+                    bar:SetValue(0, Enum.StatusBarInterpolation.ExponentialEaseOut);
+                end;
+            end;
+        end;
+    end;
+end;
 
 local function updateCountBar(resource)
+    if not frame then return; end;
+
     for i = 1, maxCountSegments do
         frame['bar' .. i]:Hide();
         frame['bg' .. i]:Hide();
-    end
+    end;
 
-    -- combo points are stored per-target, not on the player, so they need their own read path;
-    -- on Forever both of these can be secret numbers, so `current` must never be compared to or
-    -- combined via arithmetic with anything else - only passed through untouched to SetValue
+    -- combo points belong to the target on classic/forever
     local current = resource == Enum.PowerType.ComboPoints
         and (GetComboPoints("player", "target") or 0)
         or (UnitPower("player", resource) or 0);
     local max = UnitPowerMax("player", resource);
-    if not max or max <= 0 then return end;
+    if not max or max <= 0 then return; end;
 
     local isRuneResource = resource == Enum.PowerType.Runes;
     local pendingRuneDurations;
     if isRuneResource then
-        -- runes are counted here from addon-owned data, not read as a single secret value, so
-        -- `current` is a plain number for this resource and safe to compare/index directly below
+        -- We count runes ourselves, so this value is safe to do math with.
         current = 0;
         pendingRuneDurations = {};
         for i = 1, max do
-            local start, dur, ready = GetRuneCooldown(i)
+            local start, dur, ready = GetRuneCooldown(i);
             if ready then
                 current = current + 1;
             elseif start and dur and dur > 0 then
                 table.insert(pendingRuneDurations, { start = start, duration = dur });
-            end
-        end
+            end;
+        end;
         table.sort(pendingRuneDurations, function(a, b)
-            return (a.start + a.duration) < (b.start + b.duration)
-        end)
-    end
+            return (a.start + a.duration) < (b.start + b.duration);
+        end);
+    end;
 
     local gap = 4;
     local barWidth = core.width / max - gap;
@@ -199,29 +212,33 @@ local function updateCountBar(resource)
         bar:Show();
         core:SetPixelSize(bar, barWidth - 2 * core.pixel, core.barHeight);
 
-        if isRuneResource and pendingRuneDurations[i - current] then
+        if isRuneResource and not issecretvalue(current) and pendingRuneDurations[i - current] then
             local pending = pendingRuneDurations[i - current];
             bar:SetMinMaxValues(0, 1);
             local duration = C_DurationUtil.CreateDuration();
             duration:SetTimeSpan(pending.start, pending.start + pending.duration);
             bar:SetTimerDuration(duration, Enum.StatusBarInterpolation.ExponentialEaseOut);
         else
-            -- give this segment its own [i-1, i] slice of `current` so the StatusBar widget's own
-            -- clamping (not addon Lua) decides full/empty/partial fill - this also naturally
-            -- reproduces the old fractional soul shard behaviour with no special-casing needed
             bar:SetMinMaxValues(i - 1, i);
             bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
-        end
-    end
-end
+        end;
+    end;
+end;
 
 local function updateStaggerBar()
+    if not frame then return; end;
+
     local tracker = frame.trackers["STAGGER"];
-    if not tracker or not tracker.bar then return end;
+    if not tracker or not tracker.bar then return; end;
 
     local stagger = UnitStagger("player") or 0;
     local maxHealth = UnitHealthMax("player");
-    if not maxHealth or maxHealth <= 0 then return end;
+    if not maxHealth then return; end;
+
+    tracker.bar:SetMinMaxValues(0, maxHealth, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    tracker.bar:SetValue(stagger, Enum.StatusBarInterpolation.ExponentialEaseOut);
+    if issecretvalue(stagger) or issecretvalue(maxHealth) then return; end;
+    if maxHealth <= 0 then return; end;
 
     local percent = stagger / maxHealth;
     local colors = core.resources.resourceColours["STAGGER"];
@@ -232,42 +249,42 @@ local function updateStaggerBar()
         color = colors.medium;
     else
         color = colors.light;
-    end
+    end;
 
     tracker.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
-    tracker.bar:SetMinMaxValues(0, maxHealth, Enum.StatusBarInterpolation.ExponentialEaseOut);
-    tracker.bar:SetValue(stagger, Enum.StatusBarInterpolation.ExponentialEaseOut);
-end
+end;
 
 -- Devourer's max fragments depends on talents/pvp talents currently active, unlike Vengeance's fixed 6
 local function getDevourerSoulFragmentsMax()
     local max = devourerSoulFragmentsBaseMax;
     if C_SpellBook.IsSpellKnown(soulGlutton) then
         max = max - devourerSoulGluttonReduction;
-    end
+    end;
     if C_SpellBook.IsSpellKnown(surrenderToTheVoid) then
         max = max + devourerSurrenderToTheVoidBonus;
-    end
+    end;
     return max;
-end
+end;
 
 local function updateSoulFragmentsBar()
+    if not frame then return; end;
+
     local tracker = frame.trackers["SOUL_FRAGMENTS"];
-    if not tracker or not tracker.bar then return end;
+    if not tracker or not tracker.bar then return; end;
 
     local current = 0;
     local aura = C_UnitAuras.GetPlayerAuraBySpellID(devourerSoulFragments);
     if aura then
         current = aura.applications or 0;
-    end
+    end;
 
     tracker.bar:SetMinMaxValues(0, getDevourerSoulFragmentsMax());
     tracker.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
-end
+end;
 
 local function updateBar()
-    local resource = getResource()
-    if not resource then return end;
+    local resource = getResource();
+    if not resource then return; end;
 
     if resource == Enum.PowerType.Essence then
         updateEssenceBar(resource);
@@ -277,27 +294,31 @@ local function updateBar()
         updateStaggerBar();
     elseif resource == "SOUL_FRAGMENTS" then
         updateSoulFragmentsBar();
-    end
-end
+    end;
+end;
 
 local function updateColour()
-    local resource = getResource()
-    if not resource then return end;
+    if not frame then return; end;
+
+    local resource = getResource();
+    if not resource then return; end;
 
     if resource == Enum.PowerType.Essence then
         local color = core.resources.resourceColours[resource];
         for i = 1, 6 do
-            frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
-        end
+            frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+        end;
     elseif countResources[resource] then
         local color = core.resources.resourceColours[resource];
         for i = 1, maxCountSegments do
-            frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255)
-        end
-    end
-end
+            frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
+        end;
+    end;
+end;
 
 local function createAuraTracker(spellID, configureButton)
+    if not frame then return; end;
+
     local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
     container:SetPoint("CENTER");
     core:SetPixelSize(container, core.width, core.barBgHeight);
@@ -309,10 +330,12 @@ local function createAuraTracker(spellID, configureButton)
     });
 
     return container;
-end
+end;
 
 local function createTrackerBar(button, colorKey, texture)
-    texture = texture or "Interface/TargetingFrame/UI-StatusBar"
+    if not frame then return; end;
+
+    texture = texture or "Interface/TargetingFrame/UI-StatusBar";
     core:SetPixelSize(button, core.width - 2 * core.pixel, core.barHeight);
     button:SetPoint("CENTER", frame, "CENTER");
 
@@ -326,16 +349,18 @@ local function createTrackerBar(button, colorKey, texture)
     bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
 
     return bar;
-end
+end;
 
 local function buildCountSegments(tracker)
+    if not frame then return; end;
+
     for i = 1, maxCountSegments do
         frame['container' .. i] = CreateFrame("Frame", nil, frame);
 
         frame['bg' .. i] = frame['container' .. i]:CreateTexture();
         local bg = frame['bg' .. i];
         bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
+        bg:SetTexture(134532);
         bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, 100, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
@@ -350,8 +375,8 @@ local function buildCountSegments(tracker)
         bar:Hide();
 
         table.insert(tracker.visuals, frame['container' .. i]);
-    end
-end
+    end;
+end;
 
 local trackerBuilders = {
     [Enum.PowerType.Essence] = buildCountSegments,
@@ -362,6 +387,8 @@ local trackerBuilders = {
     [Enum.PowerType.SoulShards] = buildCountSegments,
 
     ["STAGGER"] = function(tracker)
+        if not frame then return; end;
+
         local barFrame = core:CreateSimpleStatusBar(nil, frame, core.width, core.barBgHeight);
         core:SetPixelPoint(barFrame.bg, "CENTER", frame, "CENTER", 0, 0);
         tracker.bar = barFrame.bar;
@@ -370,6 +397,8 @@ local trackerBuilders = {
     end,
 
     ["TEACHINGS"] = function(tracker)
+        if not frame then return; end;
+
         local segmentWidth = (core.width - 2 * core.pixel) / teachingsMaxStacks;
 
         for i = 1, teachingsMaxStacks do
@@ -378,7 +407,7 @@ local trackerBuilders = {
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
-        end
+        end;
 
         tracker.container = createAuraTracker(teachingsOfTheMonastery, function(button)
             local bar = createTrackerBar(button, "TEACHINGS",
@@ -392,6 +421,8 @@ local trackerBuilders = {
     end,
 
     ["ECLIPSE"] = function(tracker)
+        if not frame then return; end;
+
         local segmentWidth = (core.width - 2 * core.pixel) / eclipseMaxStacks;
 
         for i = 1, eclipseMaxStacks do
@@ -400,7 +431,7 @@ local trackerBuilders = {
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
-        end
+        end;
 
         tracker.container = createAuraTracker(eclipse, function(button)
             local bar = createTrackerBar(button, "ECLIPSE",
@@ -414,9 +445,11 @@ local trackerBuilders = {
     end,
 
     ["ENRAGE"] = function(tracker)
+        if not frame then return; end;
+
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
+        bg:SetTexture(134532);
         bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
@@ -433,7 +466,9 @@ local trackerBuilders = {
     end,
 
     ["SOUL_FRAGMENTS_VENGEANCE"] = function(tracker)
-        -- mirrors the 410px source texture (six 65px segments, five 4px gaps) scaled to the bar's actual width
+        if not frame then return; end;
+
+        -- Keep the six segments and five gaps in proportion as the bar resizes.
         local scale = (core.width - 2 * core.pixel) / 410;
         local segmentWidth = 65 * scale;
         local gapWidth = 4 * scale;
@@ -443,7 +478,7 @@ local trackerBuilders = {
             core:SetPixelSize(bars, segmentWidth, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + gapWidth), 0);
             table.insert(tracker.visuals, bars);
-        end
+        end;
 
         tracker.container = createAuraTracker(vengeanceSoulFragments, function(button)
             local bar = createTrackerBar(button, "SOUL_FRAGMENTS_VENGEANCE",
@@ -457,9 +492,11 @@ local trackerBuilders = {
     end,
 
     ["SOUL_FRAGMENTS"] = function(tracker)
+        if not frame then return; end;
+
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
+        bg:SetTexture(134532);
         bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, core.width, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
@@ -471,6 +508,8 @@ local trackerBuilders = {
     end,
 
     ["MAELSTROM_WEAPON"] = function(tracker)
+        if not frame then return; end;
+
         local segmentWidth = (core.width - 2 * core.pixel) / maelstromWeaponMaxStacks;
         for i = 1, maelstromWeaponMaxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
@@ -478,7 +517,7 @@ local trackerBuilders = {
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
-        end
+        end;
 
         tracker.container = createAuraTracker(maelstromWeapon, function(button)
             local bar = createTrackerBar(button, "MAELSTROM_WEAPON");
@@ -492,63 +531,65 @@ local trackerBuilders = {
 };
 
 local function refreshTrackers()
+    if not frame then return; end;
+
     for _, tracker in pairs(frame.trackers) do
         if tracker.container then
             tracker.container:Hide();
-        end
+        end;
         for _, region in ipairs(tracker.visuals) do
             region:Hide();
-        end
-    end
+        end;
+    end;
 
     local resource = getResource();
     local build = trackerBuilders[resource];
-    if not build then return end;
+    if not build then return; end;
 
     local tracker = frame.trackers[resource];
     if not tracker then
         tracker = { visuals = {} };
         frame.trackers[resource] = tracker;
         build(tracker);
-    end
+    end;
 
     if tracker.container then
         tracker.container:Show();
-    end
+    end;
     for _, region in ipairs(tracker.visuals) do
         region:Show();
-    end
-end
+    end;
+end;
 
 function core:CreateSecondaryBar(parent)
-    frame = CreateFrame("Frame", "PrimaryResourceContainer", parent)
+    frame = CreateFrame("Frame", "PrimaryResourceContainer", parent);
     core:SetPixelSize(frame, core.width, core.barBgHeight);
 
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
     frame.trackers = {};
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
     -- talent changes can raise/lower a resource's max (eg. chi charges) without a spec change
-    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-    frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+    frame:RegisterEvent("TRAIT_CONFIG_UPDATED");
     -- combo points are target-specific, so switching target can change the displayed value
-    frame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    frame:RegisterEvent("PLAYER_TARGET_CHANGED");
 
     for _, event in ipairs(classEvents[playerClass] or {}) do
-        core:SafeRegisterEvent(frame, event[1], event[2])
-    end
+        core:SafeRegisterEvent(frame, event[1], event[2]);
+    end;
 
     local hidden = true;
 
     function frame:SetHidden(hidden)
-    end
+    end;
 
     frame:SetScript("OnEvent", function(_, event, ...)
         local unit = ...;
@@ -566,15 +607,15 @@ function core:CreateSecondaryBar(parent)
             else
                 hidden = true;
                 frame:SetHidden(true);
-                return
+                return;
             end;
 
             updateColour();
-        end
-        if hidden then return end;
+        end;
+        if hidden then return; end;
 
         updateBar();
-    end)
+    end);
 
     return frame;
-end
+end;

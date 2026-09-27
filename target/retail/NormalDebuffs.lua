@@ -1,80 +1,80 @@
-local _, core = ...
+local _, core = ...;
 
-if not core.hasAuraContainer then return end
+if not core.hasAuraContainer then return; end;
 
 local debuffFilterString = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful,
     AuraUtil.AuraFilters.IncludeNameplateOnly);
 
-local maxDebuffs = 10
+local maxDebuffs = 10;
 
 function core:CreateNormalDebuffsFrame(parent)
-    local frame = CreateFrame("AuraContainer", "TargetNormalDebuffAuraContainer", parent, "CustomAuraContainerTemplate")
-    frame:SetSize(22, 22)
-    frame:SetUnit("target")
-    frame:SetFlowLayoutMaximumLineSize(120)
-    frame:SetFlowLayoutAnchorPoint("BOTTOMLEFT")
-    frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up)
+    local frame = CreateFrame("AuraContainer", "TargetNormalDebuffAuraContainer", parent, "CustomAuraContainerTemplate");
+    core:SetPixelSize(frame, 22, 22);
+    frame:SetUnit("target");
+    frame:SetFlowLayoutMaximumLineSize(120);
+    frame:SetFlowLayoutAnchorPoint("BOTTOMLEFT");
+    frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Right, AnchorUtil.FlowDirection.Up);
 
-    local function UpdateDebuffBudgets()
-        local playerCount = math.min(frame:GetAuraGroupFrameCount("PlayerDebuffs"), maxDebuffs)
-        local remainingAfterPlayer = maxDebuffs - playerCount
-        frame:SetAuraGroupMaxFrameCount("ImportantDebuffs", remainingAfterPlayer)
+    local function updateDebuffBudgets()
+        local playerCount = math.min(frame:GetAuraGroupFrameCount("PlayerDebuffs"), maxDebuffs);
+        local remainingAfterPlayer = maxDebuffs - playerCount;
+        frame:SetAuraGroupMaxFrameCount("ImportantDebuffs", remainingAfterPlayer);
 
-        local importantCount = math.min(frame:GetAuraGroupFrameCount("ImportantDebuffs"), remainingAfterPlayer)
-        frame:SetAuraGroupMaxFrameCount("OtherDebuffs", remainingAfterPlayer - importantCount)
-    end
+        local importantCount = math.min(frame:GetAuraGroupFrameCount("ImportantDebuffs"), remainingAfterPlayer);
+        frame:SetAuraGroupMaxFrameCount("OtherDebuffs", remainingAfterPlayer - importantCount);
+    end;
 
     local function initializeFrame(button)
-        core:InitializeAuraButtonBase(button, 22)
+        core:InitializeAuraButtonBase(button, 22);
 
-        local blackBorder = button:CreateTexture(nil, "BORDER")
-        blackBorder:SetDrawLayer("BORDER", 1)
-        blackBorder:SetPoint("TOPLEFT", -1, 1)
-        blackBorder:SetPoint("BOTTOMRIGHT", 1, -1)
-        blackBorder:SetColorTexture(0, 0, 0, 1)
+        local blackBorder = button:CreateTexture(nil, "BORDER");
+        blackBorder:SetDrawLayer("BORDER", 1);
+        core:SetPixelPoint(blackBorder, "TOPLEFT", button, "TOPLEFT", -core.pixel, core.pixel);
+        core:SetPixelPoint(blackBorder, "BOTTOMRIGHT", button, "BOTTOMRIGHT", core.pixel, -core.pixel);
+        blackBorder:SetColorTexture(0, 0, 0, 1);
 
-        local border = button:CreateTexture(nil, "OVERLAY")
-        border:SetDrawLayer("OVERLAY", 6)
-        border:SetPoint("TOPLEFT", -1, 1)
-        border:SetPoint("BOTTOMRIGHT", 1, -1)
+        local border = button:CreateTexture(nil, "OVERLAY");
+        border:SetDrawLayer("OVERLAY", 6);
+        core:SetPixelPoint(border, "TOPLEFT", button, "TOPLEFT", -core.pixel, core.pixel);
+        core:SetPixelPoint(border, "BOTTOMRIGHT", button, "BOTTOMRIGHT", core.pixel, -core.pixel);
         button:AddDispelTypeTexture(border, {
             style = Enum.CustomAuraButtonDispelTypeTextureStyle.Border,
             showWhenHarmful = true,
             showWhenHelpful = false,
             showWithoutDispelType = true,
-        })
-    end
+        });
+    end;
 
     frame:AddAuraGroup("PlayerDebuffs", debuffFilterString, {
         initializeFrame = initializeFrame,
         candidateFilters = { isFromPlayerOrPlayerPet = true },
         maxFrameCount = maxDebuffs,
         layout = { layoutIndex = 1, elementSpacing = 2 },
-    })
+    });
 
     frame:AddAuraGroup("ImportantDebuffs", debuffFilterString, {
         initializeFrame = initializeFrame,
         candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = true },
         maxFrameCount = 0,
         layout = { layoutIndex = 2, elementSpacing = 2 },
-    })
+    });
 
     frame:AddAuraGroup("OtherDebuffs", debuffFilterString, {
         initializeFrame = initializeFrame,
         candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = false },
         maxFrameCount = 0,
         layout = { layoutIndex = 3, elementSpacing = 2 },
-    })
+    });
 
-    UpdateDebuffBudgets();
+    updateDebuffBudgets();
 
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
-    eventFrame:RegisterUnitEvent("UNIT_AURA", "target")
+    local eventFrame = CreateFrame("Frame");
+    eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED");
+    eventFrame:RegisterUnitEvent("UNIT_AURA", "target");
     eventFrame:SetScript("OnEvent", function()
-        frame:UpdateAllAuras()
-        UpdateDebuffBudgets()
-    end)
+        frame:UpdateAllAuras();
+        updateDebuffBudgets();
+    end);
 
-    return frame
-end
+    return frame;
+end;

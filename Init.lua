@@ -17,21 +17,21 @@ Overall frame positioning/spacing -> BarFrames.lua
 Most of the sizing and positioning uses a number of pixel perfect helpers, so that we can make sure our bars are the exact size we want them to be.
 ]]
 
-local _, core = ...
+local _, core = ...;
 
 function core:InitEventHandler(event, name)
     if event == "ADDON_LOADED" then
-        if name ~= "Bars" then return end
-        if BarsGlobalVariables == nil then BarsGlobalVariables = {} end
-        return
-    end
+        if name ~= "Bars" then return; end;
+        if BarsGlobalVariables == nil then BarsGlobalVariables = {}; end;
+        return;
+    end;
 
     core.Debug = false;
 
-    core:InitializeBarFrames()
-end
+    core:InitializeBarFrames();
+end;
 
-local events = CreateFrame("Frame")
-events:RegisterEvent("ADDON_LOADED")
-events:RegisterEvent("PLAYER_LOGIN")
-events:SetScript("OnEvent", core.InitEventHandler)
+local events = CreateFrame("Frame");
+events:RegisterEvent("ADDON_LOADED");
+events:RegisterEvent("PLAYER_LOGIN");
+events:SetScript("OnEvent", core.InitEventHandler);

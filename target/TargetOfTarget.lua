@@ -1,102 +1,105 @@
-local _, core = ...
+local _, core = ...;
 
 local frame = nil;
 
-local function UpdateBar()
-    if not frame or not frame:IsShown() then return end;
+local function updateBar()
+    if not frame or not frame:IsShown() then return; end;
 
-    local isPlayer = UnitIsPlayer("targettarget")
-    local threat = UnitThreatSituation("player", "targettarget")
+    local isPlayer = UnitIsPlayer("targettarget");
+    local threat = UnitThreatSituation("player", "targettarget");
     if isPlayer then
         local _, name, _ = UnitClass("targettarget");
-        local color = C_ClassColor.GetClassColor(name)
-        local barTexture = frame.bar:GetStatusBarTexture()
+        local color = C_ClassColor.GetClassColor(name);
+        local barTexture = frame.bar:GetStatusBarTexture();
         if (barTexture) then
-            barTexture:SetVertexColor(color:GetRGB())
-        end
+            barTexture:SetVertexColor(color:GetRGB());
+        end;
     elseif threat ~= nil or UnitIsEnemy("player", "targettarget") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
-            core.ClassColors["hostile"].b)
+            core.ClassColors["hostile"].b);
     elseif UnitIsFriend("player", "targettarget") then
         frame.bar:SetStatusBarColor(core.ClassColors["friendly"].r, core.ClassColors["friendly"].g,
-            core.ClassColors["friendly"].b)
+            core.ClassColors["friendly"].b);
     else
         frame.bar:SetStatusBarColor(core.ClassColors["neutral"].r, core.ClassColors["neutral"].g,
-            core.ClassColors["neutral"].b)
-    end
+            core.ClassColors["neutral"].b);
+    end;
 
-    local currentHP, maxHP = core:UpdateHPBarValues(frame.hp, "targettarget");
+    local _, maxHP = core:UpdateHPBarValues(frame.hp, "targettarget");
     if not maxHP then
         return;
-    end
+    end;
 
-    local percentHP = string.format("%.0f%%", UnitHealthPercent("targettarget", true, CurveConstants.ScaleTo100))
+    local percentHP = string.format("%.0f%%", UnitHealthPercent("targettarget", true, CurveConstants.ScaleTo100));
     frame.hpText:SetText(tostring(percentHP));
-    frame.name:SetText(UnitName("targettarget"))
-end
+    frame.name:SetText(UnitName("targettarget"));
+end;
 
 function core:CreateTargetTargetHPBar(parent)
-    frame = CreateFrame("Frame", "TargetTargetHPBarContainer", parent, "SecureHandlerStateTemplate")
-    frame:SetSize(core.width / 3 - 2, 28)
-    frame.hp = core:CreateHPBarBase(nil, frame, core.width / 3 - 2, core.barBgHeight)
-    frame.hp:SetPoint("TOP")
-    frame.bar = frame.hp.bar
+    local targetWidth = core:EvenPixels(core.width / 3 - 2 * core.pixel);
+    local targetHeight = core:EvenPixels(28);
+
+    frame = CreateFrame("Frame", "TargetTargetHPBarContainer", parent, "SecureHandlerStateTemplate");
+    core:SetPixelSize(frame, targetWidth, targetHeight);
+    frame.hp = core:CreateHPBarBase(nil, frame, targetWidth, core.barBgHeight);
+    frame.hp:SetPoint("TOP");
+    frame.bar = frame.hp.bar;
 
     frame.hpText = frame.bar:CreateFontString("PrimaryText");
     frame.hpText:SetDrawLayer("OVERLAY", 1);
     frame.hpText:SetPoint("LEFT", 0, core.labelBelowBar);
-    core:SetBarFont(frame.hpText, 10)
+    core:SetBarFont(frame.hpText, 10);
 
     frame.name = frame.bar:CreateFontString("PrimaryText");
     frame.name:SetDrawLayer("OVERLAY", 1);
     frame.name:SetPoint("RIGHT", 0, core.labelBelowBar);
-    frame.name:SetSize((core.width / 3 - 2) * 0.6, core.barBgHeight)
-    core:SetBarFont(frame.name, 10)
+    frame.name:SetSize(targetWidth * 0.6, core.barBgHeight);
+    core:SetBarFont(frame.name, 10);
 
-    frame.click = CreateFrame("Button", "TargetFrameClick", frame, "SecureActionButtonTemplate")
+    frame.click = CreateFrame("Button", "TargetFrameClick", frame, "SecureActionButtonTemplate");
     frame.click:SetPoint("CENTER");
-    frame.click:SetSize(core.width / 3 - 2, 28);
-    frame.click:SetFrameLevel(frame.bar:GetFrameLevel() + 1)
+    core:SetPixelSize(frame.click, targetWidth, targetHeight);
+    frame.click:SetFrameLevel(frame.bar:GetFrameLevel() + 1);
 
     if core.Debug then
         frame.bg = frame:CreateTexture();
         frame.bg:SetPoint("CENTER");
         frame.bg:SetColorTexture(1, 0, 0, 0.5);
-        frame.bg:SetSize(core.width / 3 - 2, 28);
-    end
+        core:SetPixelSize(frame.bg, targetWidth, targetHeight);
+    end;
 
-    frame.click:SetAttribute("unit", "targettarget")
-    frame.click:SetAttribute("type1", "target")
-    frame.click:SetAttribute("type2", "togglemenu")
-    frame.click:RegisterForClicks("AnyUp", "AnyDown")
-    core:AddMouseoverBorder(frame.hp, frame.click, "targettarget", parent.click)
-    core:AddUnitTooltip(frame.click, "targettarget")
+    frame.click:SetAttribute("unit", "targettarget");
+    frame.click:SetAttribute("type1", "target");
+    frame.click:SetAttribute("type2", "togglemenu");
+    frame.click:RegisterForClicks("AnyUp", "AnyDown");
+    core:AddMouseoverBorder(frame.hp, frame.click, "targettarget", parent.click);
+    core:AddUnitTooltip(frame.click, "targettarget");
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "targettarget")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "targettarget")
-    frame:RegisterUnitEvent("UNIT_HEALTH", "targettarget")
-    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "targettarget")
-    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "targettarget")
-    frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "targettarget")
-    frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", "targettarget")
-    frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", "targettarget")
-    frame:RegisterUnitEvent("UNIT_TARGET", "target")
-    frame:RegisterUnitEvent("PLAYER_TARGET_DIED")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "targettarget");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "targettarget");
+    frame:RegisterUnitEvent("UNIT_HEALTH", "targettarget");
+    frame:RegisterUnitEvent("UNIT_ABSORB_AMOUNT_CHANGED", "targettarget");
+    frame:RegisterUnitEvent("UNIT_HEAL_ABSORB_AMOUNT_CHANGED", "targettarget");
+    frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "targettarget");
+    frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", "targettarget");
+    frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", "targettarget");
+    frame:RegisterUnitEvent("UNIT_TARGET", "target");
+    frame:RegisterUnitEvent("PLAYER_TARGET_DIED");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
 
     frame:HookScript("OnEvent", function()
-        UpdateBar();
-    end)
+        updateBar();
+    end);
 
     frame:HookScript("OnShow", function()
-        UpdateBar()
-    end)
+        updateBar();
+    end);
 
-    frame:SetAttribute("unit", "targettarget")
-    RegisterUnitWatch(frame, false)
+    frame:SetAttribute("unit", "targettarget");
+    RegisterUnitWatch(frame, false);
 
     return frame;
-end
+end;

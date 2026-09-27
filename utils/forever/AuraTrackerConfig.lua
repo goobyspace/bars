@@ -1,6 +1,6 @@
-local _, core = ...
+local _, core = ...;
 
-if not core.isForever then return end
+if not core.isForever then return; end;
 
 local humanOrMoonkin = { [0] = true, MOONKIN = true };
 

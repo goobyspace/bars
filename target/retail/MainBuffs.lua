@@ -1,33 +1,30 @@
 ---@diagnostic disable: undefined-global
 
-local _, core = ...
+local _, core = ...;
 
-if not core.hasAuraContainer then return end
+if not core.hasAuraContainer then return; end;
 
-local maxBuffs = 32
+local maxBuffs = 32;
 
--- Reuse Blizzard's own first-party TargetFrameAuraContainer instead of building
--- a CustomAuraContainerTemplate: addon-created containers can't render auras
--- that aren't the player's own casts on this client (secret aura data), but
--- Blizzard's built-in container isn't subject to that restriction.
+-- For some reason on forever the aura container only shows player-cast buffs
+-- so we cant use it as a proper target buff tracker :(
 function core:CreateMainBuffsFrame(parent)
-    local frame = TargetFrame.TargetFrameContent.TargetFrameContentContextual.Auras
+    local frame = TargetFrame.TargetFrameContent.TargetFrameContentContextual.Auras;
 
-    frame:SetParent(parent)
-    frame:SetAuraContainerAnchorsChangedCallback(nil) -- stop Blizzard's TargetFrame layout from re-anchoring this
-    frame:ClearAllPoints()
-    frame:SetMaxBuffs(maxBuffs)
-    frame:SetMaxDebuffs(0) -- our own Normal/ImportantDebuffs frames already cover debuffs
-    frame:SetShowAuraCount(true)
-    frame:SetUnit("target")
+    frame:SetParent(parent);
+    frame:SetAuraContainerAnchorsChangedCallback(nil); -- keep the game from moving it back
+    frame:ClearAllPoints();
+    frame:SetMaxBuffs(maxBuffs);
+    frame:SetMaxDebuffs(0);
+    frame:SetShowAuraCount(true);
+    frame:SetUnit("target");
 
-    -- TargetFrame's own OnEvent (which normally triggers this) is disabled elsewhere,
-    -- so refresh explicitly whenever the target itself changes, not just its auras.
-    local eventFrame = CreateFrame("Frame")
-    eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED")
+    -- we disabled targetframe's event handler so we gotta make it again
+    local eventFrame = CreateFrame("Frame");
+    eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED");
     eventFrame:SetScript("OnEvent", function()
-        frame:UpdateAllAuras()
-    end)
+        frame:UpdateAllAuras();
+    end);
 
-    return frame
-end
+    return frame;
+end;

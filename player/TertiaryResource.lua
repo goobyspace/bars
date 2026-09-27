@@ -1,5 +1,5 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
 local frame;
 
@@ -16,78 +16,78 @@ local classEvents = {
     ["PRIEST"]  = { { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["SHAMAN"]  = { { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
     ["WARRIOR"] = { { "UNIT_AURA", "player" } },
-}
+};
 
 local function getResource()
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
     local resourceTable = core.resources.tertiary;
 
-    local spec = C_SpecializationInfo.GetSpecialization()
-    local specID = C_SpecializationInfo.GetSpecializationInfo(spec)
+    local spec = C_SpecializationInfo.GetSpecialization();
+    local specID = C_SpecializationInfo.GetSpecializationInfo(spec);
 
     local resource = resourceTable[playerClass];
 
     if playerClass == "DRUID" then
-        local formID = core:GetShapeshiftFormKey()
-        resource = resource and resource[formID]
-    end
+        local formID = core:GetShapeshiftFormKey();
+        resource = resource and resource[formID];
+    end;
 
     if type(resource) == "table" then
-        return resource[specID]
+        return resource[specID];
     else
-        return resource
-    end
-end
+        return resource;
+    end;
+end;
 
 local function updateManaBar(resource)
     local tracker = frame.trackers[resource];
-    if not tracker or not tracker.bar then return end;
+    if not tracker or not tracker.bar then return; end;
 
     local current = UnitPower("player", resource);
     local max = UnitPowerMax("player", resource);
     if not max or max <= 0 then
         if tracker.manaTicker then
             tracker.manaTicker:SetActive(false);
-        end
+        end;
         return tracker.bar:Hide(), tracker.bg:Hide();
-    end
+    end;
     tracker.bg:Show();
     tracker.bar:Show();
     if tracker.manaTicker then
         tracker.manaTicker:SetActive(true);
-    end
+    end;
 
     tracker.bar:SetMinMaxValues(0, max, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.bar:SetValue(current, Enum.StatusBarInterpolation.ExponentialEaseOut);
-end
+end;
 
 local function updateManaColour(resource)
     local tracker = frame.trackers[resource];
-    if not tracker or not tracker.bar then return end;
+    if not tracker or not tracker.bar then return; end;
 
     local color = core.resources.resourceColours[resource];
     tracker.bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
-end
+end;
 
 local function updateRenewingMistBar()
     local tracker = frame.trackers["RENEWING_MIST"];
     if getResource() ~= "RENEWING_MIST" then
         frame:SetScript("OnUpdate", nil);
-        return
-    end
+        return;
+    end;
 
-    if not tracker or not tracker.bars then return end;
+    if not tracker or not tracker.bars then return; end;
 
     local chargeInfo = C_Spell.GetSpellCharges(renewingMist);
-    if not chargeInfo then return end;
+    if not chargeInfo then return; end;
 
     -- maxCharges is not secret, so it is safe to use for layout. currentCharges and
     -- the recharge duration object are only passed into status bar APIs below.
     local maxCharges = math.min(chargeInfo.maxCharges, #tracker.bars);
     if maxCharges <= 0 then
         frame:SetScript("OnUpdate", nil);
-        return
-    end
+        return;
+    end;
 
     frame:SetScript("OnUpdate", nil);
 
@@ -111,7 +111,7 @@ local function updateRenewingMistBar()
         tracker.cooldownBar:Show();
     else
         tracker.cooldownBar:Hide();
-    end
+    end;
 
     for i, bar in ipairs(tracker.bars) do
         if i <= maxCharges then
@@ -130,29 +130,29 @@ local function updateRenewingMistBar()
         else
             tracker.bgs[i]:Hide();
             bar:Hide();
-        end
-    end
-end
+        end;
+    end;
+end;
 
 local function updateBar()
     local resource = getResource();
-    if not resource then return end;
+    if not resource then return; end;
 
     if resource == Enum.PowerType.Mana then
         updateManaBar(resource);
     elseif resource == "RENEWING_MIST" then
         updateRenewingMistBar();
-    end
-end
+    end;
+end;
 
 local function updateColour()
     local resource = getResource();
-    if not resource then return end;
+    if not resource then return; end;
 
     if resource == Enum.PowerType.Mana then
         updateManaColour(resource);
-    end
-end
+    end;
+end;
 
 local function createAuraTracker(spellID, configureButton)
     local container = CreateFrame("AuraContainer", nil, frame, "CustomAuraContainerTemplate");
@@ -166,10 +166,10 @@ local function createAuraTracker(spellID, configureButton)
     });
 
     return container;
-end
+end;
 
 local function createTrackerBar(button, colorKey, texture)
-    texture = texture or "Interface/TargetingFrame/UI-StatusBar"
+    texture = texture or "Interface/TargetingFrame/UI-StatusBar";
     core:SetPixelSize(button, core.width / 3 - 2 * core.pixel, core.barHeight);
     button:SetPoint("CENTER", frame, "CENTER");
 
@@ -183,7 +183,7 @@ local function createTrackerBar(button, colorKey, texture)
     bar:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
 
     return bar;
-end
+end;
 
 local trackerBuilders = {
     [Enum.PowerType.Mana] = function(tracker)
@@ -193,7 +193,7 @@ local trackerBuilders = {
         tracker.bar = barFrame.bar;
         if core.CreateManaTicker then
             tracker.manaTicker = core:CreateManaTicker(tracker.bar);
-        end
+        end;
         table.insert(tracker.visuals, tracker.bg);
         table.insert(tracker.visuals, tracker.bar);
     end,
@@ -206,7 +206,7 @@ local trackerBuilders = {
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
             core:SetPixelPoint(bars, "LEFT", frame, "LEFT", (i - 1) * (segmentWidth + core.pixel), 0);
             table.insert(tracker.visuals, bars);
-        end
+        end;
 
         tracker.container = createAuraTracker(improvedWhirlwind, function(button)
             local bar = createTrackerBar(button, "WHIRLWIND", "Interface/Addons/Bars/assets/four segment bar small.png");
@@ -221,7 +221,7 @@ local trackerBuilders = {
     ["EBON_MIGHT"] = function(tracker)
         local bg = frame:CreateTexture();
         bg:SetPoint("CENTER");
-        bg:SetTexture(134532)
+        bg:SetTexture(134532);
         bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
         core:SetPixelSize(bg, core.width / 3, core.barBgHeight);
         bg:SetDrawLayer("OVERLAY", -1);
@@ -261,7 +261,7 @@ local trackerBuilders = {
 
         for i = 1, renewingMistMaxSegments do
             local bg = frame:CreateTexture();
-            bg:SetTexture(134532)
+            bg:SetTexture(134532);
             bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             bg:SetDrawLayer("OVERLAY", -1);
             bg:Hide();
@@ -277,7 +277,7 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bg);
             table.insert(tracker.bars, bar);
             table.insert(tracker.visuals, bar);
-        end
+        end;
     end,
 };
 
@@ -285,61 +285,61 @@ local function refreshTrackers()
     for _, tracker in pairs(frame.trackers) do
         if tracker.manaTicker then
             tracker.manaTicker:SetActive(false);
-        end
+        end;
         if tracker.container then
             tracker.container:Hide();
-        end
+        end;
         for _, region in ipairs(tracker.visuals) do
             region:Hide();
-        end
-    end
+        end;
+    end;
 
     local resource = getResource();
     local build = trackerBuilders[resource];
-    if not build then return end;
+    if not build then return; end;
 
     local tracker = frame.trackers[resource];
     if not tracker then
         tracker = { visuals = {} };
         frame.trackers[resource] = tracker;
         build(tracker);
-    end
+    end;
 
     if tracker.container then
         tracker.container:Show();
-    end
+    end;
     for _, region in ipairs(tracker.visuals) do
         region:Show();
-    end
-end
+    end;
+end;
 
 function core:CreateTertiaryBar(parent)
-    frame = CreateFrame("Frame", "TertiaryResourceContainer", parent)
+    frame = CreateFrame("Frame", "TertiaryResourceContainer", parent);
     core:SetPixelSize(frame, core.width / 3, core.barBgHeight);
 
     frame.trackers = {};
 
-    local playerClass = select(2, UnitClass("player"))
+    local playerClass = select(2, UnitClass("player"));
 
-    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player")
-    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player")
-    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player")
-    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED")
-    frame:RegisterEvent("PET_BATTLE_OPENING_START")
-    frame:RegisterEvent("PET_BATTLE_CLOSE")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
+    frame:RegisterUnitEvent("UNIT_ENTERED_VEHICLE", "player");
+    frame:RegisterUnitEvent("UNIT_EXITED_VEHICLE", "player");
+    frame:RegisterEvent("PLAYER_MOUNT_DISPLAY_CHANGED");
+    frame:RegisterEvent("PET_BATTLE_OPENING_START");
+    frame:RegisterEvent("PET_BATTLE_CLOSE");
     -- talent changes can raise/lower a resource's max (eg. renewing mist charges) without a spec change
-    frame:RegisterEvent("PLAYER_TALENT_UPDATE")
-    frame:RegisterEvent("TRAIT_CONFIG_UPDATED")
+    frame:RegisterEvent("PLAYER_TALENT_UPDATE");
+    frame:RegisterEvent("TRAIT_CONFIG_UPDATED");
 
     for _, event in ipairs(classEvents[playerClass] or {}) do
-        core:SafeRegisterEvent(frame, event[1], event[2])
-    end
+        core:SafeRegisterEvent(frame, event[1], event[2]);
+    end;
 
     local hidden = true;
 
     function frame:SetHidden(hidden)
-    end
+    end;
 
     frame:SetScript("OnEvent", function(_, event, unit)
         if event == "PLAYER_ENTERING_WORLD"
@@ -354,15 +354,15 @@ function core:CreateTertiaryBar(parent)
             else
                 hidden = true;
                 frame:SetHidden(true);
-                return
+                return;
             end;
 
             updateColour();
-        end
-        if hidden then return end;
+        end;
+        if hidden then return; end;
 
         updateBar();
-    end)
+    end);
 
     return frame;
-end
+end;

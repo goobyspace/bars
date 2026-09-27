@@ -1,14 +1,14 @@
-local _, core = ...
-local colours = core.colours
+local _, core = ...;
+local colours = core.colours;
 
-if not core.isClassicEra then return end
+if not core.isClassicEra then return; end;
 
 -- Classic mana regen lands on a fixed 2 second server clock
 local tickInterval = 2;
 -- spending mana pauses regen for 5 seconds (the "five second rule")
 local fsrDuration = core.resourceTickerConfig.fiveSecondRuleDuration;
 
-local isSecret = issecretvalue or function() return false end;
+local isSecret = issecretvalue or function() return false; end;
 
 local resourceStates = {
     [Enum.PowerType.Mana] = {},
@@ -18,9 +18,9 @@ local resourceStates = {
 local function readPower(resource)
     local current = UnitPower("player", resource);
     local max = UnitPowerMax("player", resource);
-    if isSecret(current) or isSecret(max) then return nil end
+    if isSecret(current) or isSecret(max) then return nil; end;
     return current, max;
-end
+end;
 
 local function startFiveSecondRule(state, now)
     state.fsrStart = now;
@@ -30,10 +30,10 @@ local function startFiveSecondRule(state, now)
         local boundary = state.nextTick;
         while boundary < fsrEnd do
             boundary = boundary + tickInterval;
-        end
+        end;
         state.fsrResume = boundary;
-    end
-end
+    end;
+end;
 
 local manaEvents = CreateFrame("Frame");
 manaEvents:RegisterEvent("PLAYER_ENTERING_WORLD");
@@ -48,17 +48,17 @@ manaEvents:SetScript("OnEvent", function(_, event, _, powerType)
             local current, max = readPower(resource);
             state.lastPower = current;
             state.isFull = current ~= nil and max > 0 and current >= max;
-        end
-        return
-    end
+        end;
+        return;
+    end;
 
     local resource = powerType == "MANA" and Enum.PowerType.Mana
         or powerType == "ENERGY" and Enum.PowerType.Energy;
     local state = resource and resourceStates[resource];
-    if not state then return end
+    if not state then return; end;
 
     local current, max = readPower(resource);
-    if not current then return end
+    if not current then return; end;
 
     state.isFull = max > 0 and current >= max;
 
@@ -68,8 +68,8 @@ manaEvents:SetScript("OnEvent", function(_, event, _, powerType)
             state.fsrStart, state.fsrResume = nil, nil;
         elseif resource == Enum.PowerType.Mana and current < state.lastPower then
             startFiveSecondRule(state, GetTime());
-        end
-    end
+        end;
+    end;
     state.lastPower = current;
 end);
 
@@ -91,19 +91,19 @@ function core:CreateResourceTicker(bar, fixedResource)
             ticker:Show();
         else
             ticker:Hide();
-        end
-    end
+        end;
+    end;
 
     ticker:SetScript("OnUpdate", function()
         local state = resource and resourceStates[resource];
-        if not state then return end
+        if not state then return; end;
         local now = GetTime();
 
         if state.nextTick then
             while now >= state.nextTick do
                 state.nextTick = state.nextTick + tickInterval;
-            end
-        end
+            end;
+        end;
 
         local progress;
         if state.fsrResume then
@@ -112,17 +112,17 @@ function core:CreateResourceTicker(bar, fixedResource)
                 refresh();
             else
                 progress = (now - state.fsrStart) / (state.fsrResume - state.fsrStart);
-            end
-        end
+            end;
+        end;
 
         if not progress then
-            if not state.nextTick then return end
+            if not state.nextTick then return; end;
             progress = 1 - (state.nextTick - now) / tickInterval;
-        end
+        end;
 
         local travel = ticker:GetWidth() - line:GetWidth();
         core:SetPixelPoint(line, "LEFT", ticker, "LEFT", progress * travel, 0);
-    end)
+    end);
 
     function ticker:SetActive(activeResource)
         resource = fixedResource and activeResource and fixedResource or activeResource;
@@ -131,13 +131,13 @@ function core:CreateResourceTicker(bar, fixedResource)
             local current, max = readPower(resource);
             state.lastPower = current;
             state.isFull = current ~= nil and max > 0 and current >= max;
-        end
+        end;
         refresh();
-    end
+    end;
 
     return ticker;
-end
+end;
 
 function core:CreateManaTicker(bar)
     return core:CreateResourceTicker(bar, Enum.PowerType.Mana);
-end
+end;

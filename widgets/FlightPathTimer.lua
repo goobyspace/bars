@@ -1,11 +1,11 @@
-local _, core = ...
-local colours = core.colours
-local config = core.widgetConfig.flightPath
+local _, core = ...;
+local colours = core.colours;
+local config = core.widgetConfig.flightPath;
 
 local function formatDuration(seconds)
     seconds = math.max(0, math.ceil(seconds));
     return format("%d:%02d", math.floor(seconds / 60), seconds % 60);
-end
+end;
 
 function core:CreateFlightPathTimer(parent)
     local frame = core:CreateCastbarBase("BarsFlightPathTimer", parent);
@@ -25,8 +25,8 @@ function core:CreateFlightPathTimer(parent)
         if type(duration) == "number" then
             allDurations[faction][route] = duration;
             allDurations[route] = nil;
-        end
-    end
+        end;
+    end;
 
     local durations = allDurations[faction];
     local oppositeDurations = allDurations[oppositeFaction];
@@ -50,12 +50,12 @@ function core:CreateFlightPathTimer(parent)
             taxiNodes[index] = TaxiNodeName(index);
             if TaxiNodeGetType(index) == "CURRENT" then
                 sourceName = taxiNodes[index];
-            end
-        end
-    end
+            end;
+        end;
+    end;
 
     local function beginFlight()
-        if startedAt or not UnitOnTaxi("player") then return end
+        if startedAt or not UnitOnTaxi("player") then return; end;
         startedAt = selectedAt or GetTime();
         expectedDuration = pendingRoute and (factionData[pendingRoute] or durations[pendingRoute]
             or oppositeFactionData[pendingRoute] or oppositeDurations[pendingRoute]) or nil;
@@ -66,23 +66,23 @@ function core:CreateFlightPathTimer(parent)
         else
             frame.bar:SetMinMaxValues(0, 1);
             frame.bar:SetValue(1);
-        end
+        end;
         frame:Show();
-    end
+    end;
 
     local function endFlight()
-        if not startedAt then return end
+        if not startedAt then return; end;
         local duration = GetTime() - startedAt;
         if pendingRoute and not factionData[pendingRoute] and duration > config.minimumLearnedDuration then
             durations[pendingRoute] = duration;
-        end
+        end;
         startedAt = nil;
         expectedDuration = nil;
         selectedAt = nil;
         pendingDestination = nil;
         pendingRoute = nil;
         frame:Hide();
-    end
+    end;
 
     hooksecurefunc("TakeTaxiNode", function(index)
         pendingDestination = taxiNodes[index];
@@ -101,21 +101,21 @@ function core:CreateFlightPathTimer(parent)
             beginFlight();
         elseif event == "PLAYER_CONTROL_GAINED" then
             endFlight();
-        end
+        end;
     end);
     controller:SetScript("OnUpdate", function(_, elapsed)
         elapsedSinceUpdate = elapsedSinceUpdate + elapsed;
-        if elapsedSinceUpdate < config.updateInterval then return end
+        if elapsedSinceUpdate < config.updateInterval then return; end;
         elapsedSinceUpdate = 0;
 
         if UnitOnTaxi("player") then
             beginFlight();
         elseif startedAt then
             endFlight();
-            return
-        end
+            return;
+        end;
 
-        if not startedAt then return end
+        if not startedAt then return; end;
         local flightElapsed = GetTime() - startedAt;
         if expectedDuration then
             local remaining = math.max(0, expectedDuration - flightElapsed);
@@ -123,8 +123,8 @@ function core:CreateFlightPathTimer(parent)
             frame.target:SetText(formatDuration(remaining));
         else
             frame.target:SetFormattedText("Estimating %s", formatDuration(flightElapsed));
-        end
+        end;
     end);
 
     return frame;
-end
+end;
