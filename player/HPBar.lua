@@ -1,5 +1,4 @@
 local _, core = ...;
-local colours = core.colours;
 
 local frame = nil;
 
@@ -17,7 +16,7 @@ end;
 
 function core:CreateHPBar(parent)
     frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
-    local _, name, classID = UnitClass("player");
+    local _, name, _ = UnitClass("player");
     local color = C_ClassColor.GetClassColor(name);
     frame.bar:SetStatusBarColor(color:GetRGB());
 

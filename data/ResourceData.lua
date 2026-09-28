@@ -116,3 +116,53 @@ core.resources.tertiary = {
         [72] = "WHIRLWIND", -- Fury
     },
 };
+
+core.resourceData = {
+    secondary = {
+        TEACHINGS = {
+            spellID = 202090,
+            maxStacks = 4,
+        },
+        ECLIPSE = {
+            spellID = 408248,
+            maxStacks = 4,
+        },
+        ENRAGE = {
+            spellID = 184362,
+        },
+        SOUL_FRAGMENTS_VENGEANCE = {
+            spellID = 203981,
+            maxStacks = 6,
+        },
+        SOUL_FRAGMENTS = {
+            spellID = 1225789,
+            baseMax = 50,
+            soulGluttonSpellID = 1247534,
+            soulGluttonReduction = 15,
+            surrenderToTheVoidSpellID = 1261423,
+            surrenderToTheVoidBonus = 50,
+        },
+        MAELSTROM_WEAPON = {
+            spellID = 344179,
+            maxStacks = 10,
+        },
+        STAGGER = {
+            yellowTransition = 0.30,
+            redTransition = 0.60,
+        },
+        maxCountSegments = 8,
+    },
+    tertiary = {
+        WHIRLWIND = {
+            spellID = 85739,
+            maxStacks = 4,
+        },
+        EBON_MIGHT = {
+            spellID = 395296,
+        },
+        RENEWING_MIST = {
+            spellID = 115151,
+            maxSegments = 4,
+        },
+    },
+};

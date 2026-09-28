@@ -10,26 +10,34 @@
 ## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
-utils/Utils.lua
-utils/LayoutConfig.lua
 utils/VersionCompat.lua
+utils/Utils.lua
 utils/SecretUtils.lua
-utils/ColourConfig.lua
-utils/ResourceData.lua
-utils/FlightPathData.lua
-utils/classic/AuraTrackerConfig.lua
-utils/Debug.lua
-utils/classic/ResourceOverrides.lua
+utils/StanceUtils.lua
 
-player/ResourceUtils.lua
+config/ColourConfig.lua
+config/LayoutConfig.lua
+config/era/AuraTrackerConfig.lua
+utils/Debug.lua
+
+data/PurgeData.lua
+data/ResourceData.lua
+data/InterruptData.lua
+data/FlightPathData.lua
+data/forever/ResourceOverrides.lua
+
 components/PixelUtils.lua
 components/StatusBar.lua
 components/AuraUtils.lua
 components/HPBar.lua
 components/Castbar.lua
+components/era/AuraLayout.lua
+
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
-player/classic/ManaTick.lua
+widgets/era/AuraTracker.lua
+
+player/era/ManaTick.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
@@ -37,19 +45,16 @@ player/TertiaryResource.lua
 player/PetFrame.lua
 player/Widgets.lua
 player/Castbar.lua
-player/classic/AuraTracker.lua
-player/classic/SwingTimer.lua
+player/era/SwingTimer.lua
 
 target/HPBar.lua
 target/Widgets.lua
 target/ResourceBar.lua
 target/TargetOfTarget.lua
-components/classic/Interrupts.lua
 target/Castbar.lua
-components/classic/AuraLayout.lua
-target/classic/ImportantDebuffs.lua
-target/classic/MainBuffs.lua
-target/classic/NormalDebuffs.lua
+target/era/ImportantDebuffs.lua
+target/era/MainBuffs.lua
+target/era/NormalDebuffs.lua
 
 BarFrames.lua
 Init.lua

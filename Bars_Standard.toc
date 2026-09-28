@@ -10,23 +10,29 @@
 ## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
 
-utils/Utils.lua
-utils/LayoutConfig.lua
 utils/VersionCompat.lua
+utils/Utils.lua
 utils/SecretUtils.lua
-utils/ColourConfig.lua
-utils/ResourceData.lua
-utils/FlightPathData.lua
+utils/StanceUtils.lua
+
+config/ColourConfig.lua
+config/LayoutConfig.lua
 utils/Debug.lua
 
-player/ResourceUtils.lua
+data/PurgeData.lua
+data/ResourceData.lua
+data/InterruptData.lua
+data/FlightPathData.lua
+
 components/PixelUtils.lua
 components/StatusBar.lua
 components/AuraUtils.lua
 components/HPBar.lua
 components/Castbar.lua
+
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
+
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
@@ -39,11 +45,10 @@ target/HPBar.lua
 target/Widgets.lua
 target/ResourceBar.lua
 target/TargetOfTarget.lua
-components/retail/Interrupts.lua
 target/Castbar.lua
-target/retail/ImportantDebuffs.lua
+target/ImportantDebuffs.lua
 target/retail/MainBuffs.lua
-target/retail/NormalDebuffs.lua
+target/NormalDebuffs.lua
 
 BarFrames.lua
 Init.lua

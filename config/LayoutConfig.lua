@@ -31,8 +31,3 @@ core.widgetConfig = {
         icon = "Interface\\Icons\\INV_Misc_PocketWatch_02",
     },
 };
-
-function core:SetBarFont(fontString, fontSize)
-    if not fontString then return; end;
-    fontString:SetFont("Fonts\\FRIZQT__.TTF", (fontSize or 12) * (core.fontScale or 1), "OUTLINE");
-end;

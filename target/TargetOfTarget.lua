@@ -72,7 +72,7 @@ function core:CreateTargetTargetHPBar(parent)
     frame.click:SetAttribute("type1", "target");
     frame.click:SetAttribute("type2", "togglemenu");
     frame.click:RegisterForClicks("AnyUp", "AnyDown");
-    core:AddMouseoverBorder(frame.hp, frame.click, "targettarget", parent.click);
+    core:AddMouseoverBorder(frame.hp, frame.click, "targettarget", parent.click, "target");
     core:AddUnitTooltip(frame.click, "targettarget");
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");

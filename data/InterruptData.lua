@@ -1,15 +1,7 @@
 local _, core = ...;
 
-if core.isClassicEra or core.isForever then return; end;
-
-function core:GetPlayerInterruptSpellID()
-    local specIndex = GetSpecialization();
-    if not specIndex then return nil; end;
-
-    local specID = GetSpecializationInfo(specIndex);
-    if not specID then return nil; end;
-
-    local specInterrupts = {
+core.interrupts = {
+    retail = {
         [250]  = 47528,  -- Blood (Mind Freeze)
         [251]  = 47528,  -- Frost (Mind Freeze)
         [252]  = 47528,  -- Unholy (Mind Freeze)
@@ -20,7 +12,6 @@ function core:GetPlayerInterruptSpellID()
         [102]  = 78675,  -- Balance (Solar Beam)
         [103]  = 106839, -- Feral (Skull Bash)
         [104]  = 106839, -- Guardian (Skull Bash)
-        [105]  = nil,    -- Restoration :(
 
         [1467] = 351338, -- Devastation (Quell)
         [1468] = 351338, -- Preservation (Healer - No Kick)
@@ -35,10 +26,8 @@ function core:GetPlayerInterruptSpellID()
         [64]   = 2139,   -- Frost (Counterspell)
 
         [268]  = 116705, -- Brewmaster (Spear Hand Strike)
-        [270]  = nil,    -- Mistweaver :(
         [269]  = 116705, -- Windwalker (Spear Hand Strike)
 
-        [65]   = nil,    -- Holy :(
         [66]   = 96231,  -- Protection (Rebuke)
         [70]   = 96231,  -- Retribution (Rebuke)
 
@@ -52,7 +41,7 @@ function core:GetPlayerInterruptSpellID()
 
         [262]  = 57994,  -- Elemental (Wind Shear)
         [263]  = 57994,  -- Enhancement (Wind Shear)
-        [264]  = 57994,  -- Restoration (Healer EXCEPTION - Has Wind Shear!)
+        [264]  = 57994,  -- Restoration (Healer exception: has Wind Shear)
 
         [265]  = 19647,  -- Affliction (Spell Lock)
         [266]  = 19647,  -- Demonology (Spell Lock)
@@ -61,7 +50,28 @@ function core:GetPlayerInterruptSpellID()
         [71]   = 6552,   -- Arms (Pummel)
         [72]   = 6552,   -- Fury (Pummel)
         [73]   = 6552,   -- Protection (Pummel)
-    };
+    },
 
-    return specInterrupts[specID];
-end;
+    classic = {
+        ["ROGUE"] = {
+            { spellIDs = { 1769, 1766 } }, -- Kick (rank 2, rank 1)
+        },
+        ["WARRIOR"] = {
+            { spellIDs = { 7355, 7354, 72 }, requiredFormIDs = { 2457, 71 } }, -- Shield Bash, Battle or Defensive Stance
+            { spellIDs = { 6554, 6552 },     requiredFormIDs = { 2458 } },     -- Pummel, Berserker Stance
+        },
+        ["MAGE"] = {
+            { spellIDs = { 2139 } }, -- Counterspell
+        },
+        ["SHAMAN"] = {
+            { spellIDs = { 10414, 10413, 10412, 8046, 8045, 8044, 8042 } }, -- Earth Shock (rank 7 to rank 1)
+        },
+        ["DRUID"] = {
+            { spellIDs = { 16979 }, requiredFormIDs = { 5487, 9634 } }, -- Feral Charge, Bear Form
+        },
+    },
+
+    classicPet = {
+        ["WARLOCK"] = { 19647, 19244 }, -- Spell Lock (rank 2, rank 1)
+    },
+};

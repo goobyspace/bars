@@ -2,12 +2,7 @@ local _, core = ...;
 local colours = core.colours;
 
 local frame;
-
-local improvedWhirlwind = 85739;
-local improvedWhirlwindMaxStacks = 4;
-local ebonMight = 395296;
-local renewingMist = 115151;
-local renewingMistMaxSegments = 4;
+local resourceData = core.resourceData.tertiary;
 
 local classEvents = {
     ["DRUID"]   = { { "UPDATE_SHAPESHIFT_FORM" }, { "UNIT_POWER_FREQUENT", "player" }, { "UNIT_MAXPOWER", "player" } },
@@ -78,7 +73,7 @@ local function updateRenewingMistBar()
 
     if not tracker or not tracker.bars then return; end;
 
-    local chargeInfo = C_Spell.GetSpellCharges(renewingMist);
+    local chargeInfo = C_Spell.GetSpellCharges(resourceData.RENEWING_MIST.spellID);
     if not chargeInfo then return; end;
 
     -- maxCharges is not secret, so it is safe to use for layout. currentCharges and
@@ -101,7 +96,7 @@ local function updateRenewingMistBar()
     tracker.anchorBar:SetValue(chargeInfo.currentCharges, Enum.StatusBarInterpolation.ExponentialEaseOut);
     tracker.anchorBar:Show();
 
-    local rechargeDuration = C_Spell.GetSpellChargeDuration(renewingMist);
+    local rechargeDuration = C_Spell.GetSpellChargeDuration(resourceData.RENEWING_MIST.spellID);
     if rechargeDuration then
         tracker.cooldownBar:ClearAllPoints();
         core:SetPixelSize(tracker.cooldownBar, segmentBgWidth - 2 * core.pixel, core.barHeight);
@@ -199,8 +194,9 @@ local trackerBuilders = {
     end,
 
     ["WHIRLWIND"] = function(tracker)
-        local segmentWidth = (core.width / 3 - 2 * core.pixel) / improvedWhirlwindMaxStacks;
-        for i = 1, 4 do
+        local whirlwindData = resourceData.WHIRLWIND;
+        local segmentWidth = (core.width / 3 - 2 * core.pixel) / whirlwindData.maxStacks;
+        for i = 1, whirlwindData.maxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
@@ -208,11 +204,11 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(improvedWhirlwind, function(button)
+        tracker.container = createAuraTracker(whirlwindData.spellID, function(button)
             local bar = createTrackerBar(button, "WHIRLWIND", "Interface/Addons/Bars/assets/four segment bar small.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = improvedWhirlwindMaxStacks,
+                maxApplications = whirlwindData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
@@ -227,7 +223,7 @@ local trackerBuilders = {
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
-        tracker.container = createAuraTracker(ebonMight, function(button)
+        tracker.container = createAuraTracker(resourceData.EBON_MIGHT.spellID, function(button)
             local bar = createTrackerBar(button, "EBON_MIGHT");
 
             button:SetDurationBar(bar, {
@@ -259,7 +255,7 @@ local trackerBuilders = {
         table.insert(tracker.visuals, tracker.anchorBar);
         table.insert(tracker.visuals, tracker.cooldownBar);
 
-        for i = 1, renewingMistMaxSegments do
+        for i = 1, resourceData.RENEWING_MIST.maxSegments do
             local bg = frame:CreateTexture();
             bg:SetTexture(134532);
             bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);

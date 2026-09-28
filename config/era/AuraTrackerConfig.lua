@@ -1,5 +1,28 @@
 local _, core = ...;
 
+-- {
+--     type = "aura", -- "spell", "aura", or "reminder"
+--     slot = 1,
+--     spellID = 123,
+--     rankSpellIDs = { 123, 456 },
+--     alwaysShow = true,
+--     form = "!CAT",
+--     showCooldownSwipe = true, -- spell
+--     showCooldownText = true, -- spell
+--     showCastCount = true, -- spell or aura
+--     rangeCheck = true, -- spell
+--     resourceDesaturate = true, -- spell
+--     trackedAuraSpellID = 123, -- spell
+--     trackedAuraFilter = "HARMFUL|PLAYER", -- spell
+--     showTargetCount = true, -- aura
+--     showTargetDuration = true, -- aura
+--     showTargetSwipe = true, -- aura
+--     auraFilter = "HARMFUL|PLAYER", -- aura; "HELPFUL|PLAYER" for reminder
+--     castCountSpellID = 123, -- aura
+--     powerCost = 30, -- optional cast-count override
+--     powerType = Enum.PowerType.Mana, -- optional cast-count override
+-- },
+
 core.auraTracker = {
     ["DRUID"] = {
         {

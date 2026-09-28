@@ -32,9 +32,11 @@ local function updateDebuffBudgets(container)
     local playerCount = math.min(container:GetGroupCount("PlayerDebuffs"), maxDebuffs);
     local remainingAfterPlayer = maxDebuffs - playerCount;
     container:SetGroupMaxCount("ImportantDebuffs", remainingAfterPlayer);
+    container:Update();
 
     local importantCount = math.min(container:GetGroupCount("ImportantDebuffs"), remainingAfterPlayer);
     container:SetGroupMaxCount("OtherDebuffs", remainingAfterPlayer - importantCount);
+    container:Update();
 end;
 
 function core:CreateNormalDebuffsFrame(parent)
@@ -72,6 +74,7 @@ function core:CreateNormalDebuffsFrame(parent)
         maxFrameCount = 0,
     });
 
+    container:Update();
     updateDebuffBudgets(container);
 
     local eventFrame = CreateFrame("Frame");

@@ -15,54 +15,6 @@ local gcdThreshold = 1.5;
 
 local outOfRangeColour = colours.outOfRange;
 
---[[
-    core.auraTracker is keyed by class token, each value being a list of entries.
-
-    Shared fields:
-        type            "spell" | "aura" | "reminder"
-        slot            which of the SLOT_COUNT positions in the row the icon occupies (1 = left)
-        spellID         spellID used for the icon texture, cooldown, range and usability
-        rankSpellIDs    ordered list of rank spellIDs (lowest first); the highest known rank is
-                        used in place of spellID, and every rank matches when reading auras
-        alwaysShow      show the icon even when the spell isn't known (default false)
-        form            restrict visibility to a shapeshift form key from core:GetShapeshiftFormKey()
-                        (e.g. "CAT", "BEAR", "MOONKIN", "AQUATIC", "TRAVEL"): shows the icon
-                        only in that form; prefixing with "!" (e.g. "!CAT") shows it everywhere
-                        except that form (default: always)
-
-    Text placement is automatic: a single text sits in the centre of the icon, two split into
-    top and bottom, three use top / centre / bottom.
-
-    type == "spell":
-        showCooldownSwipe   draw the cooldown swipe (default true)
-        showCooldownText    text with the cooldown remaining (default true)
-        showCastCount       text with how many casts the current resources allow
-        rangeCheck          red when the target is out of range, desaturated when the spell
-                            can't be used on the current target at all
-        resourceDesaturate  desaturate the icon when the spell can't be cast (missing resources,
-                            required weapon/shield, wrong stance, etc.)
-        trackedAuraSpellID  optional aura to count; shows how many targets have it
-        trackedAuraFilter   aura filter for the above (default "HARMFUL|PLAYER")
-
-    type == "aura":
-        showTargetCount     text with how many targets currently have the aura
-        showTargetDuration  text with the time left on the aura on the current target
-        showTargetSwipe     drain the cooldown swipe over the aura's remaining duration
-        showCastCount       text with how many casts the current resources allow
-        auraFilter          aura filter used for the above (default "HARMFUL|PLAYER")
-        castCountSpellID    spellID whose resource cost drives the "casts remaining" text
-                            (defaults to the icon's own spellID / highest known rank)
-
-    type == "reminder":
-        icon is grayed out while the aura isn't active on the player, and shows full colour
-        with a countdown while it is (e.g. a self buff to keep rolling)
-        auraFilter          aura filter to look for the aura with (default "HELPFUL|PLAYER")
-
-    Optional overrides for the resource maths (when the API cost lookup isn't right):
-        powerCost           flat resource cost per cast
-        powerType           Enum.PowerType.* the cost is paid from
-]]
-
 local function getSpellCooldownInfo(spellID)
     local info = C_Spell.GetSpellCooldown(spellID);
     if not info then return 0, 0, false; end;

@@ -2,6 +2,26 @@ local _, core = ...;
 
 if not core.isForever then return; end;
 
+-- {
+--     name = "Example",
+--     slot = 1,
+--     knownSpellIDs = { 123 },
+--     spellIDs = { 123, 456 },
+--     iconSpellID = 123,
+--     auraSpellIDs = { 123 },
+--     auraUnit = "target", -- "player" or "target"
+--     auraFilter = "HARMFUL|PLAYER",
+--     forms = { CAT = true }, -- allowed form keys
+--     rangeCheck = true,
+--     displayText = true,
+--     displayTextSize = 12,
+--     auraGlow = true,
+--     spellCooldown = true,
+--     usability = true,
+--     activationGlow = true,
+--     usableGlow = true,
+-- },
+
 local humanOrMoonkin = { [0] = true, MOONKIN = true };
 
 core.foreverAuraTracker = {
@@ -15,6 +35,7 @@ core.foreverAuraTracker = {
             auraUnit = "player",
             auraFilter = "HELPFUL",
             auraGlow = true,
+            displayText = false,
         },
         {
             name = "Nature's Grace",
@@ -25,6 +46,7 @@ core.foreverAuraTracker = {
             auraUnit = "player",
             auraFilter = "HELPFUL",
             auraGlow = true,
+            displayText = false,
         },
         {
             name = "Moonfire",
@@ -35,6 +57,8 @@ core.foreverAuraTracker = {
             auraFilter = "HARMFUL|PLAYER",
             forms = humanOrMoonkin,
             rangeCheck = true,
+            displayText = true,
+            displayTextSize = 14,
         },
         {
             name = "Insect Swarm",
@@ -45,6 +69,7 @@ core.foreverAuraTracker = {
             auraFilter = "HARMFUL|PLAYER",
             forms = humanOrMoonkin,
             rangeCheck = true,
+            displayText = true,
         },
         {
             name = "Rip",
@@ -55,6 +80,7 @@ core.foreverAuraTracker = {
             auraFilter = "HARMFUL|PLAYER",
             forms = { CAT = true },
             rangeCheck = true,
+            displayText = true,
         },
         {
             name = "Rake",
@@ -65,6 +91,7 @@ core.foreverAuraTracker = {
             auraFilter = "HARMFUL|PLAYER",
             forms = { CAT = true },
             rangeCheck = true,
+            displayText = true,
         },
         {
             name = "Maul",
@@ -92,6 +119,7 @@ core.foreverAuraTracker = {
             auraFilter = "HELPFUL",
             auraGlow = true,
             spellCooldown = true,
+            displayText = false,
         },
         {
             name = "Thorns",
@@ -100,6 +128,7 @@ core.foreverAuraTracker = {
             auraSpellIDs = { 467, 782, 1075, 8914, 9756, 9910 },
             auraUnit = "player",
             auraFilter = "HELPFUL",
+            displayText = true,
         },
         {
             name = "Mark of the Wild",
@@ -108,6 +137,7 @@ core.foreverAuraTracker = {
             auraSpellIDs = { 1126, 5232, 6756, 5234, 8907, 9884, 9885 },
             auraUnit = "player",
             auraFilter = "HELPFUL",
+            displayText = true,
         },
     },
     WARRIOR = {
@@ -119,6 +149,7 @@ core.foreverAuraTracker = {
             auraUnit = "player",
             auraFilter = "HELPFUL",
             auraGlow = true,
+            displayText = false,
         },
         {
             name = "Rend",
@@ -128,6 +159,7 @@ core.foreverAuraTracker = {
             auraUnit = "target",
             auraFilter = "HARMFUL|PLAYER",
             rangeCheck = true,
+            displayText = true,
         },
         {
             name = "Charge",
@@ -161,6 +193,7 @@ core.foreverAuraTracker = {
             auraUnit = "target",
             auraFilter = "HARMFUL",
             rangeCheck = true,
+            displayText = true,
         },
         {
             name = "Battle Stance",
@@ -169,6 +202,7 @@ core.foreverAuraTracker = {
             auraSpellIDs = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
             auraUnit = "player",
             auraFilter = "HELPFUL",
+            displayText = false,
         },
     },
 };

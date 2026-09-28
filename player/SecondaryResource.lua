@@ -2,25 +2,7 @@ local _, core = ...;
 local colours = core.colours;
 
 local frame = nil;
-
-local teachingsOfTheMonastery = 202090;
-local teachingsMaxStacks = 4;
-local eclipse = 408248;
-local eclipseMaxStacks = 4;
-local enrage = 184362;
-local vengeanceSoulFragments = 203981;
-local devourerSoulFragments = 1225789;
-local vengeanceSoulFragmentsMaxStacks = 6;
-local soulGlutton = 1247534;
-local surrenderToTheVoid = 1261423;
-local devourerSoulFragmentsBaseMax = 50;
-local devourerSoulGluttonReduction = 15;
-local devourerSurrenderToTheVoidBonus = 50;
-local maelstromWeapon = 344179;
-local maelstromWeaponMaxStacks = 10;
-local staggerYellowTransition = 0.30;
-local staggerRedTransition = 0.60;
-local maxCountSegments = 8;
+local resourceData = core.resourceData.secondary;
 
 local countResources = {
     [Enum.PowerType.Runes] = true,
@@ -55,7 +37,7 @@ local function getResource()
     if playerClass == "DRUID" then
         local formID = core:GetShapeshiftFormKey();
         if core.isForever and (formID == 0 or formID == "MOONKIN")
-            and C_SpellBook.IsSpellKnown(eclipse) then
+            and C_SpellBook.IsSpellKnown(resourceData.ECLIPSE.spellID) then
             return "ECLIPSE";
         end;
         resource = resource and resource[formID or 0];
@@ -165,7 +147,7 @@ end;
 local function updateCountBar(resource)
     if not frame then return; end;
 
-    for i = 1, maxCountSegments do
+    for i = 1, resourceData.maxCountSegments do
         frame['bar' .. i]:Hide();
         frame['bg' .. i]:Hide();
     end;
@@ -243,9 +225,9 @@ local function updateStaggerBar()
     local percent = stagger / maxHealth;
     local colors = core.resources.resourceColours["STAGGER"];
     local color;
-    if percent >= staggerRedTransition then
+    if percent >= resourceData.STAGGER.redTransition then
         color = colors.high;
-    elseif percent >= staggerYellowTransition then
+    elseif percent >= resourceData.STAGGER.yellowTransition then
         color = colors.medium;
     else
         color = colors.light;
@@ -256,12 +238,13 @@ end;
 
 -- Devourer's max fragments depends on talents/pvp talents currently active, unlike Vengeance's fixed 6
 local function getDevourerSoulFragmentsMax()
-    local max = devourerSoulFragmentsBaseMax;
-    if C_SpellBook.IsSpellKnown(soulGlutton) then
-        max = max - devourerSoulGluttonReduction;
+    local soulFragmentsData = resourceData.SOUL_FRAGMENTS;
+    local max = soulFragmentsData.baseMax;
+    if C_SpellBook.IsSpellKnown(soulFragmentsData.soulGluttonSpellID) then
+        max = max - soulFragmentsData.soulGluttonReduction;
     end;
-    if C_SpellBook.IsSpellKnown(surrenderToTheVoid) then
-        max = max + devourerSurrenderToTheVoidBonus;
+    if C_SpellBook.IsSpellKnown(soulFragmentsData.surrenderToTheVoidSpellID) then
+        max = max + soulFragmentsData.surrenderToTheVoidBonus;
     end;
     return max;
 end;
@@ -273,7 +256,7 @@ local function updateSoulFragmentsBar()
     if not tracker or not tracker.bar then return; end;
 
     local current = 0;
-    local aura = C_UnitAuras.GetPlayerAuraBySpellID(devourerSoulFragments);
+    local aura = C_UnitAuras.GetPlayerAuraBySpellID(resourceData.SOUL_FRAGMENTS.spellID);
     if aura then
         current = aura.applications or 0;
     end;
@@ -310,7 +293,7 @@ local function updateColour()
         end;
     elseif countResources[resource] then
         local color = core.resources.resourceColours[resource];
-        for i = 1, maxCountSegments do
+        for i = 1, resourceData.maxCountSegments do
             frame['bar' .. i]:SetStatusBarColor(color.r / 255, color.g / 255, color.b / 255);
         end;
     end;
@@ -354,7 +337,7 @@ end;
 local function buildCountSegments(tracker)
     if not frame then return; end;
 
-    for i = 1, maxCountSegments do
+    for i = 1, resourceData.maxCountSegments do
         frame['container' .. i] = CreateFrame("Frame", nil, frame);
 
         frame['bg' .. i] = frame['container' .. i]:CreateTexture();
@@ -399,9 +382,10 @@ local trackerBuilders = {
     ["TEACHINGS"] = function(tracker)
         if not frame then return; end;
 
-        local segmentWidth = (core.width - 2 * core.pixel) / teachingsMaxStacks;
+        local teachingsData = resourceData.TEACHINGS;
+        local segmentWidth = (core.width - 2 * core.pixel) / teachingsData.maxStacks;
 
-        for i = 1, teachingsMaxStacks do
+        for i = 1, teachingsData.maxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
@@ -409,12 +393,12 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(teachingsOfTheMonastery, function(button)
+        tracker.container = createAuraTracker(teachingsData.spellID, function(button)
             local bar = createTrackerBar(button, "TEACHINGS",
                 "Interface/Addons/Bars/assets/transparent four segment bar.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = teachingsMaxStacks,
+                maxApplications = teachingsData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
@@ -423,9 +407,10 @@ local trackerBuilders = {
     ["ECLIPSE"] = function(tracker)
         if not frame then return; end;
 
-        local segmentWidth = (core.width - 2 * core.pixel) / eclipseMaxStacks;
+        local eclipseData = resourceData.ECLIPSE;
+        local segmentWidth = (core.width - 2 * core.pixel) / eclipseData.maxStacks;
 
-        for i = 1, eclipseMaxStacks do
+        for i = 1, eclipseData.maxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
@@ -433,12 +418,12 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(eclipse, function(button)
+        tracker.container = createAuraTracker(eclipseData.spellID, function(button)
             local bar = createTrackerBar(button, "ECLIPSE",
                 "Interface/Addons/Bars/assets/transparent four segment bar.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = eclipseMaxStacks,
+                maxApplications = eclipseData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
@@ -455,7 +440,7 @@ local trackerBuilders = {
         bg:SetDrawLayer("OVERLAY", -1);
         table.insert(tracker.visuals, bg);
 
-        tracker.container = createAuraTracker(enrage, function(button)
+        tracker.container = createAuraTracker(resourceData.ENRAGE.spellID, function(button)
             local bar = createTrackerBar(button, "ENRAGE");
 
             button:SetDurationBar(bar, {
@@ -472,7 +457,8 @@ local trackerBuilders = {
         local scale = (core.width - 2 * core.pixel) / 410;
         local segmentWidth = 65 * scale;
         local gapWidth = 4 * scale;
-        for i = 1, vengeanceSoulFragmentsMaxStacks do
+        local soulFragmentsData = resourceData.SOUL_FRAGMENTS_VENGEANCE;
+        for i = 1, soulFragmentsData.maxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth, core.barBgHeight);
@@ -480,12 +466,12 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(vengeanceSoulFragments, function(button)
+        tracker.container = createAuraTracker(soulFragmentsData.spellID, function(button)
             local bar = createTrackerBar(button, "SOUL_FRAGMENTS_VENGEANCE",
                 "Interface/Addons/Bars/assets/transparent six segment bar.png");
 
             button:SetApplicationBar(bar, {
-                maxApplications = vengeanceSoulFragmentsMaxStacks,
+                maxApplications = soulFragmentsData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);
@@ -510,8 +496,9 @@ local trackerBuilders = {
     ["MAELSTROM_WEAPON"] = function(tracker)
         if not frame then return; end;
 
-        local segmentWidth = (core.width - 2 * core.pixel) / maelstromWeaponMaxStacks;
-        for i = 1, maelstromWeaponMaxStacks do
+        local maelstromWeaponData = resourceData.MAELSTROM_WEAPON;
+        local segmentWidth = (core.width - 2 * core.pixel) / maelstromWeaponData.maxStacks;
+        for i = 1, maelstromWeaponData.maxStacks do
             local bars = frame:CreateTexture(nil, "OVERLAY");
             bars:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
             core:SetPixelSize(bars, segmentWidth - core.pixel, core.barBgHeight);
@@ -519,11 +506,11 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(maelstromWeapon, function(button)
+        tracker.container = createAuraTracker(maelstromWeaponData.spellID, function(button)
             local bar = createTrackerBar(button, "MAELSTROM_WEAPON");
 
             button:SetApplicationBar(bar, {
-                maxApplications = maelstromWeaponMaxStacks,
+                maxApplications = maelstromWeaponData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
             });
         end);

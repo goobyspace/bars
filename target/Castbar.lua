@@ -14,19 +14,6 @@ local hasActiveCast = false;
 
 local function updateBar(kicked)
     if not frame then return; end;
-    local name, text, texture, _, _, _, _, notInterruptible = UnitCastingInfo("target");
-    local isChanneled = false;
-
-    if not name then
-        name, text, texture, _, _, _, notInterruptible = UnitChannelInfo("target");
-        isChanneled = true;
-        -- cancelling via esc/stopcasting clears cast info before interrupted event
-        if not name and kicked == nil and not kickedWait then
-            hasActiveCast = false;
-            return frame:Hide();
-        end;
-    end;
-
     if kicked ~= nil then
         if kickedClock then kickedClock:Cancel(); end;
         kickedWait = true;
@@ -37,13 +24,30 @@ local function updateBar(kicked)
         end);
     end;
 
-    frame:Show();
-
     if kickedWait then
+        frame:Show();
         core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName);
         return;
     end;
 
+    local name, text, texture, _, _, _, _, notInterruptible = UnitCastingInfo("target");
+    local isChanneled = false;
+    if not name then
+        name, text, texture, _, _, _, notInterruptible = UnitChannelInfo("target");
+        isChanneled = true;
+        -- cancelling via esc/stopcasting clears cast info before interrupted event
+        if not name then
+            hasActiveCast = false;
+            return frame:Hide();
+        end;
+    end;
+
+    -- notInterruptible is nil on era
+    if notInterruptible ~= nil then
+        currentNotInterruptible = notInterruptible;
+    end;
+
+    frame:Show();
     frame.name:SetText(text);
     frame.icon:SetTexture(texture);
     frame.target:SetText(UnitName("targettarget"));
@@ -66,11 +70,6 @@ local function updateBar(kicked)
         colours.castKickUnavailable.b);
     local colorBlocked = CreateColor(colours.castBlocked.r, colours.castBlocked.g, colours.castBlocked.b);
 
-    -- notInterruptible is nil on era
-    if notInterruptible ~= nil then
-        currentNotInterruptible = notInterruptible;
-    end;
-
     if interruptSpellID ~= nil then
         local ignoreGCD = true;
         -- this accepts 2 values the language server is wrong
@@ -88,6 +87,45 @@ local function updateBar(kicked)
             colorKickNotReady);
         core:SetCastbarColor(frame, friendlyCheck:GetRGB());
     end;
+end;
+
+function core:GetPlayerInterruptSpellID()
+    if not core.isClassicRules then
+        local specIndex = GetSpecialization();
+        if not specIndex then return nil; end;
+
+        local specID = GetSpecializationInfo(specIndex);
+        return specID and core.interrupts.retail[specID] or nil;
+    end;
+
+    local playerClass = select(2, UnitClass("player"));
+    local activeFormID = core:GetActiveStanceID();
+
+    for _, interruptGroup in ipairs(core.interrupts.classic[playerClass] or {}) do
+        local formAllowed = not interruptGroup.requiredFormIDs;
+        for _, requiredFormID in ipairs(interruptGroup.requiredFormIDs or {}) do
+            if activeFormID == requiredFormID then
+                formAllowed = true;
+                break;
+            end;
+        end;
+
+        if formAllowed then
+            for _, spellID in ipairs(interruptGroup.spellIDs) do
+                if C_SpellBook.IsSpellKnown(spellID) then
+                    return spellID;
+                end;
+            end;
+        end;
+    end;
+
+    for _, spellID in ipairs(core.interrupts.classicPet[playerClass] or {}) do
+        if C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet) then
+            return spellID;
+        end;
+    end;
+
+    return nil;
 end;
 
 local function cachePlayerInterrupt()
@@ -156,9 +194,16 @@ function core:CreateTargetCastbar(parent)
     -- warlock's interrupt is on the pet's spellbook, so it needs to be rechecked when the pet changes
     kickUpdateFrame:RegisterEvent("UNIT_PET");
 
-    kickUpdateFrame:HookScript("OnEvent", function()
+    kickUpdateFrame:HookScript("OnEvent", function(_, event)
         cachePlayerInterrupt();
+        if event == "UPDATE_SHAPESHIFT_FORM" and (UnitCastingInfo("target") or UnitChannelInfo("target")) then
+            updateBar();
+        end;
     end);
+
+    if core.isClassicRules then
+        kickUpdateFrame:RegisterEvent("UPDATE_SHAPESHIFT_FORM");
+    end;
 
     return frame;
 end;

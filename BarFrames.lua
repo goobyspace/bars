@@ -44,10 +44,6 @@ function core:AddUnitTooltip(button, unit)
     end);
 end;
 
-function core:SetBarFont(fontString, size)
-    fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor(size * core.fontScale + 0.5), "OUTLINE");
-end;
-
 function core:InitializeBarFrames()
     core.pixel = core:GetPixelUnit();
     core.barHeight = (core.thickMode and 10 or 3) * core.pixel;

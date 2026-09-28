@@ -95,7 +95,7 @@ local function createBaseIcon(parent, entry)
     if entry.spellCooldown then
         button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
         button.cooldown:SetAllPoints();
-        button.cooldown:SetHideCountdownNumbers(true);
+        button.cooldown:SetHideCountdownNumbers(not entry.displayText);
         button.cooldown:SetDrawEdge(false);
         button.cooldown:Hide();
 
@@ -141,6 +141,15 @@ local function createAuraLayer(button, entry)
         auraButton.cooldown:SetHideCountdownNumbers(true);
         auraButton.cooldown:SetDrawEdge(false);
         auraButton:SetDurationCooldown(auraButton.cooldown);
+
+        if entry.displayText then
+            -- parented to the cooldown frame itself (not auraButton) so the text renders above its swipe, not under it
+            auraButton.durationText = auraButton.cooldown:CreateFontString(nil, "OVERLAY");
+            auraButton.durationText:SetPoint("CENTER", 0, 0);
+            core:SetBarFont(auraButton.durationText, entry.displayTextSize or 8);
+            -- SetDurationText is secret-safe: Blizzard formats/updates the text internally, addon Lua never touches the raw duration
+            auraButton:SetDurationText(auraButton.durationText);
+        end;
 
         if entry.auraGlow then
             auraButton.glow = createGlow(auraButton);

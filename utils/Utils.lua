@@ -1,6 +1,11 @@
 local _, core = ...;
 core.Utils = {};
 
+function core:SetBarFont(fontString, fontSize)
+    if not fontString then return; end;
+    fontString:SetFont("Fonts\\FRIZQT__.TTF", math.floor((fontSize or 12) * (core.fontScale or 1) + 0.5), "OUTLINE");
+end;
+
 function core.Utils:FilterToNewArray(arr, func)
     local newArray = {};
     local newIndex = 1;

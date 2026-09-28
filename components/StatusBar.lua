@@ -27,53 +27,68 @@ function core:CreateSimpleStatusBar(name, parent, width, height, opts)
     return frame;
 end;
 
-function core:AddMouseoverBorder(frame, hoverFrame, unit, otherHoverFrame)
+function core:AddMouseoverBorder(frame, hoverFrame, unit, linkedFrame, linkedUnit)
     local border = CreateFrame("Frame", nil, frame);
     border:SetAllPoints(frame);
     border:SetFrameLevel(frame.bar:GetFrameLevel() + 1);
 
     local color = colours.mouseoverBorder;
-    local function createEdge(point, width, height)
+    local inset = core.pixel;
+    local outerWidth = frame:GetWidth() + 2 * inset;
+    local outerHeight = frame:GetHeight() + 2 * inset;
+    local function createEdge(point, width, height, xOfs, yOfs)
         local edge = border:CreateTexture(nil, "OVERLAY");
-        core:SetPixelPoint(edge, point, border, point, 0, 0);
+        core:SetPixelPoint(edge, point, border, point, xOfs, yOfs);
         core:SetPixelSize(edge, width, height);
         edge:SetColorTexture(color.r, color.g, color.b, color.a);
     end;
 
-    createEdge("TOPLEFT", frame:GetWidth(), core.pixel);
-    createEdge("BOTTOMLEFT", frame:GetWidth(), core.pixel);
-    createEdge("TOPLEFT", core.pixel, frame:GetHeight());
-    createEdge("TOPRIGHT", core.pixel, frame:GetHeight());
-    border:Hide();
+    -- offset outward by a pixel so this sits outside the black background border instead of covering it
+    createEdge("TOPLEFT", outerWidth, core.pixel, -inset, inset);
+    createEdge("BOTTOMLEFT", outerWidth, core.pixel, -inset, -inset);
+    createEdge("TOPLEFT", core.pixel, outerHeight, -inset, inset);
+    createEdge("TOPRIGHT", core.pixel, outerHeight, inset, inset);
+    border:Show();
+    border:SetAlpha(0);
 
+    -- GameTooltip:SetUnit (used for our own tooltips) sets the "mouseover" unit but never clears it on leave,
+    -- so it goes stale once we stop hovering; only trust it for genuinely external sources via events, never on our own OnLeave
     local hovering = false;
-    local function updateBorder()
-        local externalHover = UnitExists("mouseover") and UnitIsUnit("mouseover", unit);
-        if otherHoverFrame and otherHoverFrame:IsMouseOver() and not hovering then
-            externalHover = false;
-        end;
-        if hovering or externalHover then
-            border:Show();
+    local ignoreMouseoverUnit = false;
+    local function updateExternalHover()
+        if hovering then
+            border:SetAlpha(1);
+        elseif linkedFrame and linkedFrame:IsMouseOver() then
+            border:SetAlphaFromBoolean(UnitIsUnit(linkedUnit, unit));
+        elseif not ignoreMouseoverUnit and UnitExists("mouseover") then
+            border:SetAlphaFromBoolean(UnitIsUnit("mouseover", unit));
         else
-            border:Hide();
+            border:SetAlpha(0);
         end;
     end;
 
-    border:SetScript("OnUpdate", updateBorder);
     local updater = CreateFrame("Frame");
     updater:RegisterEvent("UPDATE_MOUSEOVER_UNIT");
     updater:RegisterEvent("PLAYER_TARGET_CHANGED");
     if unit == "targettarget" then
         updater:RegisterUnitEvent("UNIT_TARGET", "target");
     end;
-    updater:SetScript("OnEvent", updateBorder);
+    updater:SetScript("OnEvent", function(_, event)
+        if event == "UPDATE_MOUSEOVER_UNIT" then
+            ignoreMouseoverUnit = false;
+        end;
+        updateExternalHover();
+    end);
+    -- poll every frame instead of relying solely on events, so external hover state always resyncs
+    updater:SetScript("OnUpdate", updateExternalHover);
 
     hoverFrame:HookScript("OnEnter", function()
         hovering = true;
-        border:Show();
+        border:SetAlpha(1);
     end);
     hoverFrame:HookScript("OnLeave", function()
         hovering = false;
-        border:Hide();
+        ignoreMouseoverUnit = true;
+        border:SetAlpha(0);
     end);
 end;
