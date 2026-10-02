@@ -30,6 +30,8 @@ function core:InitEventHandler(event, name)
 
     core.Debug = false;
 
+    core.TRP = C_AddOns.IsAddOnLoaded("TotalRP3");
+
     core:InitializeBarFrames();
 end;
 

@@ -11,10 +11,14 @@ if not core.isForever then return; end;
 --     auraSpellIDs = { 123 },
 --     auraUnit = "target", -- "player" or "target"
 --     auraFilter = "HARMFUL|PLAYER",
+--     weaponEnchant = "MAINHAND", -- "MAINHAND" or "OFFHAND"; tracks a weapon imbue instead of an aura
+--     enchantIDs = { 29 }, -- /dump C_Item.GetWeaponEnchantInfo(0), matches any imbue if you dont set any ID
 --     forms = { CAT = true }, -- allowed form keys
 --     rangeCheck = true,
 --     displayText = true,
+--     textNoSeconds = true, -- show raw duration numbers without the "s" suffix
 --     displayTextSize = 12,
+--     displayCharges = true, -- show aura applications instead of duration text
 --     auraGlow = true,
 --     spellCooldown = true,
 --     usability = true,
@@ -57,6 +61,7 @@ core.foreverAuraTracker = {
             auraFilter = "HARMFUL|PLAYER",
             forms = humanOrMoonkin,
             rangeCheck = true,
+            textNoSeconds = true,
             displayText = true,
             displayTextSize = 14,
         },
@@ -68,6 +73,7 @@ core.foreverAuraTracker = {
             auraUnit = "target",
             auraFilter = "HARMFUL|PLAYER",
             forms = humanOrMoonkin,
+            textNoSeconds = true,
             rangeCheck = true,
             displayText = true,
         },
@@ -79,6 +85,7 @@ core.foreverAuraTracker = {
             auraUnit = "target",
             auraFilter = "HARMFUL|PLAYER",
             forms = { CAT = true },
+            textNoSeconds = true,
             rangeCheck = true,
             displayText = true,
         },
@@ -90,6 +97,7 @@ core.foreverAuraTracker = {
             auraUnit = "target",
             auraFilter = "HARMFUL|PLAYER",
             forms = { CAT = true },
+            textNoSeconds = true,
             rangeCheck = true,
             displayText = true,
         },
@@ -203,6 +211,37 @@ core.foreverAuraTracker = {
             auraUnit = "player",
             auraFilter = "HELPFUL",
             displayText = false,
+        },
+    },
+    SHAMAN = {
+        {
+            name = "Flame Shock",
+            slot = 1,
+            spellIDs = { 8050, },
+            auraSpellIDs = { 8050, },
+            auraUnit = "target",
+            auraFilter = "HARMFUL|PLAYER",
+            rangeCheck = true,
+            displayText = true,
+            textNoSeconds = true,
+            displayTextSize = 14,
+        },
+        {
+            name = "Lightning Shield",
+            slot = 7,
+            spellIDs = { 324, 325 },
+            auraSpellIDs = { 324, 325 },
+            auraUnit = "player",
+            auraFilter = "HELPFUL",
+            displayCharges = true,
+        },
+        {
+            name = "Imbue",
+            slot = 8,
+            spellIDs = { 8024 },
+            weaponEnchant = "MAINHAND",
+            enchantIDs = { 29, 6, 1, 503, 1663, 683, 1664, 4, 5, 1666, 1665, 3, 523 },
+            displayText = true,
         },
     },
 };

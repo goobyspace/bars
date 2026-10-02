@@ -166,3 +166,10 @@ core.resourceData = {
         },
     },
 };
+
+core.totems = {
+    3599, -- fire, searing totem
+    8075, -- earth, strength of earth totem
+    5394, -- water, healing stream totem
+    8512, -- air, windfury totem
+};

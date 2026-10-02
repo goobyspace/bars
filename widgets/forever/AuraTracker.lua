@@ -7,6 +7,16 @@ local iconWidth = 36;
 local iconHeight = 30;
 local slotCount = 8;
 local minIconSpacing = 2;
+local enchantUpdateInterval = 0.1;
+
+local function formatRemaining(seconds)
+    if seconds >= 60 then
+        return string.format("%dm", math.ceil(seconds / 60));
+    elseif seconds >= 10 then
+        return string.format("%d", math.floor(seconds));
+    end;
+    return string.format("%.1f", seconds);
+end;
 
 local function getCroppedTexCoords(width, height)
     local trim = 0.08;
@@ -41,6 +51,20 @@ end;
 
 local function isAllowedInCurrentForm(entry, currentForm)
     return not entry.forms or entry.forms[currentForm] == true;
+end;
+
+local function addSpellTooltip(button, getSpellID)
+    button:EnableMouse(true);
+    button:SetScript("OnEnter", function(self)
+        local spellID = getSpellID(self);
+        if not spellID then return; end;
+        GameTooltip:SetOwner(self, "ANCHOR_TOP");
+        GameTooltip:SetSpellByID(spellID);
+        GameTooltip:Show();
+    end);
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide();
+    end);
 end;
 
 local function createGlow(parent)
@@ -89,6 +113,9 @@ local function createBaseIcon(parent, entry)
     core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
     button.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
     button.icon:SetDesaturated(true);
+    if not entry.auraSpellIDs then
+        addSpellTooltip(button, function(self) return self.spellID; end);
+    end;
 
     button.glow = createGlow(button);
 
@@ -142,13 +169,28 @@ local function createAuraLayer(button, entry)
         auraButton.cooldown:SetDrawEdge(false);
         auraButton:SetDurationCooldown(auraButton.cooldown);
 
-        if entry.displayText then
-            -- parented to the cooldown frame itself (not auraButton) so the text renders above its swipe, not under it
-            auraButton.durationText = auraButton.cooldown:CreateFontString(nil, "OVERLAY");
-            auraButton.durationText:SetPoint("CENTER", 0, 0);
-            core:SetBarFont(auraButton.durationText, entry.displayTextSize or 8);
-            -- SetDurationText is secret-safe: Blizzard formats/updates the text internally, addon Lua never touches the raw duration
-            auraButton:SetDurationText(auraButton.durationText);
+        if entry.displayCharges or entry.displayText then
+            auraButton.auraText = auraButton.cooldown:CreateFontString(nil, "OVERLAY");
+            auraButton.auraText:SetPoint("CENTER", 0, 0);
+            core:SetBarFont(auraButton.auraText, entry.displayTextSize or 8);
+            if entry.displayCharges then
+                auraButton:SetApplicationCount(auraButton.auraText);
+            else
+                local durationTextOptions;
+                if entry.textNoSeconds then
+                    local formatter = C_StringUtil.CreateNumericRuleFormatter();
+                    formatter:SetBreakpoints({
+                        {
+                            threshold = 0,
+                            step = 1,
+                            rounding = Enum.NumericRuleFormatRounding.Down,
+                            format = "%d",
+                        },
+                    });
+                    durationTextOptions = { textFormatter = formatter };
+                end;
+                auraButton:SetDurationText(auraButton.auraText, durationTextOptions);
+            end;
         end;
 
         if entry.auraGlow then
@@ -163,6 +205,90 @@ local function createAuraLayer(button, entry)
     });
     auraButton:SetAllPoints(container);
     button.auraContainer = container;
+end;
+
+local function createEnchantLayer(button, entry)
+    if not entry.weaponEnchant then return; end;
+
+    if entry.enchantIDs then
+        button.enchantIDs = {};
+        for _, enchantID in ipairs(entry.enchantIDs) do
+            button.enchantIDs[enchantID] = true;
+        end;
+    end;
+
+    local layer = CreateFrame("Frame", nil, button);
+    layer:SetAllPoints();
+
+    layer.icon = layer:CreateTexture(nil, "ARTWORK");
+    core:SetPixelPoint(layer.icon, "TOPLEFT", layer, "TOPLEFT", core.pixel, -core.pixel);
+    core:SetPixelPoint(layer.icon, "BOTTOMRIGHT", layer, "BOTTOMRIGHT", -core.pixel, core.pixel);
+    layer.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
+    addSpellTooltip(layer, function() return button.spellID; end);
+
+    layer.cooldown = CreateFrame("Cooldown", nil, layer, "CooldownFrameTemplate");
+    layer.cooldown:SetAllPoints();
+    layer.cooldown:SetHideCountdownNumbers(true);
+    layer.cooldown:SetDrawEdge(false);
+
+    if entry.displayText then
+        layer.durationText = layer.cooldown:CreateFontString(nil, "OVERLAY");
+        layer.durationText:SetPoint("CENTER", 0, 0);
+        core:SetBarFont(layer.durationText, entry.displayTextSize or 8);
+    end;
+
+    if entry.auraGlow then
+        layer.glow = createGlow(layer);
+        setGlowShown(layer, true);
+    end;
+
+    layer:Hide();
+    button.enchantLayer = layer;
+end;
+
+local function findWeaponEnchant(button)
+    -- forever's Enum.WeaponSlot: 0 = main hand, 1 = off hand; the global GetWeaponEnchantInfo always reports false here
+    local weaponSlot = button.entry.weaponEnchant == "OFFHAND" and 1 or 0;
+    for _, enchant in ipairs(C_Item.GetWeaponEnchantInfo(weaponSlot) or {}) do
+        if enchant.hasEnchant and (not button.enchantIDs or button.enchantIDs[enchant.enchantID]) then
+            return enchant;
+        end;
+    end;
+end;
+
+local function updateWeaponEnchant(button)
+    local layer = button.enchantLayer;
+    if not layer then return; end;
+
+    local info = findWeaponEnchant(button);
+    if not info then
+        layer:Hide();
+        layer.duration, layer.expirationTime = nil, nil;
+        return;
+    end;
+    layer:Show();
+
+    local expiration = info.timeLeft;
+    if not expiration or issecretvalue(expiration) or expiration <= 0 then
+        layer.cooldown:Clear();
+        if layer.durationText then layer.durationText:SetText(""); end;
+        return;
+    end;
+
+    local remaining = expiration / 1000;
+    local expirationTime = GetTime() + remaining;
+    -- the API has no total duration, so use the largest remaining time seen since the imbue was applied
+    if not layer.duration or remaining > layer.duration then
+        layer.duration = remaining;
+    end;
+    if not layer.expirationTime or math.abs(expirationTime - layer.expirationTime) > 0.5 then
+        layer.expirationTime = expirationTime;
+        layer.cooldown:SetCooldown(expirationTime - layer.duration, layer.duration);
+    end;
+
+    if layer.durationText then
+        layer.durationText:SetText(formatRemaining(remaining));
+    end;
 end;
 
 local function updateSpellCooldown(button)
@@ -218,6 +344,7 @@ local function updateBaseState(button, activeOverlays)
     end;
     setGlowShown(button, activationGlow or entry.usableGlow and usable or false);
     updateSpellCooldown(button);
+    updateWeaponEnchant(button);
 end;
 
 function core:CreateAuraTracker(parent)
@@ -235,6 +362,7 @@ function core:CreateAuraTracker(parent)
         local button = createBaseIcon(frame, entry);
         button.slot = entry.slot or index;
         createAuraLayer(button, entry);
+        createEnchantLayer(button, entry);
         table.insert(buttons, button);
     end;
 
@@ -253,6 +381,9 @@ function core:CreateAuraTracker(parent)
             local spellID = getIconSpellID(button.entry, knownSpellID);
             button.spellID = spellID;
             button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+            if button.enchantLayer then
+                button.enchantLayer.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+            end;
             button:SetShown(knownSpellID ~= nil and isAllowedInCurrentForm(button.entry, currentForm));
 
             if knownSpellID and button.entry.activationGlow then
@@ -281,6 +412,24 @@ function core:CreateAuraTracker(parent)
     frame:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_SHOW");
     frame:RegisterEvent("SPELL_ACTIVATION_OVERLAY_GLOW_HIDE");
     frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player");
+    frame:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player");
+    frame:RegisterEvent("WEAPON_ENCHANT_CHANGED");
+
+    -- imbue expiry fires no event, so poll while any enchant entry exists
+    local enchantElapsed = 0;
+    for _, button in ipairs(buttons) do
+        if button.enchantLayer then
+            frame:SetScript("OnUpdate", function(_, elapsed)
+                enchantElapsed = enchantElapsed + elapsed;
+                if enchantElapsed < enchantUpdateInterval then return; end;
+                enchantElapsed = 0;
+                for _, candidate in ipairs(buttons) do
+                    if candidate:IsShown() then updateWeaponEnchant(candidate); end;
+                end;
+            end);
+            break;
+        end;
+    end;
 
     frame:SetScript("OnEvent", function(_, event, spellID)
         if event == "SPELL_ACTIVATION_OVERLAY_GLOW_SHOW" then

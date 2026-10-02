@@ -12,7 +12,7 @@ local function checkPvP()
 end;
 
 local function checkQuest()
-    local isQuestTarget = UnitIsQuestBoss("target");
+    local isQuestTarget = UnitIsQuestBoss and UnitIsQuestBoss("target");
     if not isQuestTarget and C_QuestLog and C_QuestLog.UnitIsRelatedToActiveQuest then
         isQuestTarget = C_QuestLog.UnitIsRelatedToActiveQuest("target");
     end;
@@ -40,6 +40,29 @@ local function checkRareElite()
     end;
 end;
 
+local function CheckTRP()
+    if not UnitExists("target") or not AddOn_TotalRP3.Player.CreateFromUnit("target"):GetProfileID() then
+        return frame.trpframe:Hide();
+    end;
+
+    local player = AddOn_TotalRP3.Player.CreateFromUnit("target");
+    frame.trpframe:Show();
+    frame.trpicon:Show();
+    local icon = player:GetCustomIcon() or "inv_inscription_scroll";
+    frame.trpicon:SetTexture("Interface/icons/" .. icon);
+end;
+
+local function createTRPWidget()
+    frame.trpframe = CreateFrame("Frame", nil, frame);
+    core:SetPixelPoint(frame.trpframe, "LEFT", frame, "LEFT", 0, -64);
+    core:SetPixelSize(frame.trpframe, 128, 24);
+
+    frame.trpicon = frame.trpframe:CreateTexture();
+    core:SetPixelPoint(frame.trpicon, "LEFT", frame.trpframe, "LEFT", 0, 0);
+    frame.trpicon:SetTexture("Interface/Addons/Bars/assets/afk.png");
+    core:SetPixelSize(frame.trpicon, 32, 32);
+end;
+
 function core:CreateTargetWidgets(parent, hpBar)
     frame = CreateFrame("Frame", nil, parent);
     core:SetPixelSize(frame, core.width, core.pixel);
@@ -58,8 +81,8 @@ function core:CreateTargetWidgets(parent, hpBar)
 
     frame.questIcon = frame:CreateTexture(nil, "OVERLAY");
     frame.questIcon:SetTexture("Interface/Addons/Bars/assets/quest.png");
-    core:SetPixelSize(frame.questIcon, 10, 17);
-    core:SetPixelPoint(frame.questIcon, "TOPLEFT", levelAnchor, "TOPRIGHT", -4, 0);
+    core:SetPixelSize(frame.questIcon, 10, 19);
+    core:SetPixelPoint(frame.questIcon, "TOPLEFT", levelAnchor, "TOPRIGHT", -4, 1);
     frame.questIcon:Hide();
 
     frame.elite = frame:CreateTexture();
@@ -77,6 +100,10 @@ function core:CreateTargetWidgets(parent, hpBar)
     frame.rareelite:SetTexture("Interface/Addons/Bars/assets/rare elite.png");
     core:SetPixelSize(frame.rareelite, 33, 27);
 
+    if core.TRP then
+        createTRPWidget();
+    end;
+
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterUnitEvent("PLAYER_TARGET_CHANGED");
     frame:RegisterUnitEvent("PLAYER_FLAGS_CHANGED", "target");
@@ -91,6 +118,7 @@ function core:CreateTargetWidgets(parent, hpBar)
         checkAfk();
         checkPvP();
         checkQuest();
+        CheckTRP();
     end);
     return frame;
 end;

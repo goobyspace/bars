@@ -5,18 +5,18 @@ function core:GetPixelUnit()
     return UIParent:GetHeight() / screenHeight;
 end;
 
-local function snap(units)
+function core:Snap(units)
     if not units or units == 0 then return 0; end;
     local pixels = math.floor(math.abs(units) / core.pixel + 0.5);
     return (units < 0 and -1 or 1) * pixels * core.pixel;
 end;
 
 function core:SetPixelPoint(region, point, relativeTo, relativePoint, x, y)
-    region:SetPoint(point, relativeTo, relativePoint, snap(x), snap(y));
+    region:SetPoint(point, relativeTo, relativePoint, core:Snap(x), core:Snap(y));
 end;
 
 function core:SetPixelSize(region, width, height)
-    region:SetSize(snap(width), snap(height));
+    region:SetSize(core:Snap(width), core:Snap(height));
 end;
 
 function core:EvenPixels(units)
@@ -36,7 +36,7 @@ function core:SnapToPixelGrid(frame)
     local point, relativeTo, relativePoint, x, y = frame:GetPoint(1);
     if not point then return; end;
 
-    local dx, dy = left - snap(left), bottom - snap(bottom);
+    local dx, dy = left - core:Snap(left), bottom - core:Snap(bottom);
     if dx == 0 and dy == 0 then return; end;
 
     frame:SetPoint(point, relativeTo, relativePoint, (x or 0) - dx, (y or 0) - dy);

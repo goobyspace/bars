@@ -77,19 +77,6 @@ local function formatRemaining(seconds)
     end;
     return string.format("%.1f", seconds);
 end;
-
-local function getCroppedTexCoords(width, height)
-    local trim = 0.08;
-    local span = 1 - (trim * 2);
-    local horizontal, vertical = span, span;
-    if width >= height then
-        vertical = span * (height / width);
-    else
-        horizontal = span * (width / height);
-    end;
-    return 0.5 - horizontal / 2, 0.5 + horizontal / 2, 0.5 - vertical / 2, 0.5 + vertical / 2;
-end;
-
 -- units we can read auras from in Classic Era: whatever has a nameplate, plus the target
 local nameplateUnits = {};
 
@@ -163,6 +150,20 @@ local function getEntryTexts(entry)
     return texts;
 end;
 
+local function addSpellTooltip(button, getSpellID)
+    button:EnableMouse(true);
+    button:SetScript("OnEnter", function(self)
+        local spellID = getSpellID(self);
+        if not spellID then return; end;
+        GameTooltip:SetOwner(self, "ANCHOR_TOP");
+        GameTooltip:SetSpellByID(spellID);
+        GameTooltip:Show();
+    end);
+    button:SetScript("OnLeave", function()
+        GameTooltip:Hide();
+    end);
+end;
+
 local function createIcon(parent, entry)
     local button = CreateFrame("Frame", nil, parent);
     core:SetPixelSize(button, iconWidth, iconHeight);
@@ -178,7 +179,8 @@ local function createIcon(parent, entry)
     core:SetPixelPoint(button.icon, "TOPLEFT", button, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
     button.icon:SetTexture(C_Spell.GetSpellTexture(button.spellID));
-    button.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
+    button.icon:SetTexCoord(core:GetCroppedTexCoords(iconWidth, iconHeight));
+    addSpellTooltip(button, function(self) return self.spellID; end);
 
     button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
     button.cooldown:SetAllPoints();

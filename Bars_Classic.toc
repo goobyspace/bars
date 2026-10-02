@@ -9,6 +9,7 @@
 ## X-Wago-ID: -
 ## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
+## OptionalDeps: totalRP3
 
 utils/VersionCompat.lua
 utils/Utils.lua
@@ -36,6 +37,7 @@ components/era/AuraLayout.lua
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
 widgets/era/AuraTracker.lua
+widgets/TotemTracker.lua
 
 player/era/ManaTick.lua
 player/HPBar.lua

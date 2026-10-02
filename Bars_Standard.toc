@@ -9,6 +9,7 @@
 ## X-Wago-ID: -
 ## Category: Unit Frames
 ## IconTexture: Interface\FrameGeneral\UIFrameBars
+## OptionalDeps: totalRP3
 
 utils/VersionCompat.lua
 utils/Utils.lua

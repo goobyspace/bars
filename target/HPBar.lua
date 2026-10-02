@@ -58,7 +58,9 @@ local function updateBar(immediate)
     end;
 
     frame.hpText:SetText(AbbreviateNumbers(currentHP));
-    frame.name:SetText(core.isForever and _G.GetUnitName("target", true) or UnitName("target"));
+
+    frame.name:SetText(core.TRP and TRP3_API.r.name("target") or core.isForever and _G.GetUnitName("target", true) or
+    UnitName("target"));
     local function levelText()
         if UnitLevel("target") == -1 then return "??"; else return tostring(UnitLevel("target")); end;
     end;

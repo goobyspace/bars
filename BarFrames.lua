@@ -133,9 +133,19 @@ function core:InitializeBarFrames()
 
         core:CreateBreathBar(UIParent);
 
+        local auraTracker;
         if core.CreateAuraTracker then
-            local auraTracker = core:CreateAuraTracker(playerFrame);
+            auraTracker = core:CreateAuraTracker(playerFrame);
             core:SetPixelPoint(auraTracker, "TOP", playerFrame, "BOTTOM", 0, -2);
+        end;
+
+        if core.CreateTotemTracker then
+            local totemTracker = core:CreateTotemTracker(playerFrame);
+            if totemTracker then
+                core:SetPixelPoint(totemTracker, "BOTTOM", auraTracker, "TOPRIGHT",
+                    27, -32);
+                core:SnapToPixelGrid(totemTracker);
+            end;
         end;
 
         local hpBar = core:CreateHPBar(playerFrame);
@@ -286,7 +296,7 @@ function core:InitializeBarFrames()
         core:SetPixelPoint(BigDebuffs, "TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0);
 
         local mainBuffs = core:CreateMainBuffsFrame(targetFrame);
-        core:SetPixelPoint(mainBuffs, "TOPLEFT", hpBar, "TOPRIGHT", 4, -7);
+        core:SetPixelPoint(mainBuffs, "TOPLEFT", hpBar, "TOPRIGHT", 4, -6);
 
         local normalDebuffs = core:CreateNormalDebuffsFrame(targetFrame);
         core:SetPixelPoint(normalDebuffs, "BOTTOMLEFT", mainBuffs, "TOPLEFT", 0, 8);

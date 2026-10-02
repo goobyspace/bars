@@ -130,12 +130,6 @@ end;
 
 local function cachePlayerInterrupt()
     interruptSpellID = core:GetPlayerInterruptSpellID();
-    if interruptSpellID then
-        print("Bars: detected interrupt:", C_Spell.GetSpellName(interruptSpellID) or "unknown", "spell ID:",
-            interruptSpellID);
-    else
-        print("Bars: no interrupt detected");
-    end;
 end;
 
 function core:CreateTargetCastbar(parent)
