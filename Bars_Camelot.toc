@@ -16,6 +16,7 @@ utils/ForeverFlag.lua
 utils/Utils.lua
 utils/SecretUtils.lua
 utils/StanceUtils.lua
+utils/TextureUtils.lua
 
 config/ColourConfig.lua
 config/LayoutConfig.lua

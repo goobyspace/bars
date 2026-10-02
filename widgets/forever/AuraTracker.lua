@@ -18,18 +18,6 @@ local function formatRemaining(seconds)
     return string.format("%.1f", seconds);
 end;
 
-local function getCroppedTexCoords(width, height)
-    local trim = 0.08;
-    local span = 1 - (trim * 2);
-    local horizontal, vertical = span, span;
-    if width >= height then
-        vertical = span * (height / width);
-    else
-        horizontal = span * (width / height);
-    end;
-    return 0.5 - horizontal / 2, 0.5 + horizontal / 2, 0.5 - vertical / 2, 0.5 + vertical / 2;
-end;
-
 local function isSpellKnown(spellID)
     return C_SpellBook.IsSpellKnown(spellID)
         or C_SpellBook.IsSpellKnown(spellID, Enum.SpellBookSpellBank.Pet);
@@ -111,7 +99,7 @@ local function createBaseIcon(parent, entry)
     button.icon = button:CreateTexture(nil, "ARTWORK");
     core:SetPixelPoint(button.icon, "TOPLEFT", button, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(button.icon, "BOTTOMRIGHT", button, "BOTTOMRIGHT", -core.pixel, core.pixel);
-    button.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
+    button.icon:SetTexCoord(core:GetCroppedTexCoords(iconWidth, iconHeight));
     button.icon:SetDesaturated(true);
     if not entry.auraSpellIDs then
         addSpellTooltip(button, function(self) return self.spellID; end);
@@ -160,7 +148,7 @@ local function createAuraLayer(button, entry)
         auraButton.icon = auraButton:CreateTexture(nil, "OVERLAY");
         core:SetPixelPoint(auraButton.icon, "TOPLEFT", auraButton, "TOPLEFT", core.pixel, -core.pixel);
         core:SetPixelPoint(auraButton.icon, "BOTTOMRIGHT", auraButton, "BOTTOMRIGHT", -core.pixel, core.pixel);
-        auraButton.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
+        auraButton.icon:SetTexCoord(core:GetCroppedTexCoords(iconWidth, iconHeight));
         auraButton:SetIcon(auraButton.icon);
 
         auraButton.cooldown = CreateFrame("Cooldown", nil, auraButton, "CooldownFrameTemplate");
@@ -223,7 +211,7 @@ local function createEnchantLayer(button, entry)
     layer.icon = layer:CreateTexture(nil, "ARTWORK");
     core:SetPixelPoint(layer.icon, "TOPLEFT", layer, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(layer.icon, "BOTTOMRIGHT", layer, "BOTTOMRIGHT", -core.pixel, core.pixel);
-    layer.icon:SetTexCoord(getCroppedTexCoords(iconWidth, iconHeight));
+    layer.icon:SetTexCoord(core:GetCroppedTexCoords(iconWidth, iconHeight));
     addSpellTooltip(layer, function() return button.spellID; end);
 
     layer.cooldown = CreateFrame("Cooldown", nil, layer, "CooldownFrameTemplate");

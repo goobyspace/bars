@@ -41,26 +41,119 @@ local function checkRareElite()
 end;
 
 local function CheckTRP()
-    if not UnitExists("target") or not AddOn_TotalRP3.Player.CreateFromUnit("target"):GetProfileID() then
+    if InCombatLockdown() or (not UnitExists("target") or not AddOn_TotalRP3.Player.CreateFromUnit("target"):GetProfileID()) then
         return frame.trpframe:Hide();
     end;
 
     local player = AddOn_TotalRP3.Player.CreateFromUnit("target");
     frame.trpframe:Show();
-    frame.trpicon:Show();
     local icon = player:GetCustomIcon() or "inv_inscription_scroll";
-    frame.trpicon:SetTexture("Interface/icons/" .. icon);
+    frame.trpicon.texture:SetTexture("Interface/icons/" .. icon);
+
+    if player:GetProfile() then
+        local glances = player:GetInfo("misc/PE") or {};
+        local shownGlanceIcons = {};
+
+        for slot = 1, 5 do
+            local glance = glances[tostring(slot)];
+            local glanceIcon = frame.trpframe["glanceIcon" .. slot];
+
+            if glance and glance.AC then
+                local icon = glance.IC;
+                if not icon or icon == "" then
+                    icon = "inv_misc_questionmark";
+                end;
+
+                glanceIcon.texture:SetTexture("Interface\\ICONS\\" .. icon);
+
+                glanceIcon:SetScript("OnEnter", function(self)
+                    GameTooltip:SetOwner(self, "ANCHOR_BOTTOM");
+                    GameTooltip:SetText(
+                        TRP3_API.utils.str.icon(icon, 30) .. " " .. (glance.TI or "...")
+                    );
+
+                    local text = glance.TX;
+                    if text then
+                        text = TRP3_StringUtil.TrimNewlinesAndSpaces(text);
+                        if text ~= "" then
+                            GameTooltip:AddLine(text, 1, 1, 1, true);
+                        end;
+                    end;
+
+                    GameTooltip:Show();
+                end);
+
+                glanceIcon:SetScript("OnLeave", function()
+                    GameTooltip:Hide();
+                end);
+
+                glanceIcon:Show();
+                table.insert(shownGlanceIcons, glanceIcon);
+            else
+                glanceIcon:Hide();
+            end;
+        end;
+
+        for slot, glanceIcon in ipairs(shownGlanceIcons) do
+            core:SetPixelPoint(glanceIcon, "LEFT", frame.trpframe, "LEFT", 28 * slot, 0);
+        end;
+    end;
 end;
 
 local function createTRPWidget()
     frame.trpframe = CreateFrame("Frame", nil, frame);
-    core:SetPixelPoint(frame.trpframe, "LEFT", frame, "LEFT", 0, -64);
+    core:SetPixelPoint(frame.trpframe, "LEFT", frame, "LEFT", 0, -60);
     core:SetPixelSize(frame.trpframe, 128, 24);
 
-    frame.trpicon = frame.trpframe:CreateTexture();
-    core:SetPixelPoint(frame.trpicon, "LEFT", frame.trpframe, "LEFT", 0, 0);
-    frame.trpicon:SetTexture("Interface/Addons/Bars/assets/afk.png");
-    core:SetPixelSize(frame.trpicon, 32, 32);
+    local trpicon = CreateFrame("Frame", nil, frame.trpframe);
+    core:SetPixelPoint(trpicon, "LEFT", frame.trpframe, "LEFT", 0, -2);
+    core:SetPixelSize(trpicon, 24, 24);
+
+    trpicon.texture = trpicon:CreateTexture();
+    trpicon.texture:SetDrawLayer("ARTWORK");
+    core:SetPixelPoint(trpicon.texture, "TOPLEFT", trpicon, "TOPLEFT", core.pixel, -core.pixel);
+    core:SetPixelPoint(trpicon.texture, "BOTTOMRIGHT", trpicon, "BOTTOMRIGHT", -core.pixel, core.pixel);
+    trpicon.texture:SetTexCoord(core:GetCroppedTexCoords(24, 24));
+
+    trpicon.border = trpicon:CreateTexture();
+    core:SetPixelPoint(trpicon.border, "TOPLEFT", trpicon, "TOPLEFT", 0, 0);
+    core:SetPixelPoint(trpicon.border, "BOTTOMRIGHT", trpicon, "BOTTOMRIGHT", 0, 0);
+    trpicon.border:SetColorTexture(core.colours.black.r, core.colours.black.g, core.colours.black.b);
+
+    frame.trpicon = trpicon;
+
+    for slot = 1, 5 do
+        local glanceIcon = CreateFrame("Frame", nil, frame.trpframe);
+        core:SetPixelPoint(glanceIcon, "LEFT", frame.trpframe, "LEFT", 28 * slot, 0);
+        core:SetPixelSize(glanceIcon, 24, 20);
+
+        glanceIcon.texture = glanceIcon:CreateTexture();
+        glanceIcon.texture:SetDrawLayer("ARTWORK");
+        core:SetPixelPoint(glanceIcon.texture, "TOPLEFT", glanceIcon, "TOPLEFT", core.pixel, -core.pixel);
+        core:SetPixelPoint(glanceIcon.texture, "BOTTOMRIGHT", glanceIcon, "BOTTOMRIGHT", -core.pixel, core.pixel);
+        glanceIcon.texture:SetTexCoord(core:GetCroppedTexCoords(24, 20));
+
+        glanceIcon.border = glanceIcon:CreateTexture(nil, "BACKGROUND");
+        core:SetPixelPoint(glanceIcon.border, "TOPLEFT", glanceIcon, "TOPLEFT", 0, 0);
+        core:SetPixelPoint(glanceIcon.border, "BOTTOMRIGHT", glanceIcon, "BOTTOMRIGHT", 0, 0);
+        glanceIcon.border:SetColorTexture(core.colours.black.r, core.colours.black.g, core.colours.black.b);
+
+        frame.trpframe["glanceIcon" .. slot] = glanceIcon;
+    end;
+
+    trpicon:SetScript("OnEnter", function()
+        GameTooltip_SetDefaultAnchor(GameTooltip, trpicon);
+        GameTooltip:ClearAllPoints();
+        GameTooltip:AddLine(TRP3_API.loc.BINDING_NAME_TRP3_OPEN_TARGET_PROFILE, 1, 1, 1, 1);
+        GameTooltip:SetPoint("BOTTOMLEFT", trpicon, "TOPLEFT", 0, 0);
+        GameTooltip:Show();
+    end);
+    trpicon:SetScript("OnLeave", function() GameTooltip:Hide(); end);
+    trpicon:SetScript("OnMouseDown", function() trpicon.texture:SetTexCoord(0, 1, 0, 1); end);
+    trpicon:SetScript("OnMouseUp", function()
+        trpicon.texture:SetTexCoord(.08, .92, .08, .92);
+        TRP3_API.slash.openProfile("target");
+    end);
 end;
 
 function core:CreateTargetWidgets(parent, hpBar)
@@ -118,7 +211,10 @@ function core:CreateTargetWidgets(parent, hpBar)
         checkAfk();
         checkPvP();
         checkQuest();
-        CheckTRP();
+
+        if core.TRP then
+            CheckTRP();
+        end;
     end);
     return frame;
 end;
