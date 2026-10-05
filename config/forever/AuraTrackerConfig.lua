@@ -5,10 +5,10 @@ if not core.isForever then return; end;
 -- {
 --     name = "Example",
 --     slot = 1,
---     knownSpellIDs = { 123 },
---     spellIDs = { 123, 456 },
---     iconSpellID = 123,
---     auraSpellIDs = { 123 },
+--     knownSpellIDs = { 123 }, -- spell IDs or spell names in the client's locale
+--     spellIDs = { 123, "Moonfire" },
+--     iconSpellID = 123, -- spell ID or spell name
+--     auraSpellIDs = { 123, "Moonfire" },
 --     auraUnit = "target", -- "player" or "target"
 --     auraFilter = "HARMFUL|PLAYER",
 --     weaponEnchant = "MAINHAND", -- "MAINHAND" or "OFFHAND"; tracks a weapon imbue instead of an aura

@@ -80,9 +80,7 @@ end;
 function core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName)
     frame.name:SetText(savedName);
     frame.icon:SetTexture(savedIcon);
-    if kickedName then
-        frame.target:SetText(UnitNameFromGUID(kickedName));
-    end;
+    frame.target:SetText((kickedName and UnitNameFromGUID(kickedName)) or "");
     core:SetCastbarColor(frame, colours.castKicked.r, colours.castKicked.g, colours.castKicked.b);
     local durationObject = C_DurationUtil.CreateDuration();
     durationObject:SetTimeFromStart(0, 0.1);

@@ -91,6 +91,7 @@ local function updateBar(kicked, empowerEvent)
 
     frame.name:SetText(text);
     frame.icon:SetTexture(texture);
+    frame.target:SetText("");
 
     savedIcon = texture;
     savedName = text;

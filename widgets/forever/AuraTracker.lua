@@ -9,6 +9,26 @@ local slotCount = 8;
 local minIconSpacing = 2;
 local enchantUpdateInterval = 0.1;
 
+local function resolveSpellID(spell)
+    if type(spell) == "number" then
+        return spell;
+    elseif type(spell) == "string" then
+        local spellInfo = C_Spell.GetSpellInfo(spell);
+        return spellInfo and spellInfo.spellID;
+    end;
+end;
+
+local function resolveSpellIDs(spells)
+    local spellIDs = {};
+    for _, spell in ipairs(spells or {}) do
+        local spellID = resolveSpellID(spell);
+        if spellID then
+            table.insert(spellIDs, spellID);
+        end;
+    end;
+    return spellIDs;
+end;
+
 local function formatRemaining(seconds)
     if seconds >= 60 then
         return string.format("%dm", math.ceil(seconds / 60));
@@ -25,7 +45,7 @@ end;
 
 local function getKnownSpellID(entry)
     local known;
-    for _, spellID in ipairs(entry.knownSpellIDs or entry.spellIDs or {}) do
+    for _, spellID in ipairs(resolveSpellIDs(entry.knownSpellIDs or entry.spellIDs)) do
         if isSpellKnown(spellID) then
             known = spellID;
         end;
@@ -34,7 +54,8 @@ local function getKnownSpellID(entry)
 end;
 
 local function getIconSpellID(entry, knownSpellID)
-    return entry.iconSpellID or knownSpellID or entry.spellIDs and entry.spellIDs[#entry.spellIDs];
+    return resolveSpellID(entry.iconSpellID) or knownSpellID
+        or entry.spellIDs and resolveSpellID(entry.spellIDs[#entry.spellIDs]);
 end;
 
 local function isAllowedInCurrentForm(entry, currentForm)
@@ -133,7 +154,7 @@ local function createAuraLayer(button, entry)
     container:SetUnit(entry.auraUnit);
 
     local includeSpellIDs = {};
-    for _, spellID in ipairs(entry.auraSpellIDs) do
+    for _, spellID in ipairs(resolveSpellIDs(entry.auraSpellIDs)) do
         includeSpellIDs[spellID] = true;
     end;
 
@@ -323,7 +344,7 @@ local function updateBaseState(button, activeOverlays)
 
     local activationGlow = false;
     if entry.activationGlow then
-        for _, candidate in ipairs(entry.spellIDs or {}) do
+        for _, candidate in ipairs(resolveSpellIDs(entry.spellIDs)) do
             if activeOverlays[candidate] or C_Spell.IsCurrentSpell(candidate) then
                 activationGlow = true;
                 break;
@@ -368,9 +389,9 @@ function core:CreateAuraTracker(parent)
             local knownSpellID = getKnownSpellID(button.entry);
             local spellID = getIconSpellID(button.entry, knownSpellID);
             button.spellID = spellID;
-            button.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+            button.icon:SetTexture(spellID and C_Spell.GetSpellTexture(spellID));
             if button.enchantLayer then
-                button.enchantLayer.icon:SetTexture(C_Spell.GetSpellTexture(spellID));
+                button.enchantLayer.icon:SetTexture(spellID and C_Spell.GetSpellTexture(spellID));
             end;
             button:SetShown(knownSpellID ~= nil and isAllowedInCurrentForm(button.entry, currentForm));
 

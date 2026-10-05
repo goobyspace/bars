@@ -16,7 +16,11 @@ local function checkQuest()
     if not isQuestTarget and C_QuestLog and C_QuestLog.UnitIsRelatedToActiveQuest then
         isQuestTarget = C_QuestLog.UnitIsRelatedToActiveQuest("target");
     end;
-    frame.questIcon:SetShown(isQuestTarget and true or false);
+    frame.questIcon:SetAlphaFromBoolean(isQuestTarget and true or false);
+end;
+
+local function checkLeader()
+    frame.leaderIcon:SetAlphaFromBoolean(UnitIsGroupLeader("target"));
 end;
 
 local function checkRareElite()
@@ -176,7 +180,11 @@ function core:CreateTargetWidgets(parent, hpBar)
     frame.questIcon:SetTexture("Interface/Addons/Bars/assets/quest.png");
     core:SetPixelSize(frame.questIcon, 10, 19);
     core:SetPixelPoint(frame.questIcon, "TOPLEFT", levelAnchor, "TOPRIGHT", -4, 1);
-    frame.questIcon:Hide();
+
+    frame.leaderIcon = frame:CreateTexture(nil, "OVERLAY");
+    frame.leaderIcon:SetTexture("Interface/GROUPFRAME/UI-Group-LeaderIcon");
+    core:SetPixelSize(frame.leaderIcon, 16, 16);
+    core:SetPixelPoint(frame.leaderIcon, "TOPLEFT", levelAnchor, "TOPRIGHT", -4, 1);
 
     frame.elite = frame:CreateTexture();
     core:SetPixelPoint(frame.elite, "CENTER", levelAnchor, "CENTER", 4, 0);
@@ -202,6 +210,7 @@ function core:CreateTargetWidgets(parent, hpBar)
     frame:RegisterUnitEvent("PLAYER_FLAGS_CHANGED", "target");
     frame:RegisterUnitEvent("PVP_TIMER_UPDATE", "target");
     frame:RegisterUnitEvent("PLAYER_TARGET_DIED");
+    frame:RegisterEvent("GROUP_ROSTER_UPDATE");
     frame:RegisterEvent("QUEST_LOG_UPDATE");
     frame:RegisterEvent("PET_BATTLE_OPENING_START");
     frame:RegisterEvent("PET_BATTLE_CLOSE");
@@ -211,6 +220,7 @@ function core:CreateTargetWidgets(parent, hpBar)
         checkAfk();
         checkPvP();
         checkQuest();
+        checkLeader();
 
         if core.TRP then
             CheckTRP();
