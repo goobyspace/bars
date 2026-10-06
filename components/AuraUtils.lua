@@ -12,6 +12,8 @@ function core:InitializeAuraButtonBase(button, iconSize)
         core:SetPixelSize(button, iconSize, iconSize);
     end;
 
+    button.icon:SetTexCoord(core:GetCroppedTexCoords(button:GetWidth(), button:GetHeight()));
+
     if not button.cooldown then
         button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
         button.cooldown:SetAllPoints();
