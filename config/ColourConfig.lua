@@ -84,6 +84,7 @@ core.colours = {
         ENRAGE = { r = 255, g = 202, b = 136 },
         TEACHINGS = { r = 255, g = 41, b = 135 },
         ECLIPSE = { r = 199, g = 127, b = 221 },
+        ECLIPSEDURATION = { r = 83, g = 176, b = 222 },
         RENEWING_MIST = { r = 2, g = 255, b = 127 },
         STAGGER = {
             light = { r = 133, g = 255, b = 133 },

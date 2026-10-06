@@ -37,7 +37,7 @@ local function getResource()
     if playerClass == "DRUID" then
         local formID = core:GetShapeshiftFormKey();
         if core.isForever and (formID == 0 or formID == "MOONKIN")
-            and C_SpellBook.IsSpellKnown(resourceData.ECLIPSE.spellID) then
+            and C_SpellBook.IsSpellKnown(resourceData.ECLIPSE.talentSpellID) then
             return "ECLIPSE";
         end;
         resource = resource and resource[formID or 0];
@@ -418,13 +418,28 @@ local trackerBuilders = {
             table.insert(tracker.visuals, bars);
         end;
 
-        tracker.container = createAuraTracker(eclipseData.spellID, function(button)
+        tracker.container = createAuraTracker(eclipseData.buffSpellID, function(button)
             local bar = createTrackerBar(button, "ECLIPSE",
                 "Interface/Addons/Bars/assets/transparent four segment bar.png");
 
             button:SetApplicationBar(bar, {
                 maxApplications = eclipseData.maxStacks,
                 interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
+            });
+
+            local durationBar = CreateFrame("StatusBar", nil, button);
+            durationBar:SetStatusBarTexture("Interface/Addons/Bars/assets/transparent four segment bar.png");
+            durationBar:SetFrameLevel(button:GetFrameLevel() + 2);
+            core:SetPixelSize(durationBar, core.width - 2 * core.pixel, 2 * core.pixel);
+            core:SetPixelPoint(durationBar, "BOTTOM", button, "BOTTOM", 0, 0);
+            durationBar:SetMinMaxValues(0, 1);
+
+            local durationColor = core.resources.resourceColours.ECLIPSEDURATION;
+            durationBar:SetStatusBarColor(durationColor.r / 255, durationColor.g / 255,
+                durationColor.b / 255);
+            button:SetDurationBar(durationBar, {
+                interpolation = Enum.StatusBarInterpolation.ExponentialEaseOut,
+                direction = Enum.StatusBarTimerDirection.RemainingTime,
             });
         end);
     end,

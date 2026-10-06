@@ -124,7 +124,8 @@ core.resourceData = {
             maxStacks = 4,
         },
         ECLIPSE = {
-            spellID = 408248,
+            talentSpellID = 408248,
+            buffSpellID = 408255,
             maxStacks = 4,
         },
         ENRAGE = {
