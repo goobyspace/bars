@@ -11,6 +11,42 @@ local castSucceeded = false;
 local currentNotInterruptible = false;
 local hasActiveCast = false;
 
+local function updateQueueWindowOverlay(isChanneled, startTime, endTime, isEmpowered)
+    if not frame then return; end;
+
+    local overlay = frame.queueWindowOverlay;
+    if isEmpowered or not startTime or not endTime then
+        if overlay then overlay:Hide(); end;
+        return;
+    end;
+
+    local duration = (endTime - startTime) / 1000;
+    local queueWindow = (tonumber(GetCVar("SpellQueueWindow")) or 0) / 1000;
+    if duration <= 0 or queueWindow <= 0 then
+        if overlay then overlay:Hide(); end;
+        return;
+    end;
+
+    if not overlay then
+        overlay = frame.bar:CreateTexture(nil, "OVERLAY", nil, 0);
+        overlay:SetColorTexture(colours.white.r, colours.white.g, colours.white.b);
+        overlay:SetAlpha(0.25);
+        frame.queueWindowOverlay = overlay;
+    end;
+
+    local fraction = math.min(queueWindow, duration) / duration;
+    local overlayWidth = frame.bar:GetWidth() * fraction;
+    overlay:ClearAllPoints();
+    if isChanneled then
+        core:SetPixelPoint(overlay, "TOPLEFT", frame.bar, "TOPLEFT", 0, 0);
+        core:SetPixelPoint(overlay, "BOTTOMRIGHT", frame.bar, "BOTTOMLEFT", overlayWidth, 0);
+    else
+        core:SetPixelPoint(overlay, "TOPLEFT", frame.bar, "TOPRIGHT", -overlayWidth, 0);
+        core:SetPixelPoint(overlay, "BOTTOMRIGHT", frame.bar, "BOTTOMRIGHT", 0, 0);
+    end;
+    overlay:Show();
+end;
+
 local function clearEmpowerStages()
     if not frame or not frame.empowerStages then return; end;
     frame:SetScript("OnUpdate", nil);
@@ -67,6 +103,7 @@ local function updateBar(kicked, empowerEvent)
             -- that don't otherwise clear hasActiveCast, so it can't get stuck true
             hasActiveCast = false;
             clearEmpowerStages();
+            updateQueueWindowOverlay(false, nil, nil, true);
             return frame:Hide();
         end;
     end;
@@ -85,9 +122,12 @@ local function updateBar(kicked, empowerEvent)
 
     if kickedWait then
         clearEmpowerStages();
+        updateQueueWindowOverlay(false, nil, nil, true);
         core:ShowCastbarKicked(frame, savedName, savedIcon, kickedName);
         return;
     end;
+
+    updateQueueWindowOverlay(isChanneled, startTime, endTime, isEmpowered);
 
     frame.name:SetText(text);
     frame.icon:SetTexture(texture);
@@ -144,6 +184,7 @@ function core:CreatePlayerCastbar(parent)
     frame.empowerStages = {};
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
+    frame:RegisterEvent("CVAR_UPDATE");
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_START", "player");
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_STOP", "player");
     frame:RegisterUnitEvent("UNIT_SPELLCAST_CHANNEL_UPDATE", "player");
@@ -159,6 +200,11 @@ function core:CreatePlayerCastbar(parent)
     frame:RegisterUnitEvent("UNIT_SPELLCAST_NOT_INTERRUPTIBLE", "player");
 
     frame:HookScript("OnEvent", function(self, event, target, _, _, kickedBy)
+        if event == "CVAR_UPDATE" then
+            if target == "SpellQueueWindow" then updateBar(); end;
+            return;
+        end;
+
         if event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_EMPOWER_START" or event == "UNIT_SPELLCAST_START" then
             if kickedClock then kickedClock:Cancel(); end;
             kickedWait = false;
