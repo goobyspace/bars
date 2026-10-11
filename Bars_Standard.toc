@@ -34,6 +34,7 @@ components/Castbar.lua
 
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
+widgets/Experience.lua
 
 player/HPBar.lua
 player/PrimaryResource.lua

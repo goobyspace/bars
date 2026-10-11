@@ -79,7 +79,12 @@ local function updateBar()
     -- prefer percentage if it exists but in classic we have to do math
     -- luckily its allowed there :D
     local widthFraction = 0;
-    if predictedCostPercent > 0 then
+    if core.isClassicEra then
+        -- era: costPercent is relative to base mana, not max mana, so use the flat cost
+        if predictedCostFlat > 0 and core:IsSafePositiveNumber(max) then
+            widthFraction = predictedCostFlat / max;
+        end;
+    elseif predictedCostPercent > 0 then
         widthFraction = predictedCostPercent / 100;
     elseif predictedCostFlat > 0 and core:IsSafePositiveNumber(max) then
         widthFraction = predictedCostFlat / max;

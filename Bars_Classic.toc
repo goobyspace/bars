@@ -37,6 +37,7 @@ components/era/AuraLayout.lua
 
 widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
+widgets/Experience.lua
 widgets/era/AuraTracker.lua
 widgets/TotemTracker.lua
 

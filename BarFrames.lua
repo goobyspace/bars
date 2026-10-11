@@ -116,6 +116,10 @@ function core:InitializeBarFrames()
         local widgets = core:CreateWidgets(playerFrame);
         widgets:SetPoint("BOTTOM");
 
+        local experienceBar = core:CreateExperienceBar(playerFrame);
+        core:SetPixelPoint(experienceBar, "BOTTOM", UIParent, "BOTTOM", 0, 4 * core.pixel);
+        core:SnapToPixelGrid(experienceBar);
+
         local primaryResourceBar = core:CreatePrimaryBar(playerFrame);
         core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, core.primaryBarOffset);
         core:SnapToPixelGrid(primaryResourceBar);

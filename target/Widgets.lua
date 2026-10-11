@@ -114,12 +114,11 @@ local function createTRPWidget()
     core:SetPixelSize(trpicon, 24, 24);
 
     trpicon.texture = trpicon:CreateTexture();
-    trpicon.texture:SetDrawLayer("ARTWORK");
     core:SetPixelPoint(trpicon.texture, "TOPLEFT", trpicon, "TOPLEFT", core.pixel, -core.pixel);
     core:SetPixelPoint(trpicon.texture, "BOTTOMRIGHT", trpicon, "BOTTOMRIGHT", -core.pixel, core.pixel);
     trpicon.texture:SetTexCoord(core:GetCroppedTexCoords(24, 24));
 
-    trpicon.border = trpicon:CreateTexture();
+    trpicon.border = trpicon:CreateTexture(nil, "BACKGROUND");
     core:SetPixelPoint(trpicon.border, "TOPLEFT", trpicon, "TOPLEFT", 0, 0);
     core:SetPixelPoint(trpicon.border, "BOTTOMRIGHT", trpicon, "BOTTOMRIGHT", 0, 0);
     trpicon.border:SetColorTexture(core.colours.black.r, core.colours.black.g, core.colours.black.b);
