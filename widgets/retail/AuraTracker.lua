@@ -44,14 +44,7 @@ local function addSpellTooltip(button)
     end);
 end;
 
-local function createGlow(parent)
-    local glow = CreateFrame("Frame", nil, parent);
-    glow:SetFrameLevel(parent:GetFrameLevel() + 5);
-    core:SetPixelSize(glow, iconWidth * 1.4, iconHeight * 1.4);
-    core:SetPixelPoint(glow, "CENTER", parent, "CENTER", 0, 0);
-
-    local texture = glow:CreateTexture(nil, "OVERLAY", nil, 7);
-    texture:SetAllPoints();
+local function playGlowAnimation(texture)
     texture:SetAtlas("UI-HUD-ActionBar-Proc-Loop-Flipbook", false);
 
     local animation = texture:CreateAnimationGroup();
@@ -65,8 +58,43 @@ local function createGlow(parent)
     flipbook:SetFlipBookFrameWidth(0);
     flipbook:SetFlipBookFrameHeight(0);
     animation:Play();
+end;
+
+local function createGlow(parent)
+    local glow = CreateFrame("Frame", nil, parent);
+    glow:SetFrameLevel(parent:GetFrameLevel() + 5);
+    core:SetPixelSize(glow, iconWidth * 1.4, iconHeight * 1.4);
+    core:SetPixelPoint(glow, "CENTER", parent, "CENTER", 0, 0);
+
+    local texture = glow:CreateTexture(nil, "OVERLAY", nil, 7);
+    texture:SetAllPoints();
+    playGlowAnimation(texture);
 
     return glow;
+end;
+
+-- the aura container only ever fills this bar proportionally to the stacks (min cant be set), so the glow sits in a clipping
+-- window that follows the end of the fill. the bar is so wide that the window only overlaps the glow at max stacks
+local function createStackGlow(auraButton, maxStacks)
+    local glowWidth, glowHeight = iconWidth * 1.4, iconHeight * 1.4;
+
+    local bar = CreateFrame("StatusBar", nil, auraButton);
+    core:SetPixelSize(bar, glowWidth * maxStacks * 2, glowHeight);
+    core:SetPixelPoint(bar, "RIGHT", auraButton, "CENTER", glowWidth / 2, 0);
+    bar:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8");
+    bar:SetStatusBarColor(0, 0, 0, 0);
+
+    local window = CreateFrame("Frame", nil, auraButton);
+    window:SetFrameLevel(auraButton:GetFrameLevel() + 5);
+    window:SetClipsChildren(true);
+    core:SetPixelSize(window, glowWidth, glowHeight);
+    window:SetPoint("RIGHT", bar:GetStatusBarTexture(), "RIGHT", 0, 0);
+
+    local glow = createGlow(window);
+    glow:ClearAllPoints();
+    core:SetPixelPoint(glow, "CENTER", auraButton, "CENTER", 0, 0);
+
+    auraButton:SetApplicationBar(bar, { minApplications = 0, maxApplications = maxStacks });
 end;
 
 local function createIconTexture(button, layer, subLevel)
@@ -98,7 +126,7 @@ local function createBaseIcon(parent, entry)
         button.icon:SetDesaturated(true);
         button.litIcon = createIconTexture(button, "ARTWORK", 1);
         button.litIcon:SetAlpha(0);
-    elseif entry.auraSpellIDs and not entry.spellCooldown then
+    elseif entry.auraSpellIDs and not entry.spellCooldown and not entry.keepSpellIcon then
         button.icon:SetDesaturated(true);
     end;
 
@@ -106,6 +134,15 @@ local function createBaseIcon(parent, entry)
         button.cooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
         button.cooldown:SetAllPoints();
         button.cooldown:SetDrawEdge(false);
+
+        if entry.chargeCooldown then
+            -- edge only so recharging doesnt black out the icon whilst a charge is still left
+            button.chargeCooldown = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
+            button.chargeCooldown:SetAllPoints();
+            button.chargeCooldown:SetDrawSwipe(false);
+            button.chargeCooldown:SetDrawEdge(true);
+            button.chargeCooldown:SetHideCountdownNumbers(true);
+        end;
     end;
 
     if entry.usableGlow or entry.procGlow then
@@ -139,18 +176,24 @@ local function createAuraLayer(button, entry)
 
     local function initializeAuraFrame(auraButton)
         core:SetPixelSize(auraButton, iconWidth, iconHeight);
-        auraButton.border = createBlackBorder(auraButton);
-        auraButton.icon = createIconTexture(auraButton, "OVERLAY", 0);
-        auraButton:SetIcon(auraButton.icon);
 
-        auraButton.cooldown = CreateFrame("Cooldown", nil, auraButton, "CooldownFrameTemplate");
-        auraButton.cooldown:SetAllPoints();
-        auraButton.cooldown:SetHideCountdownNumbers(true);
-        auraButton.cooldown:SetDrawEdge(false);
-        auraButton:SetDurationCooldown(auraButton.cooldown);
+        if not entry.keepSpellIcon then
+            auraButton.border = createBlackBorder(auraButton);
+            auraButton.icon = createIconTexture(auraButton, "OVERLAY", 0);
+            auraButton:SetIcon(auraButton.icon);
 
+            auraButton.cooldown = CreateFrame("Cooldown", nil, auraButton, "CooldownFrameTemplate");
+            auraButton.cooldown:SetAllPoints();
+            auraButton.cooldown:SetHideCountdownNumbers(true);
+            auraButton.cooldown:SetDrawEdge(false);
+            auraButton:SetDurationCooldown(auraButton.cooldown);
+        end;
         if entry.displayCharges then
-            auraButton.stackText = auraButton.cooldown:CreateFontString(nil, "OVERLAY");
+            -- not parented to the cooldown, auras without a duration (dance of the wind) hide it :/
+            local textFrame = CreateFrame("Frame", nil, auraButton);
+            textFrame:SetAllPoints();
+            textFrame:SetFrameLevel(auraButton:GetFrameLevel() + 10);
+            auraButton.stackText = textFrame:CreateFontString(nil, "OVERLAY");
             auraButton.stackText:SetPoint("CENTER", 0, 0);
             core:SetBarFont(auraButton.stackText, entry.displayTextSize or 14);
             auraButton:SetApplicationCount(auraButton.stackText);
@@ -158,6 +201,10 @@ local function createAuraLayer(button, entry)
 
         if entry.auraGlow then
             createGlow(auraButton);
+        end;
+
+        if entry.maxStacksGlow then
+            createStackGlow(auraButton, entry.maxStacksGlow);
         end;
     end;
 
@@ -176,6 +223,15 @@ local function updateCooldown(button)
         button.cooldown:SetCooldownFromDurationObject(duration, true);
     else
         button.cooldown:Clear();
+    end;
+
+    if button.chargeCooldown then
+        local chargeDuration = C_Spell.GetSpellChargeDuration(button.spellID);
+        if chargeDuration then
+            button.chargeCooldown:SetCooldownFromDurationObject(chargeDuration, true);
+        else
+            button.chargeCooldown:Clear();
+        end;
     end;
 end;
 
@@ -204,12 +260,18 @@ local function updateState(button)
         -- isActive and isOnGCD are never secret, so this is safe to branch on
         local info = C_Spell.GetSpellCooldown(spellID);
         local offCooldown = info and (not info.isActive or info.isOnGCD);
-        button.glow:SetAlpha(offCooldown and 1 or 0);
+        button.glow:SetAlpha(offCooldown and UnitAffectingCombat("player") and 1 or 0);
     end;
 
     if button.chargesText then
-        -- the display count is a string that can be secret in combat, SetText handles it fine
-        button.chargesText:SetText(C_Spell.GetSpellDisplayCount(spellID));
+        if entry.castCountText then
+            -- vivify has no display count, its cast count is the number of renewing mists up
+            local count = C_Spell.GetSpellCastCount(spellID);
+            button.chargesText:SetText(not issecretvalue(count) and count == 0 and "" or count);
+        else
+            -- the display count is a string that can be secret in combat, SetText handles it fine
+            button.chargesText:SetText(C_Spell.GetSpellDisplayCount(spellID));
+        end;
     end;
 
     if entry.procGlow then

@@ -13,14 +13,18 @@ if core.isClassicRules then return; end;
 --     auraSpellIDs = { 123 }, -- shows the player's matching buff on top of the icon whilst active
 --     rangeCheck = true, -- tints the icon red when the target is out of range
 --     spellCooldown = true,
+--     chargeCooldown = true, -- edge-only cooldown for the charge recharge, needs spellCooldown
 --     usability = true, -- icon is greyed out until the spell is usable
---     usableGlow = true, -- glows whilst usable, or whilst off cooldown if usability isnt set
+--     usableGlow = true, -- glows whilst usable, or whilst off cooldown and in combat if usability isnt set
 --     procGlow = true, -- glows whilst the spell has a blizzard proc overlay, e.g. when its cooldown resets
 --     auraGlow = true,
+--     keepSpellIcon = true, -- the aura only adds its stack text and glow on top, the spell icon stays as is
+--     maxStacksGlow = 20, -- glows once the buff reaches this many stacks, works in combat
 --     displayCharges = true, -- shows the buff's stack count
 --     displayTextSize = 14,
 --     chargesText = true, -- spell charges in the bottom right of the icon
 --     chargesTextSize = 10,
+--     castCountText = true, -- shows the spell's cast count instead of its charges, needs chargesText
 -- },
 
 core.retailAuraTracker = {
@@ -83,7 +87,6 @@ core.retailAuraTracker = {
                 spellIDs = { 1719 },
                 auraSpellIDs = { 1719 },
                 spellCooldown = true,
-                usability = true,
                 auraGlow = true,
                 usableGlow = true,
             },
@@ -93,11 +96,88 @@ core.retailAuraTracker = {
                 spellIDs = { 107574 },
                 auraSpellIDs = { 107574 },
                 spellCooldown = true,
-                usability = true,
                 auraGlow = true,
                 usableGlow = true,
             },
         },
         [73] = {}, -- protection
+    },
+    MONK = {
+        [268] = {}, -- brewmaster
+        [270] = {   -- mistweaver
+            {
+                name = "Thunder Focus Tea",
+                slot = 1,
+                spellIDs = { 116680 },
+                auraSpellIDs = { 116680 },
+                spellCooldown = true,
+                chargeCooldown = true,
+                auraGlow = true,
+                displayCharges = true,
+                chargesText = true,
+            },
+            {
+                name = "Rising Sun Kick",
+                slot = 2,
+                spellIDs = { 107428 },
+                rangeCheck = true,
+                spellCooldown = true,
+                procGlow = true,
+                usableGlow = true,
+            },
+            {
+                name = "Blackout Kick",
+                slot = 3,
+                spellIDs = { 100784 },
+                rangeCheck = true,
+                spellCooldown = true,
+            },
+            {
+                name = "Vivify",
+                slot = 4,
+                spellIDs = { 116670 },
+                auraSpellIDs = { 392883 }, -- vivacious vivification
+                spellCooldown = true,
+                auraGlow = true,
+                chargesText = true,
+                castCountText = true, -- renewing mists up
+                chargesTextSize = 12,
+            },
+            {
+                name = "Dance of Chi-Ji",
+                slot = 5,
+                knownSpellIDs = { 438439 },
+                iconSpellID = 438443,
+                auraSpellIDs = { 438443 },
+                auraGlow = true,
+            },
+            {
+                name = "Mana Tea",
+                slot = 6,
+                knownSpellIDs = { 115294 },
+                iconSpellID = 115294,
+                auraSpellIDs = { 115867 },
+                keepSpellIcon = true,
+                maxStacksGlow = 20,
+                displayCharges = true,
+            },
+            {
+                name = "Dance of the Wind",
+                slot = 7,
+                knownSpellIDs = { 432181 },
+                iconSpellID = 432180,
+                auraSpellIDs = { 432180 },
+                displayCharges = true,
+            },
+            {
+                name = "Spiritfont",
+                slot = 8,
+                knownSpellIDs = { 1260511 },
+                iconSpellID = 1260565,
+                displayCharges = true,
+                auraSpellIDs = { 1260565, 1260670 },
+            },
+        },
+        [269] = {}, -- windwalker
     },
 };

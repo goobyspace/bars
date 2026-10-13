@@ -45,6 +45,7 @@ player/SecondaryResource.lua
 player/TertiaryResource.lua
 player/PetFrame.lua
 player/Widgets.lua
+player/retail/SpellWidgets.lua
 player/Castbar.lua
 
 target/HPBar.lua

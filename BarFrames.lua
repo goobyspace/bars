@@ -153,6 +153,9 @@ function core:InitializeBarFrames()
         end;
 
         local hpBar = core:CreateHPBar(playerFrame);
+        if core.CreateSpellWidgets then
+            core:CreateSpellWidgets(hpBar, primaryResourceBar);
+        end;
         local petFrame = core:CreatePetFrame(playerFrame);
 
         local secondaryShown = false;

@@ -4,7 +4,6 @@ local colours = core.colours;
 local frame = nil;
 local predictedCostPercent = 0;
 local predictedCostFlat = 0;
-local highlightSpell = nil;
 
 local function getResource()
     local playerClass = select(2, UnitClass("player"));
@@ -99,63 +98,6 @@ local function updateBar()
     end;
 end;
 
-local function createHighlightGlow(parent)
-    local glow = CreateFrame("Frame", nil, parent);
-    glow:SetAllPoints(parent);
-    glow:SetFrameLevel(parent:GetFrameLevel() + 1);
-
-    local border = CreateFrame("Frame", nil, glow, "BackdropTemplate");
-    border:SetFrameLevel(glow:GetFrameLevel());
-    local padding = 4 * core.pixel;
-    core:SetPixelPoint(border, "TOPLEFT", glow, "TOPLEFT", -padding, padding);
-    core:SetPixelPoint(border, "BOTTOMRIGHT", glow, "BOTTOMRIGHT", padding, -padding);
-    border:SetBackdrop({
-        edgeFile = "Interface\\TutorialFrame\\UI-TutorialFrame-CalloutGlow",
-        edgeSize = 8 * core.pixel,
-        tileEdge = false,
-    });
-
-    border:SetBackdropBorderColor(0.7, 0.15, 0.1, 1);
-
-    local animation = border:CreateAnimationGroup();
-    animation:SetLooping("BOUNCE");
-    local pulse = animation:CreateAnimation("Alpha");
-    pulse:SetFromAlpha(0.6);
-    pulse:SetToAlpha(1);
-    pulse:SetDuration(0.8);
-    pulse:SetSmoothing("IN_OUT");
-    animation:Play();
-
-    glow:SetAlpha(0);
-    return glow;
-end;
-
-local function updateHighlightSpell()
-    highlightSpell = nil;
-    if not frame or not frame.highlightGlow then return; end;
-
-    local playerClass = select(2, UnitClass("player"));
-    local classHighlights = core.primaryResourceHighlights and core.primaryResourceHighlights[playerClass];
-    if not classHighlights then return; end;
-
-    local spec = C_SpecializationInfo.GetSpecialization();
-    local specID = spec and C_SpecializationInfo.GetSpecializationInfo(spec);
-    local spellID = specID and classHighlights[specID];
-    highlightSpell = spellID and C_SpellBook.IsSpellKnown(spellID) and spellID or nil;
-end;
-
-local function updateHighlight()
-    if not frame or not frame.highlightGlow then return; end;
-
-    if not highlightSpell or not frame:IsShown() then
-        return frame.highlightGlow:SetAlpha(0);
-    end;
-
-    -- usability can be a secret value in combat, so never branch on it
-    local usable = C_Spell.IsSpellUsable(highlightSpell);
-    frame.highlightGlow:SetAlphaFromBoolean(usable);
-end;
-
 local function updateColour()
     if not frame or not frame:IsShown() then return; end;
 
@@ -184,17 +126,6 @@ function core:CreatePrimaryBar(parent)
     frame.costPredictionBar:SetPoint("BOTTOMRIGHT", frame.bar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
     frame.costPredictionBar:Hide();
 
-    if core.primaryResourceHighlights then
-        frame.bar.bg = frame.bar:CreateTexture(nil, "BACKGROUND");
-        frame.bar.bg:SetAllPoints();
-        frame.bar.bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
-
-        frame.highlightGlow = createHighlightGlow(frame);
-        frame.bar:SetFrameLevel(frame:GetFrameLevel() + 2);
-        frame:RegisterEvent("SPELL_UPDATE_USABLE");
-        frame:RegisterEvent("SPELLS_CHANGED");
-    end;
-
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
     frame:RegisterUnitEvent("UNIT_POWER_FREQUENT", "player");
@@ -222,17 +153,12 @@ function core:CreatePrimaryBar(parent)
             or event == "UPDATE_SHAPESHIFT_FORM"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
             updateColour();
-            updateHighlightSpell();
-        end;
-        if event == "SPELLS_CHANGED" then
-            updateHighlightSpell();
         end;
         if event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_STOP" or event == "UNIT_SPELLCAST_FAILED"
             or event == "UNIT_SPELLCAST_CHANNEL_START" or event == "UNIT_SPELLCAST_CHANNEL_STOP" then
             updatePredictedCost(getResource(), event == "UNIT_SPELLCAST_START" or event == "UNIT_SPELLCAST_CHANNEL_START");
         end;
         updateBar();
-        updateHighlight();
     end);
 
     return frame;
