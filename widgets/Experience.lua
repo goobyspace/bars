@@ -25,8 +25,21 @@ local function hideDefaultExperienceBar()
     suppressFrame(StatusTrackingBarManager);
 end;
 
+local function isPlayerMaxLevel()
+    if IsPlayerAtEffectiveMaxLevel then
+        return IsPlayerAtEffectiveMaxLevel();
+    end;
+    local maxLevel = GetMaxPlayerLevel and GetMaxPlayerLevel() or MAX_PLAYER_LEVEL;
+    return maxLevel and UnitLevel("player") >= maxLevel;
+end;
+
 function core:CreateExperienceBar(parent)
     hideDefaultExperienceBar();
+
+    if isPlayerMaxLevel() then
+        return;
+    end;
+
     local frame = core:CreateSimpleStatusBar("PlayerExperienceBar", parent, core.width, core.barBgHeight);
 
     frame.bar:SetStatusBarTexture(barTexture);

@@ -176,6 +176,7 @@ local function createAuraLayer(button, entry)
 
     local function initializeAuraFrame(auraButton)
         core:SetPixelSize(auraButton, iconWidth, iconHeight);
+        auraButton:SetPoint("CENTER", button, "CENTER");
 
         if not entry.keepSpellIcon then
             auraButton.border = createBlackBorder(auraButton);
@@ -208,11 +209,10 @@ local function createAuraLayer(button, entry)
         end;
     end;
 
-    local auraButton = container:AddAuraSlot("active", "HELPFUL", {
+    container:AddAuraSlot("active", "HELPFUL", {
         candidateFilters = { includeSpellIDs = includeSpellIDs },
         initializeFrame = initializeAuraFrame,
     });
-    auraButton:SetAllPoints(container);
 end;
 
 local function updateCooldown(button)
