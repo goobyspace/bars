@@ -1,24 +1,23 @@
 local _, core = ...;
-local barTexture = "Interface/TargetingFrame/UI-StatusBar";
-
-local function suppressFrame(blizzFrame)
-    if not blizzFrame or blizzFrame.barsSuppressed then
-        return;
-    end;
-    blizzFrame.barsSuppressed = true;
-    blizzFrame:UnregisterAllEvents();
-    blizzFrame:SetAlpha(0);
-    blizzFrame:EnableMouse(false);
-    hooksecurefunc(blizzFrame, "Show", function(self) self:SetAlpha(0); end);
-    hooksecurefunc(blizzFrame, "SetAlpha", function(self, alpha)
-        if alpha ~= 0 then
-            self:SetAlpha(0);
-        end;
-    end);
-end;
 
 -- Hides the default Blizzard experience bar (classic and modern layouts)
 local function hideDefaultExperienceBar()
+    local function suppressFrame(blizzFrame)
+        if not blizzFrame or blizzFrame.barsSuppressed then
+            return;
+        end;
+        blizzFrame.barsSuppressed = true;
+        blizzFrame:UnregisterAllEvents();
+        blizzFrame:SetAlpha(0);
+        blizzFrame:EnableMouse(false);
+        hooksecurefunc(blizzFrame, "Show", function(self) self:SetAlpha(0); end);
+        hooksecurefunc(blizzFrame, "SetAlpha", function(self, alpha)
+            if alpha ~= 0 then
+                self:SetAlpha(0);
+            end;
+        end);
+    end;
+
     suppressFrame(MainMenuExpBar);
     suppressFrame(MainMenuBarMaxLevelBar);
     suppressFrame(MainStatusTrackingBarContainer);
@@ -29,6 +28,8 @@ local function isPlayerMaxLevel()
     if IsPlayerAtEffectiveMaxLevel then
         return IsPlayerAtEffectiveMaxLevel();
     end;
+
+    -- idk how classic works and im too lazy to go check so do all of them incase above doesnt work
     local maxLevel = GetMaxPlayerLevel and GetMaxPlayerLevel() or MAX_PLAYER_LEVEL;
     return maxLevel and UnitLevel("player") >= maxLevel;
 end;
@@ -42,13 +43,13 @@ function core:CreateExperienceBar(parent)
 
     local frame = core:CreateSimpleStatusBar("PlayerExperienceBar", parent, core.width, core.barBgHeight);
 
-    frame.bar:SetStatusBarTexture(barTexture);
+    frame.bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
     frame.bar:SetStatusBarColor(core.colours.experience.r, core.colours.experience.g, core.colours.experience.b);
     frame:EnableMouse(true);
 
     local function createPreviewBar(previewColour)
         local bar = CreateFrame("StatusBar", nil, frame);
-        bar:SetStatusBarTexture(barTexture);
+        bar:SetStatusBarTexture("Interface/TargetingFrame/UI-StatusBar");
         bar:SetStatusBarColor(previewColour.r, previewColour.g, previewColour.b);
         bar:SetMinMaxValues(0, 1);
         bar:SetValue(1);
