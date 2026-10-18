@@ -45,32 +45,7 @@ function core:AddUnitTooltip(button, unit)
 end;
 
 function core:InitializeBarFrames()
-    core.pixel = core:GetPixelUnit();
-    core.barHeight = (core.thickMode and 10 or 3) * core.pixel;
-    core.barBgHeight = core.barHeight + 2 * core.pixel;
-    core.fontScale = core.thickMode and 1.5 or 1;
-    core.castbarHeight = core.thickMode and 28 or 16;
-    core.barGrowth = core.barBgHeight - 5 * core.pixel;
-    core.labelAboveBar = 10 * core.fontScale + core.barGrowth / 2;
-    core.labelBelowBar = -(8 * core.fontScale + core.barGrowth / 2);
-
-    core.rowGap = 4 * core.pixel;
-    core.rowStep = core.barBgHeight + core.rowGap;
-    core.primaryBarOffset = core.rowGap;
-    core.hpRowOffset = core.primaryBarOffset + 2 * core.rowStep;
-    core.targetHpRowOffset = -16;
-    local targetTextTop = core.targetHpRowOffset - core.barBgHeight / 2 + core.labelAboveBar
-        + math.floor(12 * core.fontScale + 0.5) / 2;
-    core.targetHpRowOffset = core.targetHpRowOffset - core:EvenPixels(targetTextTop + 2 * core.pixel);
-    core.targetResourceRowOffset = core.targetHpRowOffset - core.barBgHeight - core.rowGap;
-
-    core.width = core:EvenPixels(340);
-    core.playerHeight = core:EvenPixels(core.hpRowOffset + 2 * core.rowStep + core.barBgHeight);
-    core.targetHeight = core:EvenPixels(-core.targetResourceRowOffset + core.barBgHeight + 2 * core.pixel);
-    core.playerFrameY = -244;
-    core.frameGap = 43;
-    core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
-        - core.targetResourceRowOffset;
+    core:InitializeLayout();
 
     -- playerframe
     do

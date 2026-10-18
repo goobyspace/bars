@@ -14,7 +14,7 @@ Changing one of the following?
 New/changed spell ID -> data/ or config/
 Color or Classic-vs-Retail issue -> config/
 New way a bar/aura/castbar should render (applies to both player and target) -> components/
-Overall frame positioning/spacing -> BarFrames.lua
+Overall frame positioning/spacing -> config/LayoutConfig.lua
 
 Most of the sizing and positioning uses a number of pixel perfect helpers, so that we can make sure our bars are the exact size we want them to be.
 ]]
