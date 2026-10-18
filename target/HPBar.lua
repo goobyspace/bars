@@ -60,7 +60,7 @@ local function updateBar(immediate)
     frame.hpText:SetText(AbbreviateNumbers(currentHP));
 
     frame.name:SetText(core.TRP and TRP3_API.r.name("target") or core.isForever and _G.GetUnitName("target", true) or
-    UnitName("target"));
+        UnitName("target"));
     local function levelText()
         if UnitLevel("target") == -1 then return "??"; else return tostring(UnitLevel("target")); end;
     end;
@@ -86,6 +86,7 @@ function core:CreateTargetHPBar(parent)
     frame.name = frame.bar:CreateFontString("PrimaryText");
     frame.name:SetDrawLayer("OVERLAY", 1);
     frame.name:SetPoint("CENTER", 0, core.labelAboveBar);
+    frame.name:SetSize(core.width - 50, 12);
     core:SetBarFont(frame.name, 12);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");

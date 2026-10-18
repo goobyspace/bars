@@ -44,15 +44,37 @@ local function checkRareElite()
     end;
 end;
 
+local function setTRPIcon(texture, icon)
+    if TRP3_IconUtil and TRP3_IconUtil.SetTextureToIcon then
+        TRP3_IconUtil.SetTextureToIcon(texture, icon);
+    else
+        texture:SetTexture(TRP3_API.utils.getIconTexture(icon));
+    end;
+end;
+
 local function CheckTRP()
-    if InCombatLockdown() or (not UnitExists("target") or not AddOn_TotalRP3.Player.CreateFromUnit("target"):GetProfileID()) then
+    if InCombatLockdown() or not UnitExists("target") or not UnitIsPlayer("target") then
         return frame.trpframe:Hide();
     end;
 
-    local player = AddOn_TotalRP3.Player.CreateFromUnit("target");
+    local player;
+    if TRP3_NameUtil and TRP3_NameUtil.GetQualifiedName then
+        local characterID = TRP3_NameUtil.GetQualifiedName("target");
+        if not characterID then
+            return frame.trpframe:Hide();
+        end;
+        player = AddOn_TotalRP3.Player.CreateFromCharacterID(characterID);
+    else
+        player = AddOn_TotalRP3.Player.CreateFromUnit("target");
+    end;
+
+    if not player:GetProfileID() then
+        return frame.trpframe:Hide();
+    end;
+
     frame.trpframe:Show();
     local icon = player:GetCustomIcon() or "inv_inscription_scroll";
-    frame.trpicon.texture:SetTexture("Interface/icons/" .. icon);
+    setTRPIcon(frame.trpicon.texture, icon);
 
     if player:GetProfile() then
         local glances = player:GetInfo("misc/PE") or {};
@@ -68,7 +90,7 @@ local function CheckTRP()
                     icon = "inv_misc_questionmark";
                 end;
 
-                glanceIcon.texture:SetTexture("Interface\\ICONS\\" .. icon);
+                setTRPIcon(glanceIcon.texture, icon);
 
                 glanceIcon:SetScript("OnEnter", function(self)
                     GameTooltip:SetOwner(self, "ANCHOR_BOTTOM");
@@ -78,7 +100,11 @@ local function CheckTRP()
 
                     local text = glance.TX;
                     if text then
-                        text = TRP3_StringUtil.TrimNewlinesAndSpaces(text);
+                        if TRP3_StringUtil and TRP3_StringUtil.TrimNewlinesAndSpaces then
+                            text = TRP3_StringUtil.TrimNewlinesAndSpaces(text);
+                        else
+                            text = text:match("^%s*(.-)%s*$");
+                        end;
                         if text ~= "" then
                             GameTooltip:AddLine(text, 1, 1, 1, true);
                         end;
@@ -100,6 +126,10 @@ local function CheckTRP()
 
         for slot, glanceIcon in ipairs(shownGlanceIcons) do
             core:SetPixelPoint(glanceIcon, "LEFT", frame.trpframe, "LEFT", 28 * slot, 0);
+        end;
+    else
+        for slot = 1, 5 do
+            frame.trpframe["glanceIcon" .. slot]:Hide();
         end;
     end;
 end;
