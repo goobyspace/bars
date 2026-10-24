@@ -180,4 +180,72 @@ core.retailAuraTracker = {
         },
         [269] = {}, -- windwalker
     },
+    EVOKER = {
+        [1467] = {}, -- devastation
+        [1468] = {   -- preservation
+            {
+                name = "Essence Burst",
+                slot = 1,
+                knownSpellIDs = { 369297 },
+                iconSpellID = 369299,
+                auraSpellIDs = { 369299 },
+                auraGlow = true,
+                displayCharges = true,
+            },
+            {
+                name = "Lifespark",
+                slot = 2,
+                knownSpellIDs = { 443177 },
+                iconSpellID = 443176,
+                auraSpellIDs = { 443176 },
+                auraGlow = true,
+                displayCharges = true,
+            },
+            {
+                name = "Lifebind",
+                slot = 3,
+                knownSpellIDs = { 373270 },
+                iconSpellID = 373267,
+                auraSpellIDs = { 373267 },
+            },
+            {
+                name = "Temporal Compression",
+                slot = 4,
+                knownSpellIDs = { 362874 },
+                iconSpellID = 362877,
+                auraSpellIDs = { 362877 },
+                displayCharges = true,
+            },
+            {
+                name = "Merithra's Blessing",
+                slot = 5,
+                knownSpellIDs = { 1256577 },
+                iconSpellID = 1256579,
+                auraSpellIDs = { 1256579 },
+            },
+            {
+                name = "Hover",
+                slot = 6,
+                knownSpellIDs = { 358267 },
+                iconSpellID = 358267,
+                auraSpellIDs = { 358267 },
+            },
+            {
+                name = "Stasis",
+                slot = 7,
+                knownSpellIDs = { 370537 },
+                iconSpellID = 370537,
+                auraSpellIDs = { 370537, 370562 }, -- stacks count down, then the ready buff takes over
+                displayCharges = true,
+            },
+            {
+                name = "Obsidian Scales",
+                slot = 8,
+                knownSpellIDs = { 363916 },
+                iconSpellID = 363916,
+                auraSpellIDs = { 363916 },
+            },
+        },
+        [1473] = {}, -- augmentation
+    },
 };
