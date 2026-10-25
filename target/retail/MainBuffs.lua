@@ -13,20 +13,17 @@ function core:CreateMainBuffsFrame(parent)
     local auraSpacing = 4 * core.pixel;
 
     local function ApplyPurgeBorder(button)
-        if knowsPurge then
-            if not button.purgeBorderIndex then
-                button.purgeBorderIndex = button:AddDispelTypeTexture(button.PurgeBorder, {
-                    style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
-                    showWhenHelpful = true,
-                    showWhenHarmful = false,
-                    showWithoutDispelType = true,
-                    stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
-                });
-            end;
-        elseif button.purgeBorderIndex then
-            button:RemoveDispelTypeTexture(button.purgeBorderIndex);
-            button.purgeBorderIndex = nil;
+        if button.purgeBorderRegistered then
+            button:RemoveDispelTypeTexture(button.PurgeBorder);
         end;
+        button:AddDispelTypeTexture(button.PurgeBorder, {
+            style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+            showWhenHelpful = knowsPurge,
+            showWhenHarmful = false,
+            showWithoutDispelType = true,
+            stealableFilter = Enum.CustomAuraButtonDispelTypeStealableFilter.Stealable,
+        });
+        button.purgeBorderRegistered = true;
     end;
 
     local function UpdateKnowsPurge()

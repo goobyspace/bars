@@ -66,6 +66,20 @@ function core:CreateHPBarBase(name, parent, width, height, template)
     return frame;
 end;
 
+function core:SetTRPUnitColor(bar, unit)
+    if not core.TRP then return false; end;
+
+    local characterID = TRP3_NameUtil.GetQualifiedName(unit);
+    if not characterID then return false; end;
+
+    local player = AddOn_TotalRP3.Player.CreateFromCharacterID(characterID);
+    local color = player:GetCustomColorForDisplay();
+    if not color then return false; end;
+
+    bar:SetStatusBarColor(color:GetRGB());
+    return true;
+end;
+
 function core:UpdateHPBarValues(frame, unit, immediate)
     if not UnitExists(unit) then
         return nil, nil;

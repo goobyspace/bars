@@ -4,6 +4,27 @@ local frame;
 
 local difficultyKeys = { "trivial", "standard", "difficult", "verydifficult", "impossible" };
 
+local function updateBarColour()
+    if UnitIsPlayer("target") then
+        if core:SetTRPUnitColor(frame.bar, "target") then return; end;
+
+        local _, name = UnitClass("target");
+        if name then
+            local color = C_ClassColor.GetClassColor(name);
+            frame.bar:SetStatusBarColor(color:GetRGB());
+        end;
+    elseif UnitThreatSituation("player", "target") ~= nil or UnitIsEnemy("player", "target") then
+        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
+            core.ClassColors["hostile"].b);
+    elseif UnitIsFriend("player", "target") then
+        frame.bar:SetStatusBarColor(core.ClassColors["friendly"].r, core.ClassColors["friendly"].g,
+            core.ClassColors["friendly"].b);
+    else
+        frame.bar:SetStatusBarColor(core.ClassColors["neutral"].r, core.ClassColors["neutral"].g,
+            core.ClassColors["neutral"].b);
+    end;
+end;
+
 local function getLevelDifficultyColour(unit)
     local colours = core.colours.levelDifficulty;
     local getContentDifficulty = C_PlayerInfo and C_PlayerInfo.GetContentDifficultyCreatureForPlayer;
@@ -33,24 +54,7 @@ end;
 local function updateBar(immediate)
     if not frame then return; end;
 
-    local isPlayer = UnitIsPlayer("target");
-    local threat = UnitThreatSituation("player", "target");
-    if isPlayer then
-        local _, name, _ = UnitClass("target");
-        if name then
-            local color = C_ClassColor.GetClassColor(name);
-            frame.bar:SetStatusBarColor(color:GetRGB());
-        end;
-    elseif threat ~= nil or UnitIsEnemy("player", "target") then
-        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
-            core.ClassColors["hostile"].b);
-    elseif UnitIsFriend("player", "target") then
-        frame.bar:SetStatusBarColor(core.ClassColors["friendly"].r, core.ClassColors["friendly"].g,
-            core.ClassColors["friendly"].b);
-    else
-        frame.bar:SetStatusBarColor(core.ClassColors["neutral"].r, core.ClassColors["neutral"].g,
-            core.ClassColors["neutral"].b);
-    end;
+    updateBarColour();
 
     local currentHP, maxHP = core:UpdateHPBarValues(frame, "target", immediate);
     if not maxHP then
@@ -114,6 +118,16 @@ function core:CreateTargetHPBar(parent)
     frame:SetScript("OnEvent", function(_, event)
         updateBar(event == "PLAYER_TARGET_CHANGED");
     end);
+
+    if core.TRP then
+        TRP3_API.RegisterCallback(TRP3_Addon, TRP3_Addon.Events.REGISTER_DATA_UPDATED, function(_, characterID)
+            if UnitIsPlayer("target") and characterID == TRP3_NameUtil.GetQualifiedName("target") then
+                if not core:SetTRPUnitColor(frame.bar, "target") then
+                    updateBarColour();
+                end;
+            end;
+        end);
+    end;
 
     return frame;
 end;

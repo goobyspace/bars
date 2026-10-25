@@ -14,11 +14,17 @@ local function updateBar()
     frame.text:SetText(AbbreviateNumbers(currentHP));
 end;
 
-function core:CreateHPBar(parent)
-    frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
-    local _, name, _ = UnitClass("player");
+local function updateBarColour()
+    if core:SetTRPUnitColor(frame.bar, "player") then return; end;
+
+    local _, name = UnitClass("player");
     local color = C_ClassColor.GetClassColor(name);
     frame.bar:SetStatusBarColor(color:GetRGB());
+end;
+
+function core:CreateHPBar(parent)
+    frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
+    updateBarColour();
 
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
@@ -45,6 +51,14 @@ function core:CreateHPBar(parent)
     frame:SetScript("OnEvent", function()
         updateBar();
     end);
+
+    if core.TRP then
+        TRP3_API.RegisterCallback(TRP3_Addon, TRP3_Addon.Events.REGISTER_DATA_UPDATED, function(_, characterID)
+            if characterID == TRP3_NameUtil.GetQualifiedName("player") then
+                updateBarColour();
+            end;
+        end);
+    end;
 
     return frame;
 end;

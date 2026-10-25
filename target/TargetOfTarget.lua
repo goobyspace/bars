@@ -8,11 +8,10 @@ local function updateBar()
     local isPlayer = UnitIsPlayer("targettarget");
     local threat = UnitThreatSituation("player", "targettarget");
     if isPlayer then
-        local _, name, _ = UnitClass("targettarget");
-        local color = C_ClassColor.GetClassColor(name);
-        local barTexture = frame.bar:GetStatusBarTexture();
-        if (barTexture) then
-            barTexture:SetVertexColor(color:GetRGB());
+        if not core:SetTRPUnitColor(frame.bar, "targettarget") then
+            local _, name = UnitClass("targettarget");
+            local color = C_ClassColor.GetClassColor(name);
+            frame.bar:SetStatusBarColor(color:GetRGB());
         end;
     elseif threat ~= nil or UnitIsEnemy("player", "targettarget") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
@@ -97,6 +96,14 @@ function core:CreateTargetTargetHPBar(parent)
     frame:HookScript("OnShow", function()
         updateBar();
     end);
+
+    if core.TRP then
+        TRP3_API.RegisterCallback(TRP3_Addon, TRP3_Addon.Events.REGISTER_DATA_UPDATED, function(_, characterID)
+            if UnitIsPlayer("targettarget") and characterID == TRP3_NameUtil.GetQualifiedName("targettarget") then
+                updateBar();
+            end;
+        end);
+    end;
 
     frame:SetAttribute("unit", "targettarget");
     RegisterUnitWatch(frame, false);
