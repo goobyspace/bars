@@ -36,6 +36,14 @@ core.resourceTickerConfig = {
     fiveSecondRuleDuration = 5,
 };
 
+core.resourceCostHighlightConfig = {
+    duration = 0.25, -- fade duration after a successful non-mana cast, 0 disables it
+    brighten = 0.2, -- fraction blended toward white, 0 to 1
+    alpha = 0.6,
+    fromAlpha = 1,
+    toAlpha = 0,
+};
+
 core.debugConfig = {
     copyWindowWidth = 620,
     copyWindowHeight = 320,
