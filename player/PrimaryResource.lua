@@ -5,18 +5,33 @@ local frame = nil;
 local predictedCostPercent = 0;
 local predictedCostFlat = 0;
 local predictedResource = nil;
-local spentCostActive = false;
+local spentCostPercent = 0;
+local spentCostFlat = 0;
+local spentResource = nil;
 
 local function clearPredictedCost()
-    spentCostActive = false;
     predictedCostPercent = 0;
     predictedCostFlat = 0;
     predictedResource = nil;
     if frame then
-        frame.costPredictionFade:Stop();
-        frame.costPredictionBar:SetAlpha(1);
         frame.costPredictionBar:Hide();
     end;
+end;
+
+local function clearSpentCost()
+    spentCostPercent = 0;
+    spentCostFlat = 0;
+    spentResource = nil;
+    if frame then
+        frame.spentCostFade:Stop();
+        frame.spentCostBar:SetAlpha(1);
+        frame.spentCostBar:Hide();
+    end;
+end;
+
+local function clearAllCosts()
+    clearPredictedCost();
+    clearSpentCost();
 end;
 
 local function getResource()
@@ -66,8 +81,21 @@ local function getSpellCost(resource, spellID)
 end;
 
 -- retail usually gives us a percentage but classic gives us a flat cost
+local function getCostFraction(costPercent, flatCost, max)
+    -- era: costPercent is relative to base mana, not max mana, so use the flat cost
+    if core.isClassicEra then
+        if core:IsSafePositiveNumber(flatCost) and core:IsSafePositiveNumber(max) then
+            return flatCost / max;
+        end;
+    elseif core:IsSafePositiveNumber(costPercent) then
+        return costPercent / 100;
+    elseif core:IsSafePositiveNumber(flatCost) and core:IsSafePositiveNumber(max) then
+        return flatCost / max;
+    end;
+    return 0;
+end;
+
 local function updatePredictedCost(resource, isCasting)
-    if spentCostActive then return; end;
     clearPredictedCost();
     local spellID;
     if isCasting then
@@ -88,6 +116,9 @@ local function updateBar()
     if predictedResource and predictedResource ~= resource then
         clearPredictedCost();
     end;
+    if spentResource and spentResource ~= resource then
+        clearSpentCost();
+    end;
 
     if frame.resourceTicker then
         local tickResource = resource == Enum.PowerType.Mana or resource == Enum.PowerType.Energy;
@@ -106,44 +137,28 @@ local function updateBar()
     frame.costAnchor:SetValue(current);
     frame.text:SetText(AbbreviateNumbers(current));
 
-    -- prefer percentage if it exists but in classic we have to do math
-    -- luckily its allowed there :D
-    local widthFraction = 0;
-    if core.isClassicEra then
-        -- era: costPercent is relative to base mana, not max mana, so use the flat cost
-        if core:IsSafePositiveNumber(predictedCostFlat) and core:IsSafePositiveNumber(max) then
-            widthFraction = predictedCostFlat / max;
-        end;
-    elseif core:IsSafePositiveNumber(predictedCostPercent) then
-        widthFraction = predictedCostPercent / 100;
-    elseif core:IsSafePositiveNumber(predictedCostFlat) and core:IsSafePositiveNumber(max) then
-        widthFraction = predictedCostFlat / max;
-    end;
-
-    if widthFraction > 0 then
-        if frame.costPredictionFade:IsPlaying() then return; end;
-        local spent = spentCostActive;
-        if spent then
-            local colour = core.resources.resourceColours[resource];
-            local config = core.resourceCostHighlightConfig;
-            frame.costPredictionBar:SetColorTexture(
-                colour.r / 255 * (1 - config.brighten) + config.brighten,
-                colour.g / 255 * (1 - config.brighten) + config.brighten,
-                colour.b / 255 * (1 - config.brighten) + config.brighten, config.alpha);
-        else
-            local colour = colours.blackCostPrediction;
-            frame.costPredictionBar:SetColorTexture(colour.r, colour.g, colour.b, colour.a);
-        end;
-        local anchor = spent and frame.costAnchor or frame.bar;
-        frame.costPredictionBar:ClearAllPoints();
-        frame.costPredictionBar:SetPoint(spent and "TOPLEFT" or "TOPRIGHT",
-            anchor:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
-        frame.costPredictionBar:SetPoint(spent and "BOTTOMLEFT" or "BOTTOMRIGHT",
-            anchor:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
-        frame.costPredictionBar:SetWidth(core:EvenPixels(frame.bar:GetWidth() * math.min(1, widthFraction)));
+    local predictedFraction = getCostFraction(predictedCostPercent, predictedCostFlat, max);
+    if predictedFraction > 0 then
+        frame.costPredictionBar:SetWidth(core:EvenPixels(frame.bar:GetWidth() * math.min(1, predictedFraction)));
         frame.costPredictionBar:Show();
     else
         frame.costPredictionBar:Hide();
+    end;
+
+    -- keep the spent bar frozen while it fades out
+    if frame.spentCostFade:IsPlaying() then return; end;
+    local spentFraction = getCostFraction(spentCostPercent, spentCostFlat, max);
+    if spentFraction > 0 then
+        local colour = core.resources.resourceColours[resource];
+        local config = core.resourceCostHighlightConfig;
+        frame.spentCostBar:SetColorTexture(
+            colour.r / 255 * (1 - config.brighten) + config.brighten,
+            colour.g / 255 * (1 - config.brighten) + config.brighten,
+            colour.b / 255 * (1 - config.brighten) + config.brighten, config.alpha);
+        frame.spentCostBar:SetWidth(core:EvenPixels(frame.bar:GetWidth() * math.min(1, spentFraction)));
+        frame.spentCostBar:Show();
+    else
+        frame.spentCostBar:Hide();
     end;
 end;
 
@@ -152,19 +167,18 @@ local function highlightSpentCost(spellID)
 
     local resource = getResource();
     local duration = core.resourceCostHighlightConfig.duration;
-    if not resource or resource == Enum.PowerType.Mana or duration <= 0 then return; end;
+    if not resource or duration <= 0 then return; end;
 
     local costPercent, flatCost = getSpellCost(resource, spellID);
     if not core:IsSafePositiveNumber(costPercent) and not core:IsSafePositiveNumber(flatCost) then return; end;
 
-    clearPredictedCost();
-    predictedCostPercent = costPercent;
-    predictedCostFlat = flatCost;
-    predictedResource = resource;
-    spentCostActive = true;
-    frame.costPredictionFadeAlpha:SetDuration(duration);
+    clearSpentCost();
+    spentCostPercent = costPercent;
+    spentCostFlat = flatCost;
+    spentResource = resource;
+    frame.spentCostFadeAlpha:SetDuration(duration);
     updateBar();
-    frame.costPredictionFade:Play();
+    frame.spentCostFade:Play();
 end;
 
 local function updateColour()
@@ -191,22 +205,29 @@ function core:CreatePrimaryBar(parent)
     local costWindow = CreateFrame("Frame", nil, frame.bar);
     costWindow:SetAllPoints(frame.bar);
     costWindow:SetClipsChildren(true);
+
     frame.costAnchor = CreateFrame("StatusBar", nil, costWindow);
     frame.costAnchor:SetAllPoints(frame.bar);
     frame.costAnchor:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8");
     frame.costAnchor:SetStatusBarColor(0, 0, 0, 0);
+
     frame.costPredictionBar = costWindow:CreateTexture(nil, "OVERLAY", nil, 1);
     frame.costPredictionBar:SetColorTexture(colours.blackCostPrediction.r, colours.blackCostPrediction.g,
         colours.blackCostPrediction.b, colours.blackCostPrediction.a);
     frame.costPredictionBar:SetPoint("TOPRIGHT", frame.bar:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
     frame.costPredictionBar:SetPoint("BOTTOMRIGHT", frame.bar:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
     frame.costPredictionBar:Hide();
-    frame.costPredictionFade = frame.costPredictionBar:CreateAnimationGroup();
-    frame.costPredictionFadeAlpha = frame.costPredictionFade:CreateAnimation("Alpha");
-    frame.costPredictionFadeAlpha:SetFromAlpha(core.resourceCostHighlightConfig.fromAlpha);
-    frame.costPredictionFadeAlpha:SetToAlpha(core.resourceCostHighlightConfig.toAlpha);
-    frame.costPredictionFade:SetScript("OnFinished", clearPredictedCost);
-    frame:HookScript("OnHide", clearPredictedCost);
+
+    frame.spentCostBar = costWindow:CreateTexture(nil, "OVERLAY", nil, 1);
+    frame.spentCostBar:SetPoint("TOPLEFT", frame.costAnchor:GetStatusBarTexture(), "TOPRIGHT", 0, 0);
+    frame.spentCostBar:SetPoint("BOTTOMLEFT", frame.costAnchor:GetStatusBarTexture(), "BOTTOMRIGHT", 0, 0);
+    frame.spentCostBar:Hide();
+    frame.spentCostFade = frame.spentCostBar:CreateAnimationGroup();
+    frame.spentCostFadeAlpha = frame.spentCostFade:CreateAnimation("Alpha");
+    frame.spentCostFadeAlpha:SetFromAlpha(core.resourceCostHighlightConfig.fromAlpha);
+    frame.spentCostFadeAlpha:SetToAlpha(core.resourceCostHighlightConfig.toAlpha);
+    frame.spentCostFade:SetScript("OnFinished", clearSpentCost);
+    frame:HookScript("OnHide", clearAllCosts);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
     frame:RegisterUnitEvent("PLAYER_SPECIALIZATION_CHANGED", "player");
@@ -234,7 +255,7 @@ function core:CreatePrimaryBar(parent)
         if event == "PLAYER_ENTERING_WORLD"
             or event == "UPDATE_SHAPESHIFT_FORM"
             or (event == "PLAYER_SPECIALIZATION_CHANGED" and unit and unit == "player") then
-            clearPredictedCost();
+            clearAllCosts();
             updateColour();
         end;
         if event == "UNIT_SPELLCAST_SUCCEEDED" then
