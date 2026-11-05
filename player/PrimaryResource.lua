@@ -206,6 +206,11 @@ function core:CreatePrimaryBar(parent)
     costWindow:SetAllPoints(frame.bar);
     costWindow:SetClipsChildren(true);
 
+    local textLayer = CreateFrame("Frame", nil, frame.bar);
+    textLayer:SetAllPoints(frame.bar);
+    textLayer:SetFrameLevel(costWindow:GetFrameLevel() + 1);
+    frame.text:SetParent(textLayer);
+
     frame.costAnchor = CreateFrame("StatusBar", nil, costWindow);
     frame.costAnchor:SetAllPoints(frame.bar);
     frame.costAnchor:SetStatusBarTexture("Interface\\Buttons\\WHITE8X8");
