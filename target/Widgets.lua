@@ -232,6 +232,14 @@ function core:CreateTargetWidgets(parent, hpBar)
 
     if core.TRP then
         createTRPWidget();
+        frame:RegisterEvent("PLAYER_REGEN_DISABLED");
+        frame:RegisterEvent("PLAYER_REGEN_ENABLED");
+
+        TRP3_API.RegisterCallback(TRP3_Addon, TRP3_Addon.Events.REGISTER_DATA_UPDATED, function(_, characterID)
+            if not characterID or (UnitIsPlayer("target") and characterID == TRP3_NameUtil.GetQualifiedName("target")) then
+                CheckTRP();
+            end;
+        end);
     end;
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");
