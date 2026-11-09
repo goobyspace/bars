@@ -97,6 +97,10 @@ function core:InitializeBarFrames()
             core:SnapToPixelGrid(experienceBar);
         end;
 
+        if core.CreateReputationBar then
+            core:CreateReputationBar(playerFrame, experienceBar);
+        end;
+
         local primaryResourceBar = core:CreatePrimaryBar(playerFrame);
         core:SetPixelPoint(primaryResourceBar, "BOTTOM", playerFrame, "BOTTOM", 0, core.primaryBarOffset);
         core:SnapToPixelGrid(primaryResourceBar);
@@ -115,15 +119,17 @@ function core:InitializeBarFrames()
         core:CreateBreathBar(UIParent);
 
         local auraTracker;
+        local trackers;
         if core.CreateAuraTracker then
             auraTracker = core:CreateAuraTracker(playerFrame);
             core:SetPixelPoint(auraTracker, "TOP", playerFrame, "BOTTOM", 0, -2);
+            trackers = core:CreateTrackers(playerFrame, auraTracker);
         end;
 
         if core.CreateTotemTracker then
             local totemTracker = core:CreateTotemTracker(playerFrame);
             if totemTracker then
-                core:SetPixelPoint(totemTracker, "BOTTOM", auraTracker, "TOPRIGHT",
+                core:SetPixelPoint(totemTracker, "BOTTOM", trackers and trackers.hasEntries and trackers or auraTracker, "TOPRIGHT",
                     27, -32);
                 core:SnapToPixelGrid(totemTracker);
             end;

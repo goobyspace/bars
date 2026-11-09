@@ -3,10 +3,10 @@ local colours = core.colours;
 
 if not core.isForever then return; end;
 
-local iconWidth = 36;
-local iconHeight = 30;
-local slotCount = 8;
-local minIconSpacing = 2;
+local iconWidth = core.auraTrackerLayout.iconWidth;
+local iconHeight = core.auraTrackerLayout.iconHeight;
+local slotCount = core.auraTrackerLayout.slotCount;
+local minIconSpacing = core.auraTrackerLayout.minIconSpacing;
 local enchantUpdateInterval = 0.1;
 
 local function resolveSpellID(spell)
@@ -160,6 +160,7 @@ local function createAuraLayer(button, entry)
 
     local function initializeAuraFrame(auraButton)
         core:SetPixelSize(auraButton, iconWidth, iconHeight);
+        auraButton:SetAllPoints(container);
 
         auraButton.border = auraButton:CreateTexture(nil, "BACKGROUND");
         core:SetPixelPoint(auraButton.border, "TOPLEFT", auraButton, "TOPLEFT", 0, 0);
@@ -208,11 +209,10 @@ local function createAuraLayer(button, entry)
         end;
     end;
 
-    local auraButton = container:AddAuraSlot("active", entry.auraFilter, {
+    container:AddAuraSlot("active", entry.auraFilter, {
         candidateFilters = { includeSpellIDs = includeSpellIDs },
         initializeFrame = initializeAuraFrame,
     });
-    auraButton:SetAllPoints(container);
     button.auraContainer = container;
 end;
 
@@ -356,12 +356,13 @@ local function updateBaseState(button, activeOverlays)
     updateWeaponEnchant(button);
 end;
 
-function core:CreateAuraTracker(parent)
-    local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
-    core:SetPixelSize(frame, core.width, iconHeight);
+function core:CreateAuraTracker(parent, options)
+    options = options or {};
+    local frame = CreateFrame("Frame", options.name or "PlayerAuraTrackerContainer", parent);
+    core:SetPixelSize(frame, options.width or core.width, iconHeight);
 
     local playerClass = select(2, UnitClass("player"));
-    local entries = core.foreverAuraTracker and core.foreverAuraTracker[playerClass];
+    local entries = options.entries or core.foreverAuraTracker and core.foreverAuraTracker[playerClass];
     if not entries then return frame; end;
 
     local buttons = {};

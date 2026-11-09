@@ -7,12 +7,15 @@ local function updateBar()
 
     local isPlayer = UnitIsPlayer("targettarget");
     local threat = UnitThreatSituation("player", "targettarget");
+    local reactionColour = not isPlayer and core:GetUnitReactionColor("targettarget");
     if isPlayer then
         if not core:SetTRPUnitColor(frame.bar, "targettarget") then
             local _, name = UnitClass("targettarget");
             local color = C_ClassColor.GetClassColor(name);
             frame.bar:SetStatusBarColor(color:GetRGB());
         end;
+    elseif reactionColour then
+        frame.bar:SetStatusBarColor(reactionColour.r, reactionColour.g, reactionColour.b);
     elseif threat ~= nil or UnitIsEnemy("player", "targettarget") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
             core.ClassColors["hostile"].b);
@@ -84,6 +87,7 @@ function core:CreateTargetTargetHPBar(parent)
     frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "targettarget");
     frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", "targettarget");
     frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", "targettarget");
+    frame:RegisterEvent("UPDATE_FACTION");
     frame:RegisterUnitEvent("UNIT_TARGET", "target");
     frame:RegisterUnitEvent("PLAYER_TARGET_DIED");
     frame:RegisterEvent("PET_BATTLE_OPENING_START");

@@ -20,6 +20,7 @@ utils/TextureUtils.lua
 config/ColourConfig.lua
 config/LayoutConfig.lua
 config/era/AuraTrackerConfig.lua
+config/TrackersConfig.lua
 utils/Debug.lua
 
 data/PurgeData.lua
@@ -39,6 +40,7 @@ widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
 widgets/Experience.lua
 widgets/era/AuraTracker.lua
+widgets/Trackers.lua
 widgets/TotemTracker.lua
 
 player/era/ManaTick.lua

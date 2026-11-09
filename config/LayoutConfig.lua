@@ -32,6 +32,13 @@ end;
 core.healPredictionOverflow = 1.5;
 core.playerCastbarOffsetY = -48;
 
+core.auraTrackerLayout = {
+    iconWidth = 36,
+    iconHeight = 30,
+    slotCount = 8,
+    minIconSpacing = 2,
+};
+
 core.resourceTickerConfig = {
     fiveSecondRuleDuration = 5,
 };

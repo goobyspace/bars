@@ -80,6 +80,15 @@ function core:SetTRPUnitColor(bar, unit)
     return true;
 end;
 
+function core:GetUnitReactionColor(unit)
+    local reaction = UnitReaction(unit, "player");
+    if not reaction or issecretvalue(reaction) then return nil; end;
+    if reaction < 3 then return nil; end;
+
+    local reputationColours = core.colours.reputation;
+    return reputationColours and reputationColours[reaction];
+end;
+
 function core:UpdateHPBarValues(frame, unit, immediate)
     if not UnitExists(unit) then
         return nil, nil;

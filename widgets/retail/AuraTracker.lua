@@ -3,10 +3,10 @@ local colours = core.colours;
 
 if core.isClassicRules then return; end;
 
-local iconWidth = 36;
-local iconHeight = 30;
-local slotCount = 8;
-local minIconSpacing = 2;
+local iconWidth = core.auraTrackerLayout.iconWidth;
+local iconHeight = core.auraTrackerLayout.iconHeight;
+local slotCount = core.auraTrackerLayout.slotCount;
+local minIconSpacing = core.auraTrackerLayout.minIconSpacing;
 local updateInterval = 0.1;
 
 local whiteColour = CreateColor(colours.white.r, colours.white.g, colours.white.b, 1);
@@ -299,12 +299,13 @@ local function refreshSpell(button)
     updateCooldown(button);
 end;
 
-function core:CreateAuraTracker(parent)
-    local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
-    core:SetPixelSize(frame, core.width, iconHeight);
+function core:CreateAuraTracker(parent, options)
+    options = options or {};
+    local frame = CreateFrame("Frame", options.name or "PlayerAuraTrackerContainer", parent);
+    core:SetPixelSize(frame, options.width or core.width, iconHeight);
 
     local playerClass = select(2, UnitClass("player"));
-    local classEntries = core.retailAuraTracker and core.retailAuraTracker[playerClass];
+    local classEntries = options.entries or core.retailAuraTracker and core.retailAuraTracker[playerClass];
     if not classEntries then return frame; end;
 
     local buttons = {};

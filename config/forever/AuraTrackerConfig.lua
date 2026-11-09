@@ -76,6 +76,7 @@ core.foreverAuraTracker = {
             textNoSeconds = true,
             rangeCheck = true,
             displayText = true,
+            displayTextSize = 14,
         },
         {
             name = "Rip",

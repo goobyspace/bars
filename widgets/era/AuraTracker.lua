@@ -3,11 +3,11 @@ local colours = core.colours;
 
 if not core.isClassicEra then return; end;
 
-local iconWidth = 36;
-local iconHeight = 30;
+local iconWidth = core.auraTrackerLayout.iconWidth;
+local iconHeight = core.auraTrackerLayout.iconHeight;
 
-local slotCount = 8;
-local minIconSpacing = 2;
+local slotCount = core.auraTrackerLayout.slotCount;
+local minIconSpacing = core.auraTrackerLayout.minIconSpacing;
 
 local updateInterval = 0.1;
 
@@ -315,12 +315,14 @@ local function updateReminderIcon(button)
     button.icon:SetDesaturated(auraData == nil);
 end;
 
-function core:CreateAuraTracker(parent)
-    local frame = CreateFrame("Frame", "PlayerAuraTrackerContainer", parent);
-    core:SetPixelSize(frame, core.width, iconHeight);
+function core:CreateAuraTracker(parent, options)
+    options = options or {};
+    local frame = CreateFrame("Frame", options.name or "PlayerAuraTrackerContainer", parent);
+    local width = options.width or core.width;
+    core:SetPixelSize(frame, width, iconHeight);
 
     local playerClass = select(2, UnitClass("player"));
-    local entries = core.auraTracker[playerClass];
+    local entries = options.entries or core.auraTracker[playerClass];
     if not entries or #entries == 0 then return frame; end;
 
     local icons = {};
@@ -338,7 +340,7 @@ function core:CreateAuraTracker(parent)
             button:SetShown(button.visible);
         end;
 
-        core:SetPixelSize(frame, core.width, iconHeight);
+        core:SetPixelSize(frame, width, iconHeight);
     end;
 
     local function updateVisibility()

@@ -5,7 +5,9 @@ local frame;
 local difficultyKeys = { "trivial", "standard", "difficult", "verydifficult", "impossible" };
 
 local function updateBarColour()
-    if UnitIsPlayer("target") then
+    local isPlayer = UnitIsPlayer("target");
+    local reactionColour = not isPlayer and core:GetUnitReactionColor("target");
+    if isPlayer then
         if core:SetTRPUnitColor(frame.bar, "target") then return; end;
 
         local _, name = UnitClass("target");
@@ -13,6 +15,8 @@ local function updateBarColour()
             local color = C_ClassColor.GetClassColor(name);
             frame.bar:SetStatusBarColor(color:GetRGB());
         end;
+    elseif reactionColour then
+        frame.bar:SetStatusBarColor(reactionColour.r, reactionColour.g, reactionColour.b);
     elseif UnitThreatSituation("player", "target") ~= nil or UnitIsEnemy("player", "target") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
             core.ClassColors["hostile"].b);
@@ -107,6 +111,7 @@ function core:CreateTargetHPBar(parent)
     frame:RegisterUnitEvent("UNIT_HEAL_PREDICTION", "target");
     frame:RegisterUnitEvent("UNIT_TARGETABLE_CHANGED", "target");
     frame:RegisterUnitEvent("UNIT_THREAT_LIST_UPDATE", "target");
+    frame:RegisterEvent("UPDATE_FACTION");
     frame:RegisterUnitEvent("PLAYER_TARGET_DIED");
     frame:RegisterUnitEvent("UNIT_LEVEL", "target");
     frame:RegisterEvent("PLAYER_LEVEL_UP");

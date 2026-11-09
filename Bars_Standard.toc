@@ -21,6 +21,7 @@ config/ColourConfig.lua
 config/LayoutConfig.lua
 config/retail/ResourceHighlightConfig.lua
 config/retail/AuraTrackerConfig.lua
+config/TrackersConfig.lua
 utils/Debug.lua
 
 data/PurgeData.lua
@@ -38,6 +39,7 @@ widgets/BreathBar.lua
 widgets/FlightPathTimer.lua
 widgets/Experience.lua
 widgets/retail/AuraTracker.lua
+widgets/Trackers.lua
 
 player/HPBar.lua
 player/PrimaryResource.lua
