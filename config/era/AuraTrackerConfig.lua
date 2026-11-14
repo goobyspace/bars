@@ -8,6 +8,7 @@ local _, core = ...;
 --     alwaysShow = true,
 --     form = "!CAT",
 --     showCooldownSwipe = true, -- spell
+--     showGCD = true, -- spell; also shows the global cooldown swipe
 --     showCooldownText = true, -- spell
 --     showCastCount = true, -- spell or aura
 --     rangeCheck = true, -- spell

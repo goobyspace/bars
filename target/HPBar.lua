@@ -6,6 +6,7 @@ local difficultyKeys = { "trivial", "standard", "difficult", "verydifficult", "i
 
 local function updateBarColour()
     local isPlayer = UnitIsPlayer("target");
+    local threat = UnitThreatSituation("player", "target");
     local reactionColour = not isPlayer and core:GetUnitReactionColor("target");
     if isPlayer then
         if core:SetTRPUnitColor(frame.bar, "target") then return; end;
@@ -15,9 +16,12 @@ local function updateBarColour()
             local color = C_ClassColor.GetClassColor(name);
             frame.bar:SetStatusBarColor(color:GetRGB());
         end;
+    elseif core.isForever and threat ~= nil then
+        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
+            core.ClassColors["hostile"].b);
     elseif reactionColour then
         frame.bar:SetStatusBarColor(reactionColour.r, reactionColour.g, reactionColour.b);
-    elseif UnitThreatSituation("player", "target") ~= nil or UnitIsEnemy("player", "target") then
+    elseif threat ~= nil or UnitIsEnemy("player", "target") then
         frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
             core.ClassColors["hostile"].b);
     elseif UnitIsFriend("player", "target") then

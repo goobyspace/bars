@@ -218,9 +218,10 @@ local function updateSpellIcon(button)
 
     local start, duration, enabled = getSpellCooldownInfo(spellID);
     local onCooldown = enabled and duration and duration > gcdThreshold;
+    local showSwipe = onCooldown or entry.showGCD and enabled and duration and duration > 0;
 
     if entry.showCooldownSwipe ~= false then
-        CooldownFrame_Set(button.cooldown, start, duration, onCooldown and 1 or 0);
+        CooldownFrame_Set(button.cooldown, start, duration, showSwipe and 1 or 0);
     end;
 
     if entry.showCooldownText ~= false and onCooldown then

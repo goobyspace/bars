@@ -7,6 +7,7 @@ local function updateBar()
     if not frame or not frame:IsShown() then return; end;
 
     frame.bar:SetValue(UnitPowerPercent("target", nil, true), Enum.StatusBarInterpolation.ExponentialEaseOut);
+    frame.text:SetText(AbbreviateNumbers(UnitPower("target")));
 end;
 
 local function updateColour()
@@ -20,8 +21,13 @@ local function updateColour()
 end;
 
 function core:CreateTargetResourceBar(parent)
-    frame = core:CreateSimpleStatusBar("TargetResourceContainer", parent, core.width / 3 * 2, core.barBgHeight);
+    frame = core:CreateSimpleStatusBar("TargetResourceContainer", parent, core.width / 3 * 2, core.barBgHeight,
+        { includeText = true, fontSize = 10 });
     core:AddMouseoverBorder(frame, parent.click, "target");
+
+    frame.text:SetAlpha(0);
+    parent.click:HookScript("OnEnter", function() frame.text:SetAlpha(1); end);
+    parent.click:HookScript("OnLeave", function() frame.text:SetAlpha(0); end);
     frame.bar:SetMinMaxValues(0, 1, Enum.StatusBarInterpolation.ExponentialEaseOut);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");

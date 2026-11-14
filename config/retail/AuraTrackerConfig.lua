@@ -13,6 +13,7 @@ if core.isClassicRules then return; end;
 --     auraSpellIDs = { 123 }, -- shows the player's matching buff on top of the icon whilst active
 --     rangeCheck = true, -- tints the icon red when the target is out of range
 --     spellCooldown = true,
+--     showGCD = true, -- also shows the global cooldown swipe, needs spellCooldown
 --     chargeCooldown = true, -- edge-only cooldown for the charge recharge, needs spellCooldown
 --     usability = true, -- icon is greyed out until the spell is usable
 --     usableGlow = true, -- glows whilst usable, or whilst off cooldown and in combat if usability isnt set

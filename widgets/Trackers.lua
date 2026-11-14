@@ -33,11 +33,19 @@ local function createReminder(parent, entry, offset)
     flipbook:SetFlipBookFrames(30);
     flipbook:SetFlipBookFrameWidth(0);
     flipbook:SetFlipBookFrameHeight(0);
-    button:SetScript("OnShow", function() animation:Play(); end);
+    glow:SetScript("OnShow", function() animation:Play(); end);
+    glow:SetScript("OnHide", function() animation:Stop(); end);
+    glow:Hide();
     button:SetScript("OnHide", function()
-        animation:Stop();
         if GameTooltip:GetOwner() == button then GameTooltip:Hide(); end;
     end);
+
+    local textFrame = CreateFrame("Frame", nil, button);
+    textFrame:SetAllPoints();
+    textFrame:SetFrameLevel(button:GetFrameLevel() + 10);
+    local text = textFrame:CreateFontString(nil, "OVERLAY");
+    text:SetPoint("CENTER", 0, 0);
+    core:SetBarFont(text, 10);
 
     button:EnableMouse(true);
     button:SetScript("OnEnter", function(self)
@@ -47,19 +55,39 @@ local function createReminder(parent, entry, offset)
     end);
     button:SetScript("OnLeave", function() GameTooltip:Hide(); end);
 
+    -- expiry stays nil when the aura is missing and 0 when it has no duration
+    local expiry;
+    local function refresh()
+        local remaining = expiry and expiry > 0 and expiry - GetTime();
+        local missing = not expiry or remaining <= 0;
+        local expiring = remaining and remaining > 0 and remaining <= core.trackers.reminderThreshold;
+        button:SetShown(missing or expiring);
+        glow:SetShown(missing);
+        text:SetText(expiring and math.ceil(remaining) or "");
+    end;
+
     local function update()
         -- aura slots error out when secret so just keep the last known state until they're readable again
         if C_Secrets and C_Secrets.ShouldAurasBeSecret() then return; end;
-        local active = false;
+        expiry = nil;
         AuraUtil.ForEachAura("player", "HELPFUL", nil, function(aura)
             if not (issecretvalue and issecretvalue(aura.name)) and aura.name == entry.auraName then
-                active = true;
+                expiry = aura.expirationTime or 0;
                 return true;
             end;
             return false;
         end, true);
-        button:SetShown(not active);
+        refresh();
     end;
+
+    local elapsed = 0;
+    local ticker = CreateFrame("Frame", nil, parent);
+    ticker:SetScript("OnUpdate", function(_, delta)
+        elapsed = elapsed + delta;
+        if elapsed < 0.2 then return; end;
+        elapsed = 0;
+        refresh();
+    end);
     button:RegisterEvent("PLAYER_ENTERING_WORLD");
     button:RegisterEvent("PLAYER_REGEN_ENABLED");
     button:RegisterUnitEvent("UNIT_AURA", "player");

@@ -8,6 +8,7 @@ local iconHeight = core.auraTrackerLayout.iconHeight;
 local slotCount = core.auraTrackerLayout.slotCount;
 local minIconSpacing = core.auraTrackerLayout.minIconSpacing;
 local enchantUpdateInterval = 0.1;
+local gcdSpellID = 61304;
 
 local function resolveSpellID(spell)
     if type(spell) == "number" then
@@ -144,6 +145,31 @@ local function createBaseIcon(parent, entry)
     end;
 
     return button;
+end;
+
+local function createGCDLayer(button, entry)
+    if not entry.showGCD then return; end;
+
+    -- sits above the aura layer so the swipe stays visible whilst the buff is up
+    local layer = CreateFrame("Cooldown", nil, button, "CooldownFrameTemplate");
+    layer:SetAllPoints();
+    layer:SetFrameLevel(button:GetFrameLevel() + 10);
+    layer:SetHideCountdownNumbers(true);
+    layer:SetDrawEdge(false);
+    button.gcdCooldown = layer;
+end;
+
+local function updateGCD(button)
+    local layer = button.gcdCooldown;
+    if not layer then return; end;
+
+    local info = C_Spell.GetSpellCooldown(gcdSpellID);
+    local duration = info and info["isActive"] and C_Spell.GetSpellCooldownDuration(gcdSpellID);
+    if duration then
+        layer:SetCooldownFromDurationObject(duration, true);
+    else
+        layer:Clear();
+    end;
 end;
 
 local function createAuraLayer(button, entry)
@@ -300,22 +326,24 @@ local function updateWeaponEnchant(button)
     end;
 end;
 
+-- returns whether the spell is on a real cooldown (not just the gcd)
 local function updateSpellCooldown(button)
-    if not button.cooldown then return; end;
-
     local info = C_Spell.GetSpellCooldown(button.spellID);
-    if not info or not info["isActive"] or info["isOnGCD"] then
+    local onCooldown = info and info["isActive"] and not info["isOnGCD"] or false;
+    if not button.cooldown then return onCooldown; end;
+
+    if not onCooldown then
         button.cooldown:Clear();
         button.cooldown:Hide();
         button.cooldownFallback:Hide();
-        return;
+        return false;
     end;
 
     local duration = C_Spell.GetSpellCooldownDuration(button.spellID);
-    if not duration then return; end;
+    if not duration then return true; end;
 
-    if not duration:HasSecretValues() then
-        button.cooldown:SetCooldownFromDurationObject(duration, true);
+    -- secret durations can be rejected, only then fall back to the bar
+    if pcall(button.cooldown.SetCooldownFromDurationObject, button.cooldown, duration, true) then
         button.cooldown:Show();
         button.cooldownFallback:Hide();
     else
@@ -325,6 +353,7 @@ local function updateSpellCooldown(button)
             Enum.StatusBarTimerDirection.RemainingTime);
         button.cooldownFallback:Show();
     end;
+    return true;
 end;
 
 local function updateBaseState(button, activeOverlays)
@@ -333,13 +362,14 @@ local function updateBaseState(button, activeOverlays)
     local outOfRange = entry.rangeCheck and UnitExists("target")
         and C_Spell.IsSpellInRange(spellID, "target") == false;
     local usable = entry.usability and C_Spell.IsSpellUsable(spellID);
+    local onCooldown = updateSpellCooldown(button);
 
     if outOfRange then
         button.icon:SetVertexColor(colours.outOfRange.r, colours.outOfRange.g, colours.outOfRange.b);
         button.icon:SetDesaturated(false);
     else
         button.icon:SetVertexColor(colours.white.r, colours.white.g, colours.white.b);
-        button.icon:SetDesaturated(not (entry.usability and usable));
+        button.icon:SetDesaturated(not (entry.usability and usable) or entry.grayOnCooldown and onCooldown or false);
     end;
 
     local activationGlow = false;
@@ -351,8 +381,8 @@ local function updateBaseState(button, activeOverlays)
             end;
         end;
     end;
-    setGlowShown(button, activationGlow or entry.usableGlow and usable or false);
-    updateSpellCooldown(button);
+    setGlowShown(button, activationGlow or entry.usableGlow and usable and not onCooldown or false);
+    updateGCD(button);
     updateWeaponEnchant(button);
 end;
 
@@ -373,6 +403,7 @@ function core:CreateAuraTracker(parent, options)
         button.slot = entry.slot or index;
         createAuraLayer(button, entry);
         createEnchantLayer(button, entry);
+        createGCDLayer(button, entry);
         table.insert(buttons, button);
     end;
 
@@ -446,6 +477,13 @@ function core:CreateAuraTracker(parent, options)
             activeOverlays[spellID] = true;
         elseif event == "SPELL_ACTIVATION_OVERLAY_GLOW_HIDE" then
             activeOverlays[spellID] = nil;
+        elseif event == "PLAYER_TARGET_CHANGED" then
+            -- custom containers don't rescan on their own when the unit token points at a new target
+            for _, button in ipairs(buttons) do
+                if button.auraContainer and button.entry.auraUnit == "target" then
+                    button.auraContainer:UpdateAllAuras();
+                end;
+            end;
         elseif event == "PLAYER_ENTERING_WORLD" or event == "LEARNED_SPELL_IN_SKILL_LINE"
             or event == "SPELLS_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" then
             updateVisibility();

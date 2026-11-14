@@ -218,7 +218,7 @@ end;
 local function updateCooldown(button)
     if not button.cooldown then return; end;
 
-    local duration = C_Spell.GetSpellCooldownDuration(button.spellID, true);
+    local duration = C_Spell.GetSpellCooldownDuration(button.spellID, not button.entry.showGCD);
     if duration then
         button.cooldown:SetCooldownFromDurationObject(duration, true);
     else

@@ -37,6 +37,10 @@ function core:CreateFlightPathTimer(parent)
     local pendingDestination;
     local pendingRoute;
     local selectedAt;
+    local selectionExpiresAt;
+    local gossipNPC;
+    local gossipName;
+    local gossipOptions = {};
     local startedAt;
     local expectedDuration;
     local elapsedSinceUpdate = 0;
@@ -56,6 +60,12 @@ function core:CreateFlightPathTimer(parent)
 
     local function beginFlight()
         if startedAt or not UnitOnTaxi("player") then return; end;
+        if selectionExpiresAt and GetTime() > selectionExpiresAt then
+            pendingDestination = nil;
+            pendingRoute = nil;
+            selectedAt = nil;
+        end;
+        selectionExpiresAt = nil;
         startedAt = selectedAt or GetTime();
         expectedDuration = pendingRoute and (factionData[pendingRoute] or durations[pendingRoute]
             or oppositeFactionData[pendingRoute] or oppositeDurations[pendingRoute]) or nil;
@@ -79,6 +89,7 @@ function core:CreateFlightPathTimer(parent)
         startedAt = nil;
         expectedDuration = nil;
         selectedAt = nil;
+        selectionExpiresAt = nil;
         pendingDestination = nil;
         pendingRoute = nil;
         frame:Hide();
@@ -88,7 +99,27 @@ function core:CreateFlightPathTimer(parent)
         pendingDestination = taxiNodes[index];
         pendingRoute = sourceName and pendingDestination and (sourceName .. "\031" .. pendingDestination) or nil;
         selectedAt = GetTime();
+        selectionExpiresAt = nil;
     end);
+
+    local function selectGossipOption(optionID)
+        if startedAt or not gossipNPC or not optionID then return; end;
+        pendingDestination = gossipName;
+        pendingRoute = "gossip:" .. gossipNPC .. "\031" .. optionID;
+        selectedAt = GetTime();
+        selectionExpiresAt = selectedAt + 10;
+    end;
+
+    if core.isForever then
+        hooksecurefunc(C_GossipInfo, "SelectOption", selectGossipOption);
+        if C_GossipInfo.SelectOptionByIndex then
+            hooksecurefunc(C_GossipInfo, "SelectOptionByIndex", function(index)
+                local option = gossipOptions[index];
+                selectGossipOption(option and option.gossipOptionID);
+            end);
+        end;
+        controller:RegisterEvent("GOSSIP_SHOW");
+    end;
 
     controller:RegisterEvent("PLAYER_ENTERING_WORLD");
     controller:RegisterEvent("TAXIMAP_OPENED");
@@ -97,6 +128,17 @@ function core:CreateFlightPathTimer(parent)
     controller:SetScript("OnEvent", function(_, event)
         if event == "TAXIMAP_OPENED" then
             captureTaxiMap();
+        elseif event == "GOSSIP_SHOW" then
+            local guid = UnitGUID("npc");
+            gossipName = UnitName("npc");
+            if guid and not issecretvalue(guid) then
+                gossipNPC = guid:match("^Creature%-%d+%-%d+%-%d+%-%d+%-(%d+)%-");
+            elseif gossipName and not issecretvalue(gossipName) then
+                gossipNPC = gossipName;
+            else
+                gossipNPC = nil;
+            end;
+            gossipOptions = C_GossipInfo.GetOptions();
         elseif UnitOnTaxi("player") then
             beginFlight();
         elseif event == "PLAYER_CONTROL_GAINED" then

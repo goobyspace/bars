@@ -113,6 +113,10 @@ function core:InitializeBarFrames()
         local castbar = core:CreatePlayerCastbar(playerFrame);
         core:SetPixelPoint(castbar, "TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY);
 
+        if core.CreateCooldownTracker then
+            core:CreateCooldownTracker(playerFrame, castbar);
+        end;
+
         local flightPathTimer = core:CreateFlightPathTimer(playerFrame);
         core:SetPixelPoint(flightPathTimer, "TOP", playerFrame, "BOTTOM", 0, core.playerCastbarOffsetY);
 
@@ -279,8 +283,12 @@ function core:InitializeBarFrames()
         core:SnapToPixelGrid(targetOfTargetBar);
 
         local castbar = core:CreateTargetCastbar(targetFrame);
-        core:SetPixelPoint(castbar, "BOTTOM", targetFrame, "TOP", 0,
-            4 * core.fontScale + core.barGrowth);
+        if core.isForever then
+            core:SetPixelPoint(castbar, "TOP", targetFrame, "BOTTOM", 0, core.targetCastbarOffsetY);
+        else
+            core:SetPixelPoint(castbar, "BOTTOM", targetFrame, "TOP", 0,
+                4 * core.fontScale + core.barGrowth);
+        end;
 
         local BigDebuffs = core:CreateImportantDebuffsFrame(targetFrame);
         core:SetPixelPoint(BigDebuffs, "TOPRIGHT", hpBar.hpText, "TOPLEFT", -4, 0);

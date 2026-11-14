@@ -84,6 +84,7 @@ function core:GetUnitReactionColor(unit)
     local reaction = UnitReaction(unit, "player");
     if not reaction or issecretvalue(reaction) then return nil; end;
     if reaction < 3 then return nil; end;
+    if core.isForever and reaction >= 5 then return core.ClassColors.friendly; end;
 
     local reputationColours = core.colours.reputation;
     return reputationColours and reputationColours[reaction];

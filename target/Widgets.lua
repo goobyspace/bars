@@ -136,6 +136,9 @@ end;
 
 local function createTRPWidget()
     frame.trpframe = CreateFrame("Frame", nil, frame);
+    if core.isForever then
+        frame.trpframe:SetFrameStrata("BACKGROUND");
+    end;
     core:SetPixelPoint(frame.trpframe, "LEFT", frame, "LEFT", 0, -60);
     core:SetPixelSize(frame.trpframe, 128, 24);
 

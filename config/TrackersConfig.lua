@@ -4,6 +4,8 @@ local _, core = ...;
 -- slots start at 1 and grow rightwards with no eight-slot limit
 -- retail entries are keyed by class then specialization id, era and forever by class
 core.trackers = {
+    -- seconds left on a reminder aura before its icon starts showing with a countdown
+    reminderThreshold = 60,
     -- shared reminders follow the client-specific slots and match active buff names, not spell ids
     reminders = {
         {

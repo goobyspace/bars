@@ -21,7 +21,9 @@ if not core.isForever then return; end;
 --     displayCharges = true, -- show aura applications instead of duration text
 --     auraGlow = true,
 --     spellCooldown = true,
+--     showGCD = true, -- shows the global cooldown swipe on top of the icon, works without spellCooldown
 --     usability = true,
+--     grayOnCooldown = true, -- desaturate the icon while the spell is on cooldown
 --     activationGlow = true,
 --     usableGlow = true,
 -- },
@@ -40,6 +42,7 @@ core.foreverAuraTracker = {
             auraFilter = "HELPFUL",
             auraGlow = true,
             displayText = false,
+            showGCD = true,
         },
         {
             name = "Nature's Grace",
@@ -51,6 +54,7 @@ core.foreverAuraTracker = {
             auraFilter = "HELPFUL",
             auraGlow = true,
             displayText = false,
+            showGCD = true,
         },
         {
             name = "Moonfire",
@@ -64,6 +68,7 @@ core.foreverAuraTracker = {
             textNoSeconds = true,
             displayText = true,
             displayTextSize = 14,
+            showGCD = true,
         },
         {
             name = "Insect Swarm",
@@ -77,6 +82,18 @@ core.foreverAuraTracker = {
             rangeCheck = true,
             displayText = true,
             displayTextSize = 14,
+            showGCD = true,
+        },
+        {
+            name = "Wild Growth",
+            slot = 4,
+            spellIDs = { 408120 },
+            usability = true,
+            grayOnCooldown = true,
+            spellCooldown = true,
+            displayText = true,
+            displayTextSize = 14,
+            showGCD = true,
         },
         {
             name = "Rip",
@@ -118,6 +135,8 @@ core.foreverAuraTracker = {
             rangeCheck = true,
             usability = true,
             usableGlow = true,
+            spellCooldown = true,
+            displayText = true,
         },
         {
             name = "Nature's Swiftness",
@@ -128,7 +147,8 @@ core.foreverAuraTracker = {
             auraFilter = "HELPFUL",
             auraGlow = true,
             spellCooldown = true,
-            displayText = false,
+            displayText = true,
+            displayTextSize = 14,
         },
         {
             name = "Thorns",

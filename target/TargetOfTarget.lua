@@ -14,6 +14,9 @@ local function updateBar()
             local color = C_ClassColor.GetClassColor(name);
             frame.bar:SetStatusBarColor(color:GetRGB());
         end;
+    elseif core.isForever and threat ~= nil then
+        frame.bar:SetStatusBarColor(core.ClassColors["hostile"].r, core.ClassColors["hostile"].g,
+            core.ClassColors["hostile"].b);
     elseif reactionColour then
         frame.bar:SetStatusBarColor(reactionColour.r, reactionColour.g, reactionColour.b);
     elseif threat ~= nil or UnitIsEnemy("player", "targettarget") then

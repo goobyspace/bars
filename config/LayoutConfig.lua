@@ -27,6 +27,16 @@ function core:InitializeLayout()
     core.frameGap = 43;
     core.targetFrameY = core.playerFrameY + core.hpRowOffset + 2 * core.barBgHeight + core.frameGap
         - core.targetResourceRowOffset;
+
+    if core.isForever then
+        -- player frame sits 4px below the target castbar, which sits 4px below the target labels
+        core.targetCastbarOffsetY = core.labelBelowBar - 4 * core.pixel;
+        core.playerFrameY = core.targetFrameY - core.targetHeight + core.targetCastbarOffsetY
+            - core.castbarHeight - 4 * core.pixel - core.playerHeight;
+
+        -- castbar sits centered between the aura tracker (-2 below the player frame) and the cooldown tracker
+        core.playerCastbarOffsetY = -2 - core.auraTrackerLayout.iconHeight + core.cooldownTrackerLayout.offsetY;
+    end;
 end;
 
 core.healPredictionOverflow = 1.5;
@@ -37,6 +47,11 @@ core.auraTrackerLayout = {
     iconHeight = 30,
     slotCount = 8,
     minIconSpacing = 2,
+};
+
+core.cooldownTrackerLayout = {
+    perRow = 8,
+    offsetY = -4,
 };
 
 core.resourceTickerConfig = {
