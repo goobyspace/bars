@@ -27,6 +27,73 @@ function core:CreateSimpleStatusBar(name, parent, width, height, opts)
     return frame;
 end;
 
+function core:CreateBarGlow(parent, r, g, b)
+    local glow = CreateFrame("Frame", nil, parent);
+    glow:SetAllPoints(parent);
+    glow:SetFrameLevel(parent:GetFrameLevel() + 1);
+
+    local border = CreateFrame("Frame", nil, glow);
+    border:SetFrameLevel(glow:GetFrameLevel());
+    local padding = 4 * core.pixel;
+    core:SetPixelPoint(border, "TOPLEFT", glow, "TOPLEFT", -padding, padding);
+    core:SetPixelPoint(border, "BOTTOMRIGHT", glow, "BOTTOMRIGHT", padding, -padding);
+
+    -- plain additive textures instead of a backdrop, the glow texture has no alpha on forever so it needs ADD to drop its black
+    local edgeSize = 8 * core.pixel;
+    local function createPiece(uvs)
+        local piece = border:CreateTexture(nil, "ARTWORK");
+        piece:SetTexture("Interface\\TutorialFrame\\UI-TutorialFrame-CalloutGlow");
+        piece:SetTexCoord(unpack(uvs));
+        piece:SetVertexColor(r, g, b, 1);
+        piece:SetBlendMode("ADD");
+        return piece;
+    end;
+
+    local near, far = 0.0625, 0.9375;
+    local topLeft = createPiece({ 0.5078125, near, 0.5078125, far, 0.6171875, near, 0.6171875, far });
+    local topRight = createPiece({ 0.6328125, near, 0.6328125, far, 0.7421875, near, 0.7421875, far });
+    local bottomLeft = createPiece({ 0.7578125, near, 0.7578125, far, 0.8671875, near, 0.8671875, far });
+    local bottomRight = createPiece({ 0.8828125, near, 0.8828125, far, 0.9921875, near, 0.9921875, far });
+    local top = createPiece({ 0.2578125, far, 0.3671875, far, 0.2578125, near, 0.3671875, near });
+    local bottom = createPiece({ 0.3828125, far, 0.4921875, far, 0.3828125, near, 0.4921875, near });
+    local left = createPiece({ 0.0078125, near, 0.0078125, far, 0.1171875, near, 0.1171875, far });
+    local right = createPiece({ 0.1328125, near, 0.1328125, far, 0.2421875, near, 0.2421875, far });
+
+    topLeft:SetSize(edgeSize, edgeSize);
+    topLeft:SetPoint("TOPLEFT");
+    topRight:SetSize(edgeSize, edgeSize);
+    topRight:SetPoint("TOPRIGHT");
+    bottomLeft:SetSize(edgeSize, edgeSize);
+    bottomLeft:SetPoint("BOTTOMLEFT");
+    bottomRight:SetSize(edgeSize, edgeSize);
+    bottomRight:SetPoint("BOTTOMRIGHT");
+
+    top:SetHeight(edgeSize);
+    top:SetPoint("TOPLEFT", topLeft, "TOPRIGHT");
+    top:SetPoint("TOPRIGHT", topRight, "TOPLEFT");
+    bottom:SetHeight(edgeSize);
+    bottom:SetPoint("BOTTOMLEFT", bottomLeft, "BOTTOMRIGHT");
+    bottom:SetPoint("BOTTOMRIGHT", bottomRight, "BOTTOMLEFT");
+    left:SetWidth(edgeSize);
+    left:SetPoint("TOPLEFT", topLeft, "BOTTOMLEFT");
+    left:SetPoint("BOTTOMLEFT", bottomLeft, "TOPLEFT");
+    right:SetWidth(edgeSize);
+    right:SetPoint("TOPRIGHT", topRight, "BOTTOMRIGHT");
+    right:SetPoint("BOTTOMRIGHT", bottomRight, "TOPRIGHT");
+
+    local animation = border:CreateAnimationGroup();
+    animation:SetLooping("BOUNCE");
+    local pulse = animation:CreateAnimation("Alpha");
+    pulse:SetFromAlpha(0.6);
+    pulse:SetToAlpha(1);
+    pulse:SetDuration(0.8);
+    pulse:SetSmoothing("IN_OUT");
+    animation:Play();
+
+    glow:SetAlpha(0);
+    return glow;
+end;
+
 function core:AddMouseoverBorder(frame, hoverFrame, unit, linkedFrame, linkedUnit)
     local border = CreateFrame("Frame", nil, frame);
     border:SetAllPoints(frame);

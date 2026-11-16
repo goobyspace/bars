@@ -57,6 +57,16 @@ function core:CreateMainBuffsFrame(parent)
 
         table.insert(buffButtons, button);
         ApplyPurgeBorder(button);
+
+        for _, border in ipairs(core:CreateEdgeBorders(button, 1)) do
+            button:AddDispelTypeTexture(border, {
+                style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+                showWhenHelpful = true,
+                showWhenHarmful = false,
+                showWithoutDispelType = true,
+                customDispelColorMap = core.auraDispelColorMap,
+            });
+        end;
     end;
 
     local auraProcessingPolicy = 1;

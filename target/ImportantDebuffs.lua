@@ -13,6 +13,8 @@ function core:CreateImportantDebuffsFrame(parent)
     frame:SetFlowLayoutAnchorPoint("TOPRIGHT");
     frame:SetFlowLayoutGrowthDirection(AnchorUtil.FlowDirection.Left, AnchorUtil.FlowDirection.Down);
 
+    local durationFormatter = core:CreateAuraDurationFormatter();
+
     local function initializeFrame(button)
         core:InitializeAuraButtonBase(button, 32);
 
@@ -20,10 +22,29 @@ function core:CreateImportantDebuffsFrame(parent)
         core:SetPixelPoint(blackBorder, "TOPLEFT", button, "TOPLEFT", -core.pixel, core.pixel);
         core:SetPixelPoint(blackBorder, "BOTTOMRIGHT", button, "BOTTOMRIGHT", core.pixel, -core.pixel);
         blackBorder:SetColorTexture(0, 0, 0, 1);
+
+        local textFrame = CreateFrame("Frame", nil, button);
+        textFrame:SetAllPoints();
+        textFrame:SetFrameLevel(button.cooldown:GetFrameLevel() + 1);
+        core:InitializeAuraDurationText(button, textFrame);
+        button:SetDurationText(button.durationText, { textFormatter = durationFormatter });
+    end;
+
+    local function initializeDebuffFrame(button)
+        initializeFrame(button);
+        for _, border in ipairs(core:CreateEdgeBorders(button, 2)) do
+            button:AddDispelTypeTexture(border, {
+                style = Enum.CustomAuraButtonDispelTypeTextureStyle.PreserveAsset,
+                showWhenHarmful = true,
+                showWhenHelpful = false,
+                showWithoutDispelType = true,
+                customDispelColorMap = core.auraDispelColorMap,
+            });
+        end;
     end;
 
     frame:AddAuraGroup("CrowdControl", AuraUtil.AuraFilters.Harmful .. "|" .. AuraUtil.AuraFilters.CrowdControl, {
-        initializeFrame = initializeFrame,
+        initializeFrame = initializeDebuffFrame,
         maxFrameCount = 1,
         layout = { layoutIndex = 1 },
     });

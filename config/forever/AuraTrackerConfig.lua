@@ -14,6 +14,7 @@ if not core.isForever then return; end;
 --     weaponEnchant = "MAINHAND", -- "MAINHAND" or "OFFHAND"; tracks a weapon imbue instead of an aura
 --     enchantIDs = { 29 }, -- /dump C_Item.GetWeaponEnchantInfo(0), matches any imbue if you dont set any ID
 --     forms = { CAT = true }, -- allowed form keys
+--     currentStance = true, -- shows the icon of the active stance or form, needs no spell IDs
 --     rangeCheck = true,
 --     displayText = true,
 --     textNoSeconds = true, -- show raw duration numbers without the "s" suffix
@@ -57,34 +58,6 @@ core.foreverAuraTracker = {
             showGCD = true,
         },
         {
-            name = "Moonfire",
-            slot = 3,
-            spellIDs = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
-            auraSpellIDs = { 8921, 8924, 8925, 8926, 8927, 8928, 8929, 9833, 9834, 9835 },
-            auraUnit = "target",
-            auraFilter = "HARMFUL|PLAYER",
-            forms = humanOrMoonkin,
-            rangeCheck = true,
-            textNoSeconds = true,
-            displayText = true,
-            displayTextSize = 14,
-            showGCD = true,
-        },
-        {
-            name = "Insect Swarm",
-            slot = 4,
-            spellIDs = { 5570, 24974, 24975, 24976, 24977 },
-            auraSpellIDs = { 5570, 24974, 24975, 24976, 24977 },
-            auraUnit = "target",
-            auraFilter = "HARMFUL|PLAYER",
-            forms = humanOrMoonkin,
-            textNoSeconds = true,
-            rangeCheck = true,
-            displayText = true,
-            displayTextSize = 14,
-            showGCD = true,
-        },
-        {
             name = "Wild Growth",
             slot = 4,
             spellIDs = { 408120 },
@@ -94,30 +67,6 @@ core.foreverAuraTracker = {
             displayText = true,
             displayTextSize = 14,
             showGCD = true,
-        },
-        {
-            name = "Rip",
-            slot = 3,
-            spellIDs = { 1079, 9492, 9493, 9752, 9894, 9896 },
-            auraSpellIDs = { 1079, 9492, 9493, 9752, 9894, 9896 },
-            auraUnit = "target",
-            auraFilter = "HARMFUL|PLAYER",
-            forms = { CAT = true },
-            textNoSeconds = true,
-            rangeCheck = true,
-            displayText = true,
-        },
-        {
-            name = "Rake",
-            slot = 4,
-            spellIDs = { 1822, 1823, 1824, 9904 },
-            auraSpellIDs = { 1822, 1823, 1824, 9904 },
-            auraUnit = "target",
-            auraFilter = "HARMFUL|PLAYER",
-            forms = { CAT = true },
-            textNoSeconds = true,
-            rangeCheck = true,
-            displayText = true,
         },
         {
             name = "Maul",
@@ -171,14 +120,12 @@ core.foreverAuraTracker = {
     },
     WARRIOR = {
         {
-            name = "Battle Shout",
+            name = "Heroic Strike",
             slot = 1,
             spellIDs = { 78, 284, 285, 1608, 11564, 11565, 11566, 11567, 25286 },
-            auraSpellIDs = { 78, 284, 285, 1608, 11564, 11565, 11566, 11567, 25286 },
-            auraUnit = "player",
-            auraFilter = "HELPFUL",
-            auraGlow = true,
-            displayText = false,
+            rangeCheck = true,
+            usability = true,
+            activationGlow = true,
         },
         {
             name = "Rend",
@@ -216,7 +163,7 @@ core.foreverAuraTracker = {
         },
         {
             name = "Demoralizing Shout",
-            slot = 7,
+            slot = 6,
             spellIDs = { 1160, 6190, 11554, 11555, 11556 },
             auraSpellIDs = { 1160, 6190, 11554, 11555, 11556 },
             auraUnit = "target",
@@ -225,13 +172,18 @@ core.foreverAuraTracker = {
             displayText = true,
         },
         {
-            name = "Battle Stance",
+            name = "Stance",
+            slot = 7,
+            currentStance = true,
+        },
+        {
+            name = "Battle Shout",
             slot = 8,
             spellIDs = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
             auraSpellIDs = { 6673, 5242, 6192, 11549, 11550, 11551, 25289 },
             auraUnit = "player",
             auraFilter = "HELPFUL",
-            displayText = false,
+            displayText = true,
         },
     },
     SHAMAN = {

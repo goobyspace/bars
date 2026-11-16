@@ -10,11 +10,11 @@ local function matchesCandidateFilters(auraData, candidateFilters)
     return true;
 end;
 
-local function collectAuras(unit, filter, maxCount, candidateFilters, sortFunc)
+local function collectAuras(unit, filter, maxCount, candidateFilters, sortFunc, filterFunc)
     local auras = {};
     local batchSize = maxCount and math.max(maxCount * 4, 40) or 40;
     AuraUtil.ForEachAura(unit, filter, batchSize, function(auraData)
-        if matchesCandidateFilters(auraData, candidateFilters) then
+        if matchesCandidateFilters(auraData, candidateFilters) and (not filterFunc or filterFunc(auraData)) then
             table.insert(auras, auraData);
         end;
         return false;
@@ -45,6 +45,7 @@ function core:CreateAuraContainer(parent, layout)
             maxCount = opts.maxFrameCount,
             candidateFilters = opts.candidateFilters,
             sortFunc = opts.sortFunc,
+            filterFunc = opts.filterFunc,
             initializeFrame = opts.initializeFrame,
             updateFrame = opts.updateFrame,
             cachedCount = 0,
@@ -80,13 +81,14 @@ function core:CreateAuraContainer(parent, layout)
 
         local index = 0;
         for _, group in ipairs(groups) do
-            local auras = collectAuras(layout.unit, group.filter, group.maxCount, group.candidateFilters, group.sortFunc);
+            local auras = collectAuras(layout.unit, group.filter, group.maxCount, group.candidateFilters, group.sortFunc,
+                group.filterFunc);
             group.cachedCount = #auras;
 
             for _, auraData in ipairs(auras) do
                 local button = pool:Acquire();
                 if not button.initialized then
-                    core:SetPixelSize(button, iconSize, iconSize);
+                    core:SetPixelSize(button, iconSize, layout.iconHeight or iconSize);
                     if group.initializeFrame then group.initializeFrame(button); end;
                     button.initialized = true;
                 end;
@@ -96,7 +98,7 @@ function core:CreateAuraContainer(parent, layout)
                 local row = math.floor(index / perLine);
                 button:ClearAllPoints();
                 core:SetPixelPoint(button, anchorPoint, parent, anchorPoint,
-                    growX * col * (iconSize + spacing), growY * row * (iconSize + spacing));
+                    growX * col * (iconSize + spacing), growY * row * ((layout.iconHeight or iconSize) + spacing));
                 button:Show();
 
                 index = index + 1;

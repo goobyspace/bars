@@ -369,7 +369,8 @@ local function updateBaseState(button, activeOverlays)
         button.icon:SetDesaturated(false);
     else
         button.icon:SetVertexColor(colours.white.r, colours.white.g, colours.white.b);
-        button.icon:SetDesaturated(not (entry.usability and usable) or entry.grayOnCooldown and onCooldown or false);
+        button.icon:SetDesaturated(not entry.currentStance
+            and (not (entry.usability and usable) or entry.grayOnCooldown and onCooldown or false));
     end;
 
     local activationGlow = false;
@@ -419,6 +420,10 @@ function core:CreateAuraTracker(parent, options)
         local currentForm = core:GetShapeshiftFormKey();
         for _, button in ipairs(buttons) do
             local knownSpellID = getKnownSpellID(button.entry);
+            if button.entry.currentStance then
+                knownSpellID = core:GetActiveStanceID();
+                if knownSpellID == 0 then knownSpellID = nil; end;
+            end;
             local spellID = getIconSpellID(button.entry, knownSpellID);
             button.spellID = spellID;
             button.icon:SetTexture(spellID and C_Spell.GetSpellTexture(spellID));

@@ -26,6 +26,8 @@ function core:CreateHPBar(parent)
     frame = core:CreateHPBarBase("HPBarContainer", parent, core:EvenPixels(core.width / 3), core.barBgHeight);
     updateBarColour();
 
+    frame.gcdTicker = core:CreateGCDTicker(frame.bar);
+
     frame.text = frame.bar:CreateFontString("PrimaryText");
     frame.text:SetDrawLayer("OVERLAY", 1);
     frame.text:SetPoint("RIGHT", 0, core.labelAboveBar);

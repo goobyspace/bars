@@ -101,8 +101,11 @@ function core:CreateTargetHPBar(parent)
 
     frame.name = frame.bar:CreateFontString("PrimaryText");
     frame.name:SetDrawLayer("OVERLAY", 1);
-    frame.name:SetPoint("CENTER", 0, core.labelAboveBar);
-    frame.name:SetSize(core.width - 50, 12);
+    frame.name:SetPoint("LEFT", frame.hpText, "RIGHT", 4, 0);
+    frame.name:SetPoint("RIGHT", frame.level, "LEFT", -4, 0);
+    frame.name:SetHeight(12);
+    frame.name:SetJustifyH("CENTER");
+    frame.name:SetWordWrap(false);
     core:SetBarFont(frame.name, 12);
 
     frame:RegisterEvent("PLAYER_ENTERING_WORLD");

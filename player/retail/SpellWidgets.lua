@@ -3,37 +3,6 @@ local colours = core.colours;
 
 local DEFENSIVE_STANCE_SPELL_ID = 386208;
 
-local function createHighlightGlow(parent)
-    local glow = CreateFrame("Frame", nil, parent);
-    glow:SetAllPoints(parent);
-    glow:SetFrameLevel(parent:GetFrameLevel() + 1);
-
-    local border = CreateFrame("Frame", nil, glow, "BackdropTemplate");
-    border:SetFrameLevel(glow:GetFrameLevel());
-    local padding = 4 * core.pixel;
-    core:SetPixelPoint(border, "TOPLEFT", glow, "TOPLEFT", -padding, padding);
-    core:SetPixelPoint(border, "BOTTOMRIGHT", glow, "BOTTOMRIGHT", padding, -padding);
-    border:SetBackdrop({
-        edgeFile = "Interface\\TutorialFrame\\UI-TutorialFrame-CalloutGlow",
-        edgeSize = 8 * core.pixel,
-        tileEdge = false,
-    });
-
-    border:SetBackdropBorderColor(0.7, 0.15, 0.1, 1);
-
-    local animation = border:CreateAnimationGroup();
-    animation:SetLooping("BOUNCE");
-    local pulse = animation:CreateAnimation("Alpha");
-    pulse:SetFromAlpha(0.6);
-    pulse:SetToAlpha(1);
-    pulse:SetDuration(0.8);
-    pulse:SetSmoothing("IN_OUT");
-    animation:Play();
-
-    glow:SetAlpha(0);
-    return glow;
-end;
-
 function core:CreateSpellWidgets(hpBar, primaryBar)
     local playerClass = select(2, UnitClass("player"));
     local classHighlights = core.primaryResourceHighlights and core.primaryResourceHighlights[playerClass];
@@ -50,7 +19,7 @@ function core:CreateSpellWidgets(hpBar, primaryBar)
         primaryBar.bar.bg:SetAllPoints();
         primaryBar.bar.bg:SetColorTexture(colours.black.r, colours.black.g, colours.black.b);
 
-        glow = createHighlightGlow(primaryBar);
+        glow = core:CreateBarGlow(primaryBar, 0.7, 0.15, 0.1);
         primaryBar.bar:SetFrameLevel(primaryBar:GetFrameLevel() + 2);
         eventFrame:RegisterEvent("SPELL_UPDATE_USABLE");
         eventFrame:RegisterEvent("SPELLS_CHANGED");

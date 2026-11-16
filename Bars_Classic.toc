@@ -26,7 +26,7 @@ utils/Debug.lua
 data/PurgeData.lua
 data/ResourceData.lua
 data/InterruptData.lua
-data/FlightPathData.lua
+data/era/FlightPathData.lua
 data/forever/ResourceOverrides.lua
 
 components/PixelUtils.lua
@@ -44,6 +44,7 @@ widgets/Trackers.lua
 widgets/TotemTracker.lua
 
 player/era/ManaTick.lua
+player/GCDTicker.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua

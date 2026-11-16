@@ -28,7 +28,7 @@ utils/Debug.lua
 data/PurgeData.lua
 data/ResourceData.lua
 data/InterruptData.lua
-data/FlightPathData.lua
+data/forever/FlightPathData.lua
 data/forever/ResourceOverrides.lua
 
 components/PixelUtils.lua
@@ -47,12 +47,14 @@ widgets/Trackers.lua
 widgets/TotemTracker.lua
 
 player/forever/ManaTick.lua
+player/GCDTicker.lua
 player/HPBar.lua
 player/PrimaryResource.lua
 player/SecondaryResource.lua
 player/TertiaryResource.lua
 player/PetFrame.lua
 player/Widgets.lua
+player/forever/SpellWidgets.lua
 player/Castbar.lua
 player/forever/SwingTimer.lua
 

@@ -3,51 +3,59 @@ local _, core = ...;
 if core.hasAuraContainer then return; end;
 
 local debuffFilterString = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful,
-    AuraUtil.AuraFilters.IncludeNameplateOnly);
+    AuraUtil.AuraFilters.Player, AuraUtil.AuraFilters.IncludeNameplateOnly);
+local crowdControlFilter = AuraUtil.CreateFilterString(AuraUtil.AuraFilters.Harmful, AuraUtil.AuraFilters.CrowdControl);
 
-local maxDebuffs = 10;
+local maxDebuffs = 8;
+
+local function updateDuration(button)
+    local remaining = button.expirationTime and button.expirationTime - GetTime() or 0;
+    if remaining > 0 then
+        button.durationText:SetText(string.format("%d", math.floor(remaining)));
+    else
+        button.durationText:SetText("");
+    end;
+end;
 
 local function initializeButton(button)
-    core:InitializeAuraButtonBase(button);
-
-    button.BlackBorder = button:CreateTexture(nil, "BORDER");
-    button.BlackBorder:SetDrawLayer("BORDER", 1);
-    core:SetPixelPoint(button.BlackBorder, "TOPLEFT", button, "TOPLEFT", -core.pixel, core.pixel);
-    core:SetPixelPoint(button.BlackBorder, "BOTTOMRIGHT", button, "BOTTOMRIGHT", core.pixel, -core.pixel);
-    button.BlackBorder:SetColorTexture(0, 0, 0, 1);
-
-    button.border = button:CreateTexture(nil, "OVERLAY");
-    button.border:SetDrawLayer("OVERLAY", 6);
-    core:SetPixelPoint(button.border, "TOPLEFT", button, "TOPLEFT", -core.pixel, core.pixel);
-    core:SetPixelPoint(button.border, "BOTTOMRIGHT", button, "BOTTOMRIGHT", core.pixel, -core.pixel);
+    button.borders = core:InitializeTrackedDebuffButton(button);
+    local elapsedSinceUpdate = 0;
+    button:SetScript("OnUpdate", function(self, elapsed)
+        elapsedSinceUpdate = elapsedSinceUpdate + elapsed;
+        if elapsedSinceUpdate < 0.1 then return; end;
+        elapsedSinceUpdate = 0;
+        updateDuration(self);
+    end);
 end;
 
 local function updateButton(button, auraData)
     core:UpdateAuraCooldown(button, auraData);
+    button.expirationTime = auraData.duration and auraData.duration > 0 and auraData.expirationTime or nil;
+    updateDuration(button);
 
-    AuraUtil.SetAuraBorderColor(button.border, auraData.dispelName);
-end;
-
-local function updateDebuffBudgets(container)
-    local playerCount = math.min(container:GetGroupCount("PlayerDebuffs"), maxDebuffs);
-    local remainingAfterPlayer = maxDebuffs - playerCount;
-    container:SetGroupMaxCount("ImportantDebuffs", remainingAfterPlayer);
-    container:Update();
-
-    local importantCount = math.min(container:GetGroupCount("ImportantDebuffs"), remainingAfterPlayer);
-    container:SetGroupMaxCount("OtherDebuffs", remainingAfterPlayer - importantCount);
-    container:Update();
+    for _, border in ipairs(button.borders) do
+        local dispelName = auraData.dispelName;
+        if not dispelName or dispelName == "" or dispelName == "None" or dispelName == "Physical" then
+            border:SetVertexColor(0, 0, 0, 1);
+        else
+            AuraUtil.SetAuraBorderColor(border, dispelName);
+        end;
+    end;
 end;
 
 function core:CreateNormalDebuffsFrame(parent)
     local frame = CreateFrame("Frame", "TargetNormalDebuffAuraContainer", parent);
-    core:SetPixelSize(frame, 20, 20);
+    local layout = core.auraTrackerLayout;
+    local spacing = math.max(layout.iconWidth + layout.minIconSpacing,
+        (core.width - layout.iconWidth) / (maxDebuffs - 1)) - layout.iconWidth;
+    core:SetPixelSize(frame, core.width, layout.iconHeight);
 
     local container = core:CreateAuraContainer(frame, {
         unit = "target",
-        iconSize = 22,
-        spacing = 2,
-        maxLineSize = 120,
+        iconSize = layout.iconWidth,
+        iconHeight = layout.iconHeight,
+        spacing = spacing,
+        maxLineSize = core.width + spacing,
         anchorPoint = "BOTTOMLEFT",
         growX = 1,
         growY = 1,
@@ -56,33 +64,19 @@ function core:CreateNormalDebuffsFrame(parent)
     container:AddGroup("PlayerDebuffs", debuffFilterString, {
         initializeFrame = initializeButton,
         updateFrame = updateButton,
-        candidateFilters = { isFromPlayerOrPlayerPet = true },
+        filterFunc = function(auraData)
+            return C_UnitAuras.IsAuraFilteredOutByInstanceID("target", auraData.auraInstanceID, crowdControlFilter);
+        end,
         maxFrameCount = maxDebuffs,
     });
 
-    container:AddGroup("ImportantDebuffs", debuffFilterString, {
-        initializeFrame = initializeButton,
-        updateFrame = updateButton,
-        candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = true },
-        maxFrameCount = 0,
-    });
-
-    container:AddGroup("OtherDebuffs", debuffFilterString, {
-        initializeFrame = initializeButton,
-        updateFrame = updateButton,
-        candidateFilters = { isFromPlayerOrPlayerPet = false, isPriorityAura = false },
-        maxFrameCount = 0,
-    });
-
     container:Update();
-    updateDebuffBudgets(container);
 
     local eventFrame = CreateFrame("Frame");
     eventFrame:RegisterEvent("PLAYER_TARGET_CHANGED");
     eventFrame:RegisterUnitEvent("UNIT_AURA", "target");
     eventFrame:SetScript("OnEvent", function()
         container:Update();
-        updateDebuffBudgets(container);
     end);
 
     return frame;

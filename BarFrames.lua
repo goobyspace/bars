@@ -297,7 +297,11 @@ function core:InitializeBarFrames()
         core:SetPixelPoint(mainBuffs, "TOPLEFT", hpBar, "TOPRIGHT", 4, -6);
 
         local normalDebuffs = core:CreateNormalDebuffsFrame(targetFrame);
-        core:SetPixelPoint(normalDebuffs, "BOTTOMLEFT", mainBuffs, "TOPLEFT", 0, 8);
+        local targetTextHeight = math.floor(12 * core.fontScale + 0.5);
+        local targetTextGap = core.labelAboveBar - targetTextHeight / 2 - core.barBgHeight / 2;
+        core:SetPixelPoint(normalDebuffs, "BOTTOMLEFT", hpBar.bar, "LEFT", 0,
+            core.labelAboveBar + targetTextHeight / 2 + targetTextGap);
+        core:SnapToPixelGrid(normalDebuffs);
 
         -- taint safe way to hide/show this depending on target
         targetFrame:SetAttribute("unit", "target");
